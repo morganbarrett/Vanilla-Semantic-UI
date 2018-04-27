@@ -1,16 +1,15 @@
  /*
- * # Semantic UI - 2.3.1
- * https://github.com/Semantic-Org/Semantic-UI
- * http://www.semantic-ui.com/
+ * # Vanilla Semantic UI - 0.0.1
+ * https://github.com/morganbarrett/Vanilla-Semantic-UI/
  *
- * Copyright 2014 Contributors
+ * Copyright 2018 Contributors
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
  */
 @import url('https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic&subset=latin');
 /*!
- * # Semantic UI 2.3.1 - Reset
+ * # Semantic UI 0.0.1 - Reset
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -541,7 +540,7 @@ template {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Site
+ * # Semantic UI 0.0.1 - Site
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -760,7 +759,7 @@ body .ui.inverted::-webkit-scrollbar-thumb:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Button
+ * # Semantic UI 0.0.1 - Button
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -4949,7 +4948,7 @@ body .ui.inverted::-webkit-scrollbar-thumb:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Container
+ * # Semantic UI 0.0.1 - Container
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -5110,7 +5109,7 @@ body .ui.inverted::-webkit-scrollbar-thumb:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Divider
+ * # Semantic UI 0.0.1 - Divider
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -5377,7 +5376,7 @@ body .ui.inverted::-webkit-scrollbar-thumb:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Flag
+ * # Semantic UI 0.0.1 - Flag
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -6653,7 +6652,7 @@ i.flag.zimbabwe:before {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Header
+ * # Semantic UI 0.0.1 - Header
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -7480,7 +7479,7 @@ a.ui.inverted.grey.header:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Icon
+ * # Semantic UI 0.0.1 - Icon
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -13608,7 +13607,7 @@ i.icon.youtube.square {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Image
+ * # Semantic UI 0.0.1 - Image
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -13930,7 +13929,7 @@ img.ui.bordered.image {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Input
+ * # Semantic UI 0.0.1 - Input
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -14502,7 +14501,7 @@ img.ui.bordered.image {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Label
+ * # Semantic UI 0.0.1 - Label
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -15933,7 +15932,7 @@ a.ui.basic.label:hover {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - List
+ * # Semantic UI 0.0.1 - List
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -17010,7 +17009,7 @@ ol.ui.horizontal.list li:before,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Loader
+ * # Semantic UI 0.0.1 - Loader
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -17388,7 +17387,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Rail
+ * # Semantic UI 0.0.1 - Rail
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -17550,7 +17549,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Reveal
+ * # Semantic UI 0.0.1 - Reveal
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -17865,7 +17864,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Segment
+ * # Semantic UI 0.0.1 - Segment
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -18765,7 +18764,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Step
+ * # Semantic UI 0.0.1 - Step
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -19455,7 +19454,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Breadcrumb
+ * # Semantic UI 0.0.1 - Breadcrumb
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -19586,7 +19585,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Form
+ * # Semantic UI 0.0.1 - Form
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -20765,7 +20764,7 @@ ol.ui.horizontal.list li:before,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Grid
+ * # Semantic UI 0.0.1 - Grid
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -25369,7 +25368,7 @@ Floated Menu / Item
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Message
+ * # Semantic UI 0.0.1 - Message
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -25939,7 +25938,7 @@ Floated Menu / Item
         Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Table
+ * # Semantic UI 0.0.1 - Table
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -27234,7 +27233,7 @@ Floated Menu / Item
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Ad
+ * # Semantic UI 0.0.1 - Ad
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -27523,7 +27522,7 @@ Floated Menu / Item
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Item
+ * # Semantic UI 0.0.1 - Item
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -28630,7 +28629,7 @@ a.ui.card:hover,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Comment
+ * # Semantic UI 0.0.1 - Comment
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -28916,7 +28915,7 @@ a.ui.card:hover,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Feed
+ * # Semantic UI 0.0.1 - Feed
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -29229,7 +29228,7 @@ a.ui.card:hover,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Item
+ * # Semantic UI 0.0.1 - Item
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -29750,7 +29749,7 @@ a.ui.card:hover,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Statistic
+ * # Semantic UI 0.0.1 - Statistic
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -30386,7 +30385,7 @@ a.ui.card:hover,
     User Variable Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Accordion
+ * # Semantic UI 0.0.1 - Accordion
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -30649,7 +30648,7 @@ a.ui.card:hover,
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Checkbox
+ * # Semantic UI 0.0.1 - Checkbox
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -31324,7 +31323,7 @@ a.ui.card:hover,
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Dimmer
+ * # Semantic UI 0.0.1 - Dimmer
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -31577,7 +31576,7 @@ body.dimmable > .dimmer {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Dropdown
+ * # Semantic UI 0.0.1 - Dropdown
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -33224,7 +33223,7 @@ select.ui.dropdown {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Video
+ * # Semantic UI 0.0.1 - Video
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -33389,7 +33388,7 @@ select.ui.dropdown {
   padding-bottom: 42.85714286%;
 }
 /*!
- * # Semantic UI 2.3.1 - Modal
+ * # Semantic UI 0.0.1 - Modal
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -34041,7 +34040,7 @@ select.ui.dropdown {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Nag
+ * # Semantic UI 0.0.1 - Nag
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -34187,7 +34186,7 @@ a.ui.nag {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Popup
+ * # Semantic UI 0.0.1 - Popup
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -35017,7 +35016,7 @@ a.ui.nag {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Progress Bar
+ * # Semantic UI 0.0.1 - Progress Bar
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -35599,7 +35598,7 @@ a.ui.nag {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Rating
+ * # Semantic UI 0.0.1 - Rating
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -35876,7 +35875,7 @@ a.ui.nag {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Search
+ * # Semantic UI 0.0.1 - Search
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -36346,7 +36345,7 @@ a.ui.nag {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Shape
+ * # Semantic UI 0.0.1 - Shape
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -36506,7 +36505,7 @@ a.ui.nag {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Sidebar
+ * # Semantic UI 0.0.1 - Sidebar
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -37191,7 +37190,7 @@ body.pushable > .pusher {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Sticky
+ * # Semantic UI 0.0.1 - Sticky
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -37265,7 +37264,7 @@ body.pushable > .pusher {
          Site Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Tab
+ * # Semantic UI 0.0.1 - Tab
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -37353,7 +37352,7 @@ body.pushable > .pusher {
         User Overrides
 *******************************/
 /*!
- * # Semantic UI 2.3.1 - Transition
+ * # Semantic UI 0.0.1 - Transition
  * http://github.com/semantic-org/semantic-ui/
  *
  *

@@ -32,7 +32,7 @@ catch(error) {
 }
 
 // looks for version in config or package.json (whichever is available)
-version = (npmPackage && npmPackage.version !== undefined && npmPackage.name == 'semantic-ui')
+version = (npmPackage && npmPackage.version !== undefined && npmPackage.name == 'vanilla-semantic-ui')
   ? npmPackage.version
   : config.version
 ;
@@ -44,17 +44,15 @@ version = (npmPackage && npmPackage.version !== undefined && npmPackage.name == 
 
 module.exports = {
 
-  title      : 'Semantic UI',
-  repository : 'https://github.com/Semantic-Org/Semantic-UI',
-  url        : 'http://www.semantic-ui.com/',
+  title      : 'Vanilla Semantic UI',
+  repository : 'https://github.com/morganbarrett/Vanilla-Semantic-UI/',
 
   banner: ''
     + ' /*' + '\n'
     + ' * # <%= title %> - <%= version %>' + '\n'
     + ' * <%= repository %>' + '\n'
-    + ' * <%= url %>' + '\n'
     + ' *' + '\n'
-    + ' * Copyright 2014 Contributors' + '\n'
+    + ' * Copyright 2018 Contributors' + '\n'
     + ' * Released under the MIT license' + '\n'
     + ' * http://opensource.org/licenses/MIT' + '\n'
     + ' *' + '\n'
