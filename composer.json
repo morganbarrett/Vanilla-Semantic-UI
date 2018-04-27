@@ -1,20 +1,20 @@
 {
-  "name"        : "semantic/ui",
-  "description" : "Semantic empowers designers and developers by creating a shared vocabulary for UI.",
-  "homepage"    : "http://www.semantic-ui.com",
+  "name"        : "vanilla-semantic-ui",
+  "description" : "Semantic UI without jQuery.",
+  "homepage"    : "https://github.com/morganbarrett/Vanilla-Semantic-UI/",
   "authors"     : [
     {
-      "name"     : "Jack Lukic",
-      "email"    : "jacklukic@gmail.com",
-      "homepage" : "http://www.jacklukic.com",
-      "role"     : "Creator"
+      "name"     : "Morgan Barrett",
+      "email"    : "morganbarrett@icloud.com",
+      "role"     : "Rewrite without jquery"
     }
   ],
   "support": {
-    "issues": "https://github.com/Semantic-Org/Semantic-UI/issues",
-    "source": "https://github.com/Semantic-Org/Semantic-UI"
+    "issues": "https://github.com/morganbarrett/Vanilla-Semantic-UI/issues",
+    "source": "https://github.com/morganbarrett/Vanilla-Semantic-UI/"
   },
   "keywords" : [
+    "vanilla",
     "semantic",
     "ui",
     "css",
