@@ -8,7 +8,7 @@
  *
  */
 /*!
- * # Semantic UI 0.0.1 - Site
+ * # Vanilla Semantic UI 0.0.1 - Site
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -496,7 +496,7 @@ $.extend($.expr[ ":" ], {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Form Validation
+ * # Vanilla Semantic UI 0.0.1 - Form Validation
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -2203,7 +2203,7 @@ $.fn.form.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Accordion
+ * # Vanilla Semantic UI 0.0.1 - Accordion
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -2817,7 +2817,7 @@ $.extend( $.easing, {
 
 
 /*!
- * # Semantic UI 0.0.1 - Checkbox
+ * # Vanilla Semantic UI 0.0.1 - Checkbox
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -3649,7 +3649,7 @@ $.fn.checkbox.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Dimmer
+ * # Vanilla Semantic UI 0.0.1 - Dimmer
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -4360,7 +4360,7 @@ $.fn.dimmer.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Dropdown
+ * # Vanilla Semantic UI 0.0.1 - Dropdown
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -8284,7 +8284,7 @@ $.fn.dropdown.settings.templates = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Embed
+ * # Vanilla Semantic UI 0.0.1 - Embed
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -8981,7 +8981,7 @@ $.fn.embed.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Modal
+ * # Vanilla Semantic UI 0.0.1 - Modal
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -9941,7 +9941,7 @@ $.fn.modal.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Nag
+ * # Vanilla Semantic UI 0.0.1 - Nag
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -10449,7 +10449,7 @@ $.extend( $.easing, {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Popup
+ * # Vanilla Semantic UI 0.0.1 - Popup
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -11973,7 +11973,7 @@ $.fn.popup.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Progress
+ * # Vanilla Semantic UI 0.0.1 - Progress
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -12905,7 +12905,7 @@ $.fn.progress.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Rating
+ * # Vanilla Semantic UI 0.0.1 - Rating
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -13414,7 +13414,7 @@ $.fn.rating.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Search
+ * # Vanilla Semantic UI 0.0.1 - Search
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -14920,7 +14920,7 @@ $.fn.search.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Shape
+ * # Vanilla Semantic UI 0.0.1 - Shape
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -15842,7 +15842,7 @@ $.fn.shape.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Sidebar
+ * # Vanilla Semantic UI 0.0.1 - Sidebar
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -16876,7 +16876,7 @@ $.fn.sidebar.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Sticky
+ * # Vanilla Semantic UI 0.0.1 - Sticky
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -17836,7 +17836,7 @@ $.fn.sticky.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Tab
+ * # Vanilla Semantic UI 0.0.1 - Tab
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -18789,7 +18789,7 @@ $.fn.tab.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Transition
+ * # Vanilla Semantic UI 0.0.1 - Transition
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -19885,7 +19885,7 @@ $.fn.transition.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - API
+ * # Vanilla Semantic UI 0.0.1 - API
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -21053,7 +21053,7 @@ $.api.settings = {
 })( jQuery, window, document );
 
 /*!
- * # Semantic UI 0.0.1 - Visibility
+ * # Vanilla Semantic UI 0.0.1 - Visibility
  * http://github.com/semantic-org/semantic-ui/
  *
  *

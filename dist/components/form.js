@@ -1,5 +1,5 @@
 /*!
- * # Semantic UI 0.0.1 - Form Validation
+ * # Vanilla Semantic UI 0.0.1 - Form Validation
  * http://github.com/semantic-org/semantic-ui/
  *
  *
