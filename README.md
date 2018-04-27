@@ -1,4 +1,6 @@
-# ![Semantic](http://semantic-ui.com/images/logo.png) Vanilla Semantic UI
+![Semantic](http://semantic-ui.com/images/logo.png)
+
+# Vanilla Semantic UI
 
 Vanilla Semantic UI removes the jQuery dependency from [Semantic](http://www.semantic-ui.com), a UI framework designed for theming.
 
