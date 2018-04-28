@@ -46,7 +46,7 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 * nag.js
 * popup.js
 * progress.js
-* rating.js
+* ~~rating.js~~ ✓
 * search.js
 * shape.js
 * sidebar.js
