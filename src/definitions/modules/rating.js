@@ -365,7 +365,7 @@
 						;
 						time = false;
 						clearTimeout(module.performance.timer);
-						performance.forEach(function(index, data){
+						performance.forEach(function(data, index){
 							totalTime += data['Execution Time'];
 						});
 						title += ' ' + totalTime + 'ms';
@@ -381,7 +381,7 @@
 								console.table(performance);
 							}
 							else {
-								performance.forEach(function(index, data) {
+								performance.forEach(function(data, index) {
 									console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
 								});
 							}
@@ -399,9 +399,9 @@
 					if(typeof query == 'string' && object !== undefined) {
 						query    = query.split(/[\. ]/);
 						maxDepth = query.length - 1;
-						query.forEach(function(depth, value){
+						query.forEach(function(value, depth){
 							var camelCaseValue = (depth != maxDepth)
-								? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
+								? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
 								: query
 							;
 							if( isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
