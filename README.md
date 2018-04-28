@@ -53,3 +53,17 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 * sticky.js
 * tab.js
 * transition.js
+
+## Usage
+#### Old (jQuery) way
+```javascript
+$('.star.rating').rating({
+	initialRating: 3
+});
+```
+#### New (Vanilla) way
+```javascript
+VsRating('.star.rating', {
+	initialRating: 3
+});
+```
