@@ -31,73 +31,13 @@
 		}
 	}
 
-	function isPlainObject(obj) {
-		if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
-			return false;
-		}
-
-		if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, 'isPrototypeOf')) {
-			return false;
-		}
-
-		return true;
-	}
-
-	function extend(){
-		var extended = {};
-		var deep = false;
-		var i = 0;
-		var length = arguments.length;
-
-		// Check if a deep merge
-		if ( Object.prototype.toString.call( arguments[0] ) === '[object Boolean]' ) {
-			deep = arguments[0];
-			i++;
-		}
-
-		// Merge the object into the extended object
-		var merge = function (obj) {
-			for ( var prop in obj ) {
-				if ( Object.prototype.hasOwnProperty.call( obj, prop ) ) {
-					// If deep merge and property is an object, merge properties
-					if ( deep && Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
-						extended[prop] = extend( true, extended[prop], obj[prop] );
-					} else {
-						extended[prop] = obj[prop];
-					}
-				}
-			}
-		};
-
-		// Loop through each object and conduct a merge
-		for ( ; i < length; i++ ) {
-			var obj = arguments[i];
-			merge(obj);
-		}
-
-		return extended;
-	}
-
-	vs.rating = function(allModules, parameters){
-		var moduleSelector = "",
+	vs.rating = function(selector, parameters){
+		var modules = vs.parse(selector),
 			time = new Date().getTime(),
-			performance = [],
-			modules = [];
-
-		if(typeof allModules === "string"){
-			moduleSelector = allModules;
-			allModules = document.querySelectorAll(allModules);
-			allModules = [].slice.call(allModules);
-		}
-
-		if(typeof allModules !== "object"){
-			allModules = [allModules];
-		}
-
-		allModules.forEach(function(element){
-			var settings = ( isPlainObject(parameters) )
-					? extend(true, {}, vs.rating.settings, parameters)
-					: extend({}, vs.rating.settings),
+			performance = [];
+		
+		modules.forEach(function(element){
+			var settings = vs.extendSettings("rating", parameters),
 				namespace = settings.namespace,
 				className = settings.className,
 				metadata = settings.metadata,
@@ -116,11 +56,11 @@
 					
 					console.log();
 
-					if(icons.length === 0) {
+					if(icons.length === 0){
 						module.setup.layout();
 					}
 
-					if(settings.interactive) {
+					if(settings.interactive){
 						module.enable();
 					}
 					else {
@@ -196,7 +136,7 @@
 					module.set.rating(0);
 				},
 				bind: {
-					events: function() {
+					events: function(){
 						module.verbose('Binding events');
 						element.onclick = module.event.click;
 						element.onmouseover = module.event.mouseenter;
@@ -204,22 +144,22 @@
 					}
 				},
 				remove: {
-					events: function() {
+					events: function(){
 						module.verbose('Removing events');
 						element.onclick = undefined;
 						element.onmouseover = undefined;
 						element.onmouseout = undefined;
 					},
-					initialLoad: function() {
+					initialLoad: function(){
 						initialLoad = false;
 					}
 				},
-				enable: function() {
+				enable: function(){
 					module.debug('Setting rating to interactive mode');
 					module.bind.events();
 					element.classList.remove(className.disabled);
 				},
-				disable: function() {
+				disable: function(){
 					module.debug('Setting rating to read-only mode');
 					module.remove.events();
 					element.classList.add(className.disabled);
@@ -233,21 +173,21 @@
 					initialRating: function(){
 						var rating = element.dataset[metadata.rating];
 
-						if(rating !== undefined) {
+						if(rating !== undefined){
 							element.removeAttribute("data-" + metadata.rating);
 							return rating;
 						}
 
 						return settings.initialRating;
 					},
-					maxRating: function() {
+					maxRating: function(){
 						if(element.dataset[metadata.maxRating] !== undefined){
 							element.dataset[metadata.maxRating] = null;
 							return element.dataset[metadata.maxRating];
 						}
 						return settings.maxRating;
 					},
-					rating: function() {
+					rating: function(){
 						var currentRating = icons.filter(function(elem){
 							return elem.matches('.' + className.active);
 						}).length;
@@ -256,7 +196,7 @@
 					}
 				},
 				set: {
-					rating: function(rating) {
+					rating: function(rating){
 						var ratingIndex = rating - 1 >= 0 ? rating - 1 : 0,
 							activeIcon = icons[ratingIndex];
 
@@ -267,27 +207,27 @@
 							icons[i].classList.remove(className.active);
 						}
 
-						if(rating > 0) {
+						if(rating > 0){
 							module.verbose('Setting current rating to', rating);
 							activeIcon.classList.add(className.active);
 							prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
 						}
-						if(!module.is.initialLoad()) {
+						if(!module.is.initialLoad()){
 							settings.onRate.call(element, rating);
 						}
 					},
-					initialLoad: function() {
+					initialLoad: function(){
 						initialLoad = true;
 					}
 				},
-				setting: function(name, value) {
+				setting: function(name, value){
 					module.debug('Changing setting', name, value);
-					if( isPlainObject(name) ) {
-						extend(true, settings, name);
+					if(vs.isPlainObject(name)){
+						vs.extend(true, settings, name);
 					}
-					else if(value !== undefined) {
-						if(isPlainObject(settings[name])) {
-							extend(true, settings[name], value);
+					else if(value !== undefined){
+						if(isPlainObject(settings[name])){
+							vs.extend(true, settings[name], value);
 						}
 						else {
 							settings[name] = value;
@@ -297,20 +237,20 @@
 						return settings[name];
 					}
 				},
-				internal: function(name, value) {
-					if(isPlainObject(name)){
-						extend(true, module, name);
+				internal: function(name, value){
+					if(vs.isPlainObject(name)){
+						vs.extend(true, module, name);
 					}
-					else if(value !== undefined) {
+					else if(value !== undefined){
 						module[name] = value;
 					}
 					else {
 						return module[name];
 					}
 				},
-				debug: function() {
-					if(!settings.silent && settings.debug) {
-						if(settings.performance) {
+				debug: function(){
+					if(!settings.silent && settings.debug){
+						if(settings.performance){
 							module.performance.log(arguments);
 						}
 						else {
@@ -319,9 +259,9 @@
 						}
 					}
 				},
-				verbose: function() {
-					if(!settings.silent && settings.verbose && settings.debug) {
-						if(settings.performance) {
+				verbose: function(){
+					if(!settings.silent && settings.verbose && settings.debug){
+						if(settings.performance){
 							module.performance.log(arguments);
 						}
 						else {
@@ -330,20 +270,20 @@
 						}
 					}
 				},
-				error: function() {
-					if(!settings.silent) {
+				error: function(){
+					if(!settings.silent){
 						module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
 						module.error.apply(console, arguments);
 					}
 				},
 				performance: {
-					log: function(message) {
+					log: function(message){
 						var
 							currentTime,
 							executionTime,
 							previousTime
 						;
-						if(settings.performance) {
+						if(settings.performance){
 							currentTime   = new Date().getTime();
 							previousTime  = time || currentTime;
 							executionTime = currentTime - previousTime;
@@ -358,7 +298,7 @@
 						clearTimeout(module.performance.timer);
 						module.performance.timer = setTimeout(module.performance.display, 500);
 					},
-					display: function() {
+					display: function(){
 						var
 							title = settings.name + ':',
 							totalTime = 0
@@ -369,19 +309,16 @@
 							totalTime += data['Execution Time'];
 						});
 						title += ' ' + totalTime + 'ms';
-						if(moduleSelector) {
-							title += ' \'' + moduleSelector + '\'';
+						if(modules.length > 1){
+							title += ' ' + '(' + modules.length + ')';
 						}
-						if(allModules.length > 1) {
-							title += ' ' + '(' + allModules.length + ')';
-						}
-						if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
+						if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
 							console.groupCollapsed(title);
-							if(console.table) {
+							if(console.table){
 								console.table(performance);
 							}
 							else {
-								performance.forEach(function(data, index) {
+								performance.forEach(function(data, index){
 									console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
 								});
 							}
@@ -389,53 +326,10 @@
 						}
 						performance = [];
 					}
-				},
-				invoke: function(query, passedArguments){
-					var object = instance,
-						maxDepth,
-						found,
-						response;
-
-					if(typeof query == 'string' && object !== undefined) {
-						query    = query.split(/[\. ]/);
-						maxDepth = query.length - 1;
-						query.forEach(function(value, depth){
-							var camelCaseValue = (depth != maxDepth)
-								? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
-								: query
-							;
-							if( isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-								object = object[camelCaseValue];
-							}
-							else if( object[camelCaseValue] !== undefined ) {
-								found = object[camelCaseValue];
-								return false;
-							}
-							else if( isPlainObject( object[value] ) && (depth != maxDepth) ) {
-								object = object[value];
-							}
-							else if( object[value] !== undefined ) {
-								found = object[value];
-								return false;
-							}
-							else {
-								return false;
-							}
-						});
-					}
-
-					if(typeof found === 'function'){
-						response = found.apply(element, passedArguments);
-					} else if(found !== undefined) {
-						response = found;
-					}
-
-					return response;
 				}
 			}
 
 			module.initialize();
-			modules.push(module);
 		});
 
 		return modules;

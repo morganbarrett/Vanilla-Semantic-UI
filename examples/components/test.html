@@ -28,9 +28,10 @@
   <script src="../assets/library/jquery.min.js"></script>
   <script src="../assets/library/iframe-content.js"></script>
   <script type="text/javascript" src="../../dist/components/vs.js"></script>
+  <script type="text/javascript" src="../../dist/components/rating.js"></script>
+  <script type="text/javascript" src="../../dist/components/nag.js"></script>
   <script type="text/javascript" src="../../dist/components/popup.js"></script>
   <script type="text/javascript" src="../../dist/components/dimmer.js"></script>
-  <script type="text/javascript" src="../../dist/components/rating.js"></script>
   <script type="text/javascript" src="../../dist/components/transition.js"></script>
 
   <!--- Show Names -->
@@ -47,11 +48,17 @@
   <script>
   $(document)
     .ready(function() {
+      var ratings = vs.rating(".star.rating"),
+          nag = vs.nag(".cookie.nag", {
+            key: "accepts-cookies",
+            value: true
+          });
+
+
       $('.special.card .image').dimmer({
         on: 'hover'
       });
       
-      var ratings = vs.rating('.star.rating');
       
       $('.card .dimmer')
         .dimmer({
@@ -64,6 +71,13 @@
 </head>
 
 <body>
+
+<div class="ui cookie nag">
+  <span class="title">
+    We use cookies to ensure you get the best experience on our website
+  </span>
+  <i class="close icon"></i>
+</div>
 
 <div class="ui four cards">
   <div class="card">

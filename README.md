@@ -43,7 +43,7 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 * dropdown.js
 * embed.js
 * modal.js
-* nag.js
+* ~~nag.js~~ ✓
 * popup.js
 * progress.js
 * ~~rating.js~~ ✓

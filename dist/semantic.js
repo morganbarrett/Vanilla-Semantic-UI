@@ -7,6 +7,140 @@
  * http://opensource.org/licenses/MIT
  *
  */
+var vs = {
+	parse: function(selector){
+		if(typeof selector === "string"){
+			var elems = document.querySelectorAll(selector);
+			return [].slice.call(elems);
+		}
+
+		if(typeof selector !== "object"){
+			return [selector];
+		}
+
+		return selector;
+	},
+	extendSettings: function(name, parameters){
+		var args = [{}, vs[name].settings];
+
+		if(this.isPlainObject(parameters)){
+			args.unshift(true);
+			args.push(parameters);
+		}
+
+		return this.extend(...args);
+	},
+	invoke: function(query, passedArguments){
+		var object = instance,
+			maxDepth,
+			found,
+			response;
+
+		if(typeof query == 'string' && object !== undefined) {
+			query    = query.split(/[\. ]/);
+			maxDepth = query.length - 1;
+			query.forEach(function(value, depth){
+				var camelCaseValue = (depth != maxDepth)
+					? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
+					: query
+				;
+				if( vs.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
+					object = object[camelCaseValue];
+				}
+				else if( object[camelCaseValue] !== undefined ) {
+					found = object[camelCaseValue];
+					return false;
+				}
+				else if( vs.isPlainObject( object[value] ) && (depth != maxDepth) ) {
+					object = object[value];
+				}
+				else if( object[value] !== undefined ) {
+					found = object[value];
+					return false;
+				}
+				else {
+					return false;
+				}
+			});
+		}
+
+		if(typeof found === 'function'){
+			response = found.apply(element, passedArguments);
+		} else if(found !== undefined) {
+			response = found;
+		}
+
+		return response;
+	},
+	isPlainObject: function(obj){
+		if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
+			return false;
+		}
+
+		if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, 'isPrototypeOf')) {
+			return false;
+		}
+
+		return true;
+	},
+	extend: function(){
+		var extended = {};
+		var deep = false;
+		var i = 0;
+		var length = arguments.length;
+
+		if ( Object.prototype.toString.call( arguments[0] ) === '[object Boolean]' ) {
+			deep = arguments[0];
+			i++;
+		}
+
+		var merge = function (obj) {
+			for ( var prop in obj ) {
+				if ( Object.prototype.hasOwnProperty.call( obj, prop ) ) {
+					if ( deep && Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
+						extended[prop] = vs.extend( true, extended[prop], obj[prop] );
+					} else {
+						extended[prop] = obj[prop];
+					}
+				}
+			}
+		};
+
+		for ( ; i < length; i++ ) {
+			var obj = arguments[i];
+			merge(obj);
+		}
+
+		return extended;
+	},
+	isVisible: function(e){
+    	return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
+	},
+	fadeIn: function(elem, display){
+		elem.style.opacity = 0;
+		elem.style.display = display || "block";
+
+		(function fade(){
+			var val = parseFloat(elem.style.opacity) + .1;
+			
+			if(val <= 1){
+				elem.style.opacity = val;
+				requestAnimationFrame(fade);
+			}
+		})();
+	},
+	fadeOut: function(elem){//might not be used
+		elem.style.opacity = 1;
+
+		(function fade() {
+			if ((elem.style.opacity -= .1) < 0) {
+				elem.style.display = "none";
+			} else {
+				requestAnimationFrame(fade);
+			}
+		})();
+	}
+};
 /*!
  * # Vanilla Semantic UI 0.0.1 - Site
  * http://github.com/semantic-org/semantic-ui/
@@ -9950,503 +10084,372 @@ $.fn.modal.settings = {
  *
  */
 
-;(function ($, window, document, undefined) {
+;(function(vs, window, document, undefined){
+	'use strict';
 
-'use strict';
+	if(typeof window == 'undefined' || window.Math != Math){
+		if(typeof self == 'undefined' || self.Math != Math){
+			window = Function('return this')();
+		} else {
+			window = self;
+		}
+	}
 
-window = (typeof window != 'undefined' && window.Math == Math)
-  ? window
-  : (typeof self != 'undefined' && self.Math == Math)
-    ? self
-    : Function('return this')()
-;
+	vs.nag = function(selector, parameters){
+		var modules = vs.parse(selector),
+			time = new Date().getTime(),
+			performance = [];
 
-$.fn.nag = function(parameters) {
-  var
-    $allModules    = $(this),
-    moduleSelector = $allModules.selector || '',
+		modules.forEach(function(element){
+			var settings = vs.extendSettings("nag", parameters),
+				className = settings.className,
+				selector = settings.selector,
+				error = settings.error,
+				namespace = settings.namespace,
+				eventNamespace = '.' + namespace,
+				moduleNamespace = namespace + 'Module',
+				context = document.querySelector(settings.context ? settings.context : "body"),
+				instance = element[moduleNamespace],
+				moduleOffset,
+				moduleHeight,
+				contextWidth,
+				contextHeight,
+				contextOffset,
+				yOffset,
+				yPosition,
+				timer,
+				module,
+				requestAnimationFrame = window.requestAnimationFrame
+					|| window.mozRequestAnimationFrame
+					|| window.webkitRequestAnimationFrame
+					|| window.msRequestAnimationFrame
+					|| function(callback){ setTimeout(callback, 0); };
 
-    time           = new Date().getTime(),
-    performance    = [],
+			module = {
+				initialize: function(){
+					module.verbose('Initializing element');
 
-    query          = arguments[0],
-    methodInvoked  = (typeof query == 'string'),
-    queryArguments = [].slice.call(arguments, 1),
-    returnedValue
-  ;
-  $allModules
-    .each(function() {
-      var
-        settings          = ( $.isPlainObject(parameters) )
-          ? $.extend(true, {}, $.fn.nag.settings, parameters)
-          : $.extend({}, $.fn.nag.settings),
+					//$module
+					//	.on('click' + eventNamespace, selector.close, module.dismiss)
 
-        className       = settings.className,
-        selector        = settings.selector,
-        error           = settings.error,
-        namespace       = settings.namespace,
+					element.onclick = module.dismiss;
+					element[moduleNamespace] = module;
 
-        eventNamespace  = '.' + namespace,
-        moduleNamespace = namespace + '-module',
+					if(settings.detachable && $module.parentElement !== context){
+						element.remove();
+						context.prepend(element);
+					}
 
-        $module         = $(this),
+					if(settings.displayTime > 0){
+						setTimeout(module.hide, settings.displayTime);
+					} else {
+						element.style.display = "none";
+					}
 
-        $close          = $module.find(selector.close),
-        $context        = (settings.context)
-          ? $(settings.context)
-          : $('body'),
+					module.show();
+				},
+				destroy: function(){
+					module.verbose('Destroying instance');
+					element.onclick = undefined;
+					element[moduleNamespace] = undefined;
+				},
+				show: function(){
+					if(module.should.show() && !vs.isVisible(element)){
+						console.log("hey")
+						module.debug('Showing nag', settings.animation.show);
+						if(settings.animation.show == 'fade'){
+							//$module.fadeIn(settings.duration, settings.easing);
+							vs.fadeIn(element);
+						}
+						else {
+							//$module.slideDown(settings.duration, settings.easing);
+							vs.fadeIn(element);
+						}
+					}
+				},
+				hide: function(){
+					module.debug('Showing nag', settings.animation.hide);
+					if(settings.animation.show == 'fade'){
+						//$module.fadeIn(settings.duration, settings.easing);
+						vs.fadeOut(element);
+					}
+					else {
+						//$module.slideUp(settings.duration, settings.easing);
+						vs.fadeOut(element);
+					}
+				},
+				onHide: function(){
+					module.debug('Removing nag', settings.animation.hide);
+					element.parentNode.removeChild(element);
 
-        element         = this,
-        instance        = $module.data(moduleNamespace),
+					if(settings.onHide){
+						settings.onHide();
+					}
+				},
+				dismiss: function(event){
+					if(settings.storageMethod){
+						module.storage.set(settings.key, settings.value);
+					}
+					module.hide();
+					event.stopImmediatePropagation();
+					event.preventDefault();
+				},
+				should: {
+					show: function(){
+						if(settings.persist){
+							module.debug('Persistent nag is set, can show nag');
+							return true;
+						}
+						if( module.storage.get(settings.key) != settings.value.toString() ){
+							module.debug('Stored value is not set, can show nag', module.storage.get(settings.key));
+							return true;
+						}
+						module.debug('Stored value is set, cannot show nag', module.storage.get(settings.key));
+						return false;
+					}
+				},
+				get: {
+					storageOptions: function(){
+						var options = {};
 
-        moduleOffset,
-        moduleHeight,
+						if(settings.expires){
+							options.expires = settings.expires;
+						}
+						if(settings.domain){
+							options.domain = settings.domain;
+						}
+						if(settings.path){
+							options.path = settings.path;
+						}
 
-        contextWidth,
-        contextHeight,
-        contextOffset,
+						return options;
+					}
+				},
+				clear: function(){
+					module.storage.remove(settings.key);
+				},
+				storage: {
+					set: function(key, value){
+						var options = module.get.storageOptions();
 
-        yOffset,
-        yPosition,
+						if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined){
+							window.localStorage.setItem(key, value);
+							module.debug('Value stored using local storage', key, value);
+						} else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined){
+							window.sessionStorage.setItem(key, value);
+							module.debug('Value stored using session storage', key, value);
+						} else if(document.cookie !== undefined){
+							//$.cookie(key, value, options);
 
-        timer,
-        module,
+							document.cookie = key + "=" + value + ";" +
+								"expires=" + options.expires + ";" +
+								//"domain=" + options.domain + ";" +
+								"path=" + options.path;
 
-        requestAnimationFrame = window.requestAnimationFrame
-          || window.mozRequestAnimationFrame
-          || window.webkitRequestAnimationFrame
-          || window.msRequestAnimationFrame
-          || function(callback) { setTimeout(callback, 0); }
-      ;
-      module = {
+							module.debug('Value stored using cookie', key, value, options);
+						} else {
+							module.error(error.noCookieStorage);
+							return;
+						}
+					},
+					get: function(key, value){
+						var storedValue;
 
-        initialize: function() {
-          module.verbose('Initializing element');
+						if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined){
+							storedValue = window.localStorage.getItem(key);
+						} else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined){
+							storedValue = window.sessionStorage.getItem(key);
+						} else if(document.cookie !== undefined){
+							var reg = new RegExp("[; ]" + key + "=([^\\s;]*)");
+							var sMatch = (' ' + document.cookie).match(reg);
+ 							storedValue = sMatch[1];
+						} else {
+							module.error(error.noCookieStorage);
+						}
 
-          $module
-            .on('click' + eventNamespace, selector.close, module.dismiss)
-            .data(moduleNamespace, module)
-          ;
+						if(storedValue == 'undefined' || storedValue == 'null' || storedValue === undefined || storedValue === null){
+							storedValue = undefined;
+						}
 
-          if(settings.detachable && $module.parent()[0] !== $context[0]) {
-            $module
-              .detach()
-              .prependTo($context)
-            ;
-          }
+						return storedValue;
+					},
+					remove: function(key){
+						var options = module.get.storageOptions();
 
-          if(settings.displayTime > 0) {
-            setTimeout(module.hide, settings.displayTime);
-          }
-          module.show();
-        },
+						if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined){
+							window.localStorage.removeItem(key);
+						} else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined){
+							window.sessionStorage.removeItem(key);
+						} else if(document.cookie !== undefined){
+							document.cookie = key + "=;" +
+								"expires=Thu, 01 Jan 1970 00:00:00 GMT;" +
+								//"domain=" + options.domain + ";" +
+								"path=" + options.path;
+						} else {
+							module.error(error.noStorage);
+						}
+					}
+				},
+				setting: function(name, value){
+					module.debug('Changing setting', name, value);
+					if( vs.isPlainObject(name) ){
+						vs.extend(true, settings, name);
+					}
+					else if(value !== undefined){
+						if(vs.isPlainObject(settings[name])){
+							vs.extend(true, settings[name], value);
+						}
+						else {
+							settings[name] = value;
+						}
+					}
+					else {
+						return settings[name];
+					}
+				},
+				internal: function(name, value){
+					if( vs.isPlainObject(name) ){
+						vs.extend(true, module, name);
+					}
+					else if(value !== undefined){
+						module[name] = value;
+					}
+					else {
+						return module[name];
+					}
+				},
+				debug: function(){
+					if(!settings.silent && settings.debug){
+						if(settings.performance){
+							module.performance.log(arguments);
+						}
+						else {
+							module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
+							module.debug.apply(console, arguments);
+						}
+					}
+				},
+				verbose: function(){
+					if(!settings.silent && settings.verbose && settings.debug){
+						if(settings.performance){
+							module.performance.log(arguments);
+						}
+						else {
+							module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
+							module.verbose.apply(console, arguments);
+						}
+					}
+				},
+				error: function(){
+					if(!settings.silent){
+						module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
+						module.error.apply(console, arguments);
+					}
+				},
+				performance: {
+					log: function(message){
+						var
+							currentTime,
+							executionTime,
+							previousTime
+						;
+						if(settings.performance){
+							currentTime   = new Date().getTime();
+							previousTime  = time || currentTime;
+							executionTime = currentTime - previousTime;
+							time          = currentTime;
+							performance.push({
+								'Name'           : message[0],
+								'Arguments'      : [].slice.call(message, 1) || '',
+								'Element'        : element,
+								'Execution Time' : executionTime
+							});
+						}
+						clearTimeout(module.performance.timer);
+						module.performance.timer = setTimeout(module.performance.display, 500);
+					},
+					display: function(){
+						var title = settings.name + ':',
+							totalTime = 0;
 
-        destroy: function() {
-          module.verbose('Destroying instance');
-          $module
-            .removeData(moduleNamespace)
-            .off(eventNamespace)
-          ;
-        },
+						time = false;
+						clearTimeout(module.performance.timer);
+						performance.forEach(function(data, index){
+							totalTime += data['Execution Time'];
+						});
+						title += ' ' + totalTime + 'ms';
+						if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
+							console.groupCollapsed(title);
+							if(console.table){
+								console.table(performance);
+							}
+							else {
+								performance.forEach(function(data, index){
+									console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
+								});
+							}
+							console.groupEnd();
+						}
+						performance = [];
+					}
+				}
+			};
 
-        show: function() {
-          if( module.should.show() && !$module.is(':visible') ) {
-            module.debug('Showing nag', settings.animation.show);
-            if(settings.animation.show == 'fade') {
-              $module
-                .fadeIn(settings.duration, settings.easing)
-              ;
-            }
-            else {
-              $module
-                .slideDown(settings.duration, settings.easing)
-              ;
-            }
-          }
-        },
+			module.initialize();
+		});
 
-        hide: function() {
-          module.debug('Showing nag', settings.animation.hide);
-          if(settings.animation.show == 'fade') {
-            $module
-              .fadeIn(settings.duration, settings.easing)
-            ;
-          }
-          else {
-            $module
-              .slideUp(settings.duration, settings.easing)
-            ;
-          }
-        },
+		return modules;
+	}
 
-        onHide: function() {
-          module.debug('Removing nag', settings.animation.hide);
-          $module.remove();
-          if (settings.onHide) {
-            settings.onHide();
-          }
-        },
+	vs.nag.settings = {
+		name        : 'Nag',
+		silent      : false,
+		debug       : false,
+		verbose     : false,
+		performance : true,
+		namespace   : 'Nag',
+		// allows cookie to be overridden
+		persist     : false,
+		// set to zero to require manually dismissal, otherwise hides on its own
+		displayTime : 0,
+		animation   : {
+			show : 'slide',
+			hide : 'slide'
+		},
+		context       : false,
+		detachable    : false,
+		expires       : 30,
+		domain        : false,
+		path          : '/',
+		// type of storage to use
+		storageMethod : 'cookie',
+		// value to store in dismissed localstorage/cookie
+		key           : 'nag',
+		value         : 'dismiss',
+		error: {
+			noCookieStorage : '$.cookie is not included. A storage solution is required.',
+			noStorage       : 'Neither $.cookie or store is defined. A storage solution is required for storing state',
+			method          : 'The method you called is not defined.'
+		},
+		className     : {
+			bottom : 'bottom',
+			fixed  : 'fixed'
+		},
+		selector      : {
+			close : '.close.icon'
+		},
+		speed         : 500,
+		easing        : 'easeOutQuad',
+		onHide: function(){}
+	};
 
-        dismiss: function(event) {
-          if(settings.storageMethod) {
-            module.storage.set(settings.key, settings.value);
-          }
-          module.hide();
-          event.stopImmediatePropagation();
-          event.preventDefault();
-        },
-
-        should: {
-          show: function() {
-            if(settings.persist) {
-              module.debug('Persistent nag is set, can show nag');
-              return true;
-            }
-            if( module.storage.get(settings.key) != settings.value.toString() ) {
-              module.debug('Stored value is not set, can show nag', module.storage.get(settings.key));
-              return true;
-            }
-            module.debug('Stored value is set, cannot show nag', module.storage.get(settings.key));
-            return false;
-          }
-        },
-
-        get: {
-          storageOptions: function() {
-            var
-              options = {}
-            ;
-            if(settings.expires) {
-              options.expires = settings.expires;
-            }
-            if(settings.domain) {
-              options.domain = settings.domain;
-            }
-            if(settings.path) {
-              options.path = settings.path;
-            }
-            return options;
-          }
-        },
-
-        clear: function() {
-          module.storage.remove(settings.key);
-        },
-
-        storage: {
-          set: function(key, value) {
-            var
-              options = module.get.storageOptions()
-            ;
-            if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined) {
-              window.localStorage.setItem(key, value);
-              module.debug('Value stored using local storage', key, value);
-            }
-            else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined) {
-              window.sessionStorage.setItem(key, value);
-              module.debug('Value stored using session storage', key, value);
-            }
-            else if($.cookie !== undefined) {
-              $.cookie(key, value, options);
-              module.debug('Value stored using cookie', key, value, options);
-            }
-            else {
-              module.error(error.noCookieStorage);
-              return;
-            }
-          },
-          get: function(key, value) {
-            var
-              storedValue
-            ;
-            if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined) {
-              storedValue = window.localStorage.getItem(key);
-            }
-            else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined) {
-              storedValue = window.sessionStorage.getItem(key);
-            }
-            // get by cookie
-            else if($.cookie !== undefined) {
-              storedValue = $.cookie(key);
-            }
-            else {
-              module.error(error.noCookieStorage);
-            }
-            if(storedValue == 'undefined' || storedValue == 'null' || storedValue === undefined || storedValue === null) {
-              storedValue = undefined;
-            }
-            return storedValue;
-          },
-          remove: function(key) {
-            var
-              options = module.get.storageOptions()
-            ;
-            if(settings.storageMethod == 'localstorage' && window.localStorage !== undefined) {
-              window.localStorage.removeItem(key);
-            }
-            else if(settings.storageMethod == 'sessionstorage' && window.sessionStorage !== undefined) {
-              window.sessionStorage.removeItem(key);
-            }
-            // store by cookie
-            else if($.cookie !== undefined) {
-              $.removeCookie(key, options);
-            }
-            else {
-              module.error(error.noStorage);
-            }
-          }
-        },
-
-        setting: function(name, value) {
-          module.debug('Changing setting', name, value);
-          if( $.isPlainObject(name) ) {
-            $.extend(true, settings, name);
-          }
-          else if(value !== undefined) {
-            if($.isPlainObject(settings[name])) {
-              $.extend(true, settings[name], value);
-            }
-            else {
-              settings[name] = value;
-            }
-          }
-          else {
-            return settings[name];
-          }
-        },
-        internal: function(name, value) {
-          if( $.isPlainObject(name) ) {
-            $.extend(true, module, name);
-          }
-          else if(value !== undefined) {
-            module[name] = value;
-          }
-          else {
-            return module[name];
-          }
-        },
-        debug: function() {
-          if(!settings.silent && settings.debug) {
-            if(settings.performance) {
-              module.performance.log(arguments);
-            }
-            else {
-              module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-              module.debug.apply(console, arguments);
-            }
-          }
-        },
-        verbose: function() {
-          if(!settings.silent && settings.verbose && settings.debug) {
-            if(settings.performance) {
-              module.performance.log(arguments);
-            }
-            else {
-              module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-              module.verbose.apply(console, arguments);
-            }
-          }
-        },
-        error: function() {
-          if(!settings.silent) {
-            module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-            module.error.apply(console, arguments);
-          }
-        },
-        performance: {
-          log: function(message) {
-            var
-              currentTime,
-              executionTime,
-              previousTime
-            ;
-            if(settings.performance) {
-              currentTime   = new Date().getTime();
-              previousTime  = time || currentTime;
-              executionTime = currentTime - previousTime;
-              time          = currentTime;
-              performance.push({
-                'Name'           : message[0],
-                'Arguments'      : [].slice.call(message, 1) || '',
-                'Element'        : element,
-                'Execution Time' : executionTime
-              });
-            }
-            clearTimeout(module.performance.timer);
-            module.performance.timer = setTimeout(module.performance.display, 500);
-          },
-          display: function() {
-            var
-              title = settings.name + ':',
-              totalTime = 0
-            ;
-            time = false;
-            clearTimeout(module.performance.timer);
-            $.each(performance, function(index, data) {
-              totalTime += data['Execution Time'];
-            });
-            title += ' ' + totalTime + 'ms';
-            if(moduleSelector) {
-              title += ' \'' + moduleSelector + '\'';
-            }
-            if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-              console.groupCollapsed(title);
-              if(console.table) {
-                console.table(performance);
-              }
-              else {
-                $.each(performance, function(index, data) {
-                  console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-                });
-              }
-              console.groupEnd();
-            }
-            performance = [];
-          }
-        },
-        invoke: function(query, passedArguments, context) {
-          var
-            object = instance,
-            maxDepth,
-            found,
-            response
-          ;
-          passedArguments = passedArguments || queryArguments;
-          context         = element         || context;
-          if(typeof query == 'string' && object !== undefined) {
-            query    = query.split(/[\. ]/);
-            maxDepth = query.length - 1;
-            $.each(query, function(depth, value) {
-              var camelCaseValue = (depth != maxDepth)
-                ? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-                : query
-              ;
-              if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-                object = object[camelCaseValue];
-              }
-              else if( object[camelCaseValue] !== undefined ) {
-                found = object[camelCaseValue];
-                return false;
-              }
-              else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-                object = object[value];
-              }
-              else if( object[value] !== undefined ) {
-                found = object[value];
-                return false;
-              }
-              else {
-                module.error(error.method, query);
-                return false;
-              }
-            });
-          }
-          if ( $.isFunction( found ) ) {
-            response = found.apply(context, passedArguments);
-          }
-          else if(found !== undefined) {
-            response = found;
-          }
-          if($.isArray(returnedValue)) {
-            returnedValue.push(response);
-          }
-          else if(returnedValue !== undefined) {
-            returnedValue = [returnedValue, response];
-          }
-          else if(response !== undefined) {
-            returnedValue = response;
-          }
-          return found;
-        }
-      };
-
-      if(methodInvoked) {
-        if(instance === undefined) {
-          module.initialize();
-        }
-        module.invoke(query);
-      }
-      else {
-        if(instance !== undefined) {
-          instance.invoke('destroy');
-        }
-        module.initialize();
-      }
-    })
-  ;
-
-  return (returnedValue !== undefined)
-    ? returnedValue
-    : this
-  ;
-};
-
-$.fn.nag.settings = {
-
-  name        : 'Nag',
-
-  silent      : false,
-  debug       : false,
-  verbose     : false,
-  performance : true,
-
-  namespace   : 'Nag',
-
-  // allows cookie to be overridden
-  persist     : false,
-
-  // set to zero to require manually dismissal, otherwise hides on its own
-  displayTime : 0,
-
-  animation   : {
-    show : 'slide',
-    hide : 'slide'
-  },
-
-  context       : false,
-  detachable    : false,
-
-  expires       : 30,
-  domain        : false,
-  path          : '/',
-
-  // type of storage to use
-  storageMethod : 'cookie',
-
-  // value to store in dismissed localstorage/cookie
-  key           : 'nag',
-  value         : 'dismiss',
-
-  error: {
-    noCookieStorage : '$.cookie is not included. A storage solution is required.',
-    noStorage       : 'Neither $.cookie or store is defined. A storage solution is required for storing state',
-    method          : 'The method you called is not defined.'
-  },
-
-  className     : {
-    bottom : 'bottom',
-    fixed  : 'fixed'
-  },
-
-  selector      : {
-    close : '.close.icon'
-  },
-
-  speed         : 500,
-  easing        : 'easeOutQuad',
-
-  onHide: function() {}
-
-};
-
-// Adds easing
-$.extend( $.easing, {
-  easeOutQuad: function (x, t, b, c, d) {
-    return -c *(t/=d)*(t-2) + b;
-  }
-});
-
-})( jQuery, window, document );
+	// Adds easing
+	$.extend( $.easing, {
+		easeOutQuad: function (x, t, b, c, d){
+			return -c *(t/=d)*(t-2) + b;
+		}
+	});
+})(vs, window, document);
 
 /*!
  * # Vanilla Semantic UI 0.0.1 - Popup
@@ -12914,7 +12917,7 @@ $.fn.progress.settings = {
  *
  */
 
-;(function(window, document, undefined){
+;(function(vs, window, document, undefined){
 	'use strict';
 
 	if(typeof window == 'undefined' || window.Math != Math){
@@ -12937,73 +12940,13 @@ $.fn.progress.settings = {
 		}
 	}
 
-	function isPlainObject(obj) {
-		if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
-			return false;
-		}
-
-		if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, 'isPrototypeOf')) {
-			return false;
-		}
-
-		return true;
-	}
-
-	function extend(){
-		var extended = {};
-		var deep = false;
-		var i = 0;
-		var length = arguments.length;
-
-		// Check if a deep merge
-		if ( Object.prototype.toString.call( arguments[0] ) === '[object Boolean]' ) {
-			deep = arguments[0];
-			i++;
-		}
-
-		// Merge the object into the extended object
-		var merge = function (obj) {
-			for ( var prop in obj ) {
-				if ( Object.prototype.hasOwnProperty.call( obj, prop ) ) {
-					// If deep merge and property is an object, merge properties
-					if ( deep && Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
-						extended[prop] = extend( true, extended[prop], obj[prop] );
-					} else {
-						extended[prop] = obj[prop];
-					}
-				}
-			}
-		};
-
-		// Loop through each object and conduct a merge
-		for ( ; i < length; i++ ) {
-			var obj = arguments[i];
-			merge(obj);
-		}
-
-		return extended;
-	}
-
-	window.VsRating = function(allModules, parameters){
-		var moduleSelector = "",
+	vs.rating = function(selector, parameters){
+		var modules = vs.parse(selector),
 			time = new Date().getTime(),
-			performance = [],
-			modules = [];
-
-		if(typeof allModules === "string"){
-			moduleSelector = allModules;
-			allModules = document.querySelectorAll(allModules);
-			allModules = [].slice.call(allModules);
-		}
-
-		if(typeof allModules !== "object"){
-			allModules = [allModules];
-		}
-
-		allModules.forEach(function(element){
-			var settings = ( isPlainObject(parameters) )
-					? extend(true, {}, window.VsRating.settings, parameters)
-					: extend({}, window.VsRating.settings),
+			performance = [];
+		
+		modules.forEach(function(element){
+			var settings = vs.extendSettings("rating", parameters),
 				namespace = settings.namespace,
 				className = settings.className,
 				metadata = settings.metadata,
@@ -13022,11 +12965,11 @@ $.fn.progress.settings = {
 					
 					console.log();
 
-					if(icons.length === 0) {
+					if(icons.length === 0){
 						module.setup.layout();
 					}
 
-					if(settings.interactive) {
+					if(settings.interactive){
 						module.enable();
 					}
 					else {
@@ -13054,7 +12997,7 @@ $.fn.progress.settings = {
 				setup: {
 					layout: function(){
 						var maxRating = module.get.maxRating(),
-							settings = window.VsRating.settings,
+							settings = vs.rating.settings,
 							html = settings.templates.icon(maxRating);
 
 						module.debug('Generating icon html dynamically');
@@ -13102,7 +13045,7 @@ $.fn.progress.settings = {
 					module.set.rating(0);
 				},
 				bind: {
-					events: function() {
+					events: function(){
 						module.verbose('Binding events');
 						element.onclick = module.event.click;
 						element.onmouseover = module.event.mouseenter;
@@ -13110,22 +13053,22 @@ $.fn.progress.settings = {
 					}
 				},
 				remove: {
-					events: function() {
+					events: function(){
 						module.verbose('Removing events');
 						element.onclick = undefined;
 						element.onmouseover = undefined;
 						element.onmouseout = undefined;
 					},
-					initialLoad: function() {
+					initialLoad: function(){
 						initialLoad = false;
 					}
 				},
-				enable: function() {
+				enable: function(){
 					module.debug('Setting rating to interactive mode');
 					module.bind.events();
 					element.classList.remove(className.disabled);
 				},
-				disable: function() {
+				disable: function(){
 					module.debug('Setting rating to read-only mode');
 					module.remove.events();
 					element.classList.add(className.disabled);
@@ -13139,21 +13082,21 @@ $.fn.progress.settings = {
 					initialRating: function(){
 						var rating = element.dataset[metadata.rating];
 
-						if(rating !== undefined) {
+						if(rating !== undefined){
 							element.removeAttribute("data-" + metadata.rating);
 							return rating;
 						}
 
 						return settings.initialRating;
 					},
-					maxRating: function() {
+					maxRating: function(){
 						if(element.dataset[metadata.maxRating] !== undefined){
 							element.dataset[metadata.maxRating] = null;
 							return element.dataset[metadata.maxRating];
 						}
 						return settings.maxRating;
 					},
-					rating: function() {
+					rating: function(){
 						var currentRating = icons.filter(function(elem){
 							return elem.matches('.' + className.active);
 						}).length;
@@ -13162,7 +13105,7 @@ $.fn.progress.settings = {
 					}
 				},
 				set: {
-					rating: function(rating) {
+					rating: function(rating){
 						var ratingIndex = rating - 1 >= 0 ? rating - 1 : 0,
 							activeIcon = icons[ratingIndex];
 
@@ -13173,27 +13116,27 @@ $.fn.progress.settings = {
 							icons[i].classList.remove(className.active);
 						}
 
-						if(rating > 0) {
+						if(rating > 0){
 							module.verbose('Setting current rating to', rating);
 							activeIcon.classList.add(className.active);
 							prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
 						}
-						if(!module.is.initialLoad()) {
+						if(!module.is.initialLoad()){
 							settings.onRate.call(element, rating);
 						}
 					},
-					initialLoad: function() {
+					initialLoad: function(){
 						initialLoad = true;
 					}
 				},
-				setting: function(name, value) {
+				setting: function(name, value){
 					module.debug('Changing setting', name, value);
-					if( isPlainObject(name) ) {
-						extend(true, settings, name);
+					if(vs.isPlainObject(name)){
+						vs.extend(true, settings, name);
 					}
-					else if(value !== undefined) {
-						if(isPlainObject(settings[name])) {
-							extend(true, settings[name], value);
+					else if(value !== undefined){
+						if(isPlainObject(settings[name])){
+							vs.extend(true, settings[name], value);
 						}
 						else {
 							settings[name] = value;
@@ -13203,20 +13146,20 @@ $.fn.progress.settings = {
 						return settings[name];
 					}
 				},
-				internal: function(name, value) {
-					if(isPlainObject(name)){
-						extend(true, module, name);
+				internal: function(name, value){
+					if(vs.isPlainObject(name)){
+						vs.extend(true, module, name);
 					}
-					else if(value !== undefined) {
+					else if(value !== undefined){
 						module[name] = value;
 					}
 					else {
 						return module[name];
 					}
 				},
-				debug: function() {
-					if(!settings.silent && settings.debug) {
-						if(settings.performance) {
+				debug: function(){
+					if(!settings.silent && settings.debug){
+						if(settings.performance){
 							module.performance.log(arguments);
 						}
 						else {
@@ -13225,9 +13168,9 @@ $.fn.progress.settings = {
 						}
 					}
 				},
-				verbose: function() {
-					if(!settings.silent && settings.verbose && settings.debug) {
-						if(settings.performance) {
+				verbose: function(){
+					if(!settings.silent && settings.verbose && settings.debug){
+						if(settings.performance){
 							module.performance.log(arguments);
 						}
 						else {
@@ -13236,20 +13179,20 @@ $.fn.progress.settings = {
 						}
 					}
 				},
-				error: function() {
-					if(!settings.silent) {
+				error: function(){
+					if(!settings.silent){
 						module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
 						module.error.apply(console, arguments);
 					}
 				},
 				performance: {
-					log: function(message) {
+					log: function(message){
 						var
 							currentTime,
 							executionTime,
 							previousTime
 						;
-						if(settings.performance) {
+						if(settings.performance){
 							currentTime   = new Date().getTime();
 							previousTime  = time || currentTime;
 							executionTime = currentTime - previousTime;
@@ -13264,7 +13207,7 @@ $.fn.progress.settings = {
 						clearTimeout(module.performance.timer);
 						module.performance.timer = setTimeout(module.performance.display, 500);
 					},
-					display: function() {
+					display: function(){
 						var
 							title = settings.name + ':',
 							totalTime = 0
@@ -13275,19 +13218,16 @@ $.fn.progress.settings = {
 							totalTime += data['Execution Time'];
 						});
 						title += ' ' + totalTime + 'ms';
-						if(moduleSelector) {
-							title += ' \'' + moduleSelector + '\'';
+						if(modules.length > 1){
+							title += ' ' + '(' + modules.length + ')';
 						}
-						if(allModules.length > 1) {
-							title += ' ' + '(' + allModules.length + ')';
-						}
-						if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
+						if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
 							console.groupCollapsed(title);
-							if(console.table) {
+							if(console.table){
 								console.table(performance);
 							}
 							else {
-								performance.forEach(function(data, index) {
+								performance.forEach(function(data, index){
 									console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
 								});
 							}
@@ -13295,59 +13235,16 @@ $.fn.progress.settings = {
 						}
 						performance = [];
 					}
-				},
-				invoke: function(query, passedArguments){
-					var object = instance,
-						maxDepth,
-						found,
-						response;
-
-					if(typeof query == 'string' && object !== undefined) {
-						query    = query.split(/[\. ]/);
-						maxDepth = query.length - 1;
-						query.forEach(function(value, depth){
-							var camelCaseValue = (depth != maxDepth)
-								? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
-								: query
-							;
-							if( isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-								object = object[camelCaseValue];
-							}
-							else if( object[camelCaseValue] !== undefined ) {
-								found = object[camelCaseValue];
-								return false;
-							}
-							else if( isPlainObject( object[value] ) && (depth != maxDepth) ) {
-								object = object[value];
-							}
-							else if( object[value] !== undefined ) {
-								found = object[value];
-								return false;
-							}
-							else {
-								return false;
-							}
-						});
-					}
-
-					if(typeof found === 'function'){
-						response = found.apply(element, passedArguments);
-					} else if(found !== undefined) {
-						response = found;
-					}
-
-					return response;
 				}
 			}
 
 			module.initialize();
-			modules.push(module);
 		});
 
 		return modules;
-	};
+	}
 
-	window.VsRating.settings = {
+	vs.rating.settings = {
 		name: 'Rating',
 		namespace: 'rating',
 		slent: false,
@@ -13391,7 +13288,7 @@ $.fn.progress.settings = {
 			}
 		}
 	};
-})(window, document);
+})(vs, window, document);
 
 /*!
  * # Vanilla Semantic UI 0.0.1 - Search
