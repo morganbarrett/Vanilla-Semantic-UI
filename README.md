@@ -63,7 +63,7 @@ $('.star.rating').rating({
 ```
 #### New (Vanilla) way
 ```javascript
-VsRating('.star.rating', {
+vs.rating('.star.rating', {
 	initialRating: 3
 });
 ```

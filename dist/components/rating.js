@@ -8,7 +8,7 @@
  *
  */
 
-;(function(window, document, undefined){
+;(function(vs, window, document, undefined){
 	'use strict';
 
 	if(typeof window == 'undefined' || window.Math != Math){
@@ -78,7 +78,7 @@
 		return extended;
 	}
 
-	window.VsRating = function(allModules, parameters){
+	vs.rating = function(allModules, parameters){
 		var moduleSelector = "",
 			time = new Date().getTime(),
 			performance = [],
@@ -96,8 +96,8 @@
 
 		allModules.forEach(function(element){
 			var settings = ( isPlainObject(parameters) )
-					? extend(true, {}, window.VsRating.settings, parameters)
-					: extend({}, window.VsRating.settings),
+					? extend(true, {}, vs.rating.settings, parameters)
+					: extend({}, vs.rating.settings),
 				namespace = settings.namespace,
 				className = settings.className,
 				metadata = settings.metadata,
@@ -148,7 +148,7 @@
 				setup: {
 					layout: function(){
 						var maxRating = module.get.maxRating(),
-							settings = window.VsRating.settings,
+							settings = vs.rating.settings,
 							html = settings.templates.icon(maxRating);
 
 						module.debug('Generating icon html dynamically');
@@ -439,9 +439,9 @@
 		});
 
 		return modules;
-	};
+	}
 
-	window.VsRating.settings = {
+	vs.rating.settings = {
 		name: 'Rating',
 		namespace: 'rating',
 		slent: false,
@@ -485,4 +485,4 @@
 			}
 		}
 	};
-})(window, document);
+})(vs, window, document);

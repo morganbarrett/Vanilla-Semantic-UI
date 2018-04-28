@@ -42,7 +42,8 @@ module.exports = {
 
   // components to include in package
   components: [
-
+    "vs",
+    
     // global
     'reset',
     'site',
