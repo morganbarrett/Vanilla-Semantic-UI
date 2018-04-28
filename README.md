@@ -39,7 +39,7 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 #### Modules
 * accordion.js
 * checkbox.js
-* dimmer.js
+* ~~dimmer.js~~ ✓
 * dropdown.js
 * embed.js
 * modal.js

@@ -19,7 +19,7 @@ var vs = {
 			args.push(parameters);
 		}
 
-		return this.extend(...args);
+		return this.extend.apply(this, args);
 	},
 	invoke: function(query, passedArguments){
 		var object = instance,
@@ -107,25 +107,35 @@ var vs = {
 	isVisible: function(e){
     	return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 	},
-	fadeIn: function(elem, display){
+	fadeIn: function(elem, opts){//duration
 		elem.style.opacity = 0;
-		elem.style.display = display || "block";
+		elem.style.display = opts.display || "block";
+
+		var to = opts.to ? opts.to : 1;
 
 		(function fade(){
 			var val = parseFloat(elem.style.opacity) + .1;
 			
-			if(val <= 1){
+			if(val <= to){
 				elem.style.opacity = val;
 				requestAnimationFrame(fade);
+			} else {
+				if(typeof opts.ondone == "function"){
+					opts.ondone();
+				}
 			}
 		})();
 	},
-	fadeOut: function(elem){//might not be used
+	fadeOut: function(elem, opts){//duration
 		elem.style.opacity = 1;
 
 		(function fade() {
 			if ((elem.style.opacity -= .1) < 0) {
 				elem.style.display = "none";
+
+				if(typeof opts.ondone == "function"){
+					opts.ondone();
+				}
 			} else {
 				requestAnimationFrame(fade);
 			}

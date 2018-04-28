@@ -82,24 +82,32 @@
 						console.log("hey")
 						module.debug('Showing nag', settings.animation.show);
 						if(settings.animation.show == 'fade'){
-							//$module.fadeIn(settings.duration, settings.easing);
-							vs.fadeIn(element);
+							vs.fadeIn(element, {
+								duration: settings.duration,
+								easing: settings.easing
+							});
 						}
 						else {
-							//$module.slideDown(settings.duration, settings.easing);
-							vs.fadeIn(element);
+							vs.fadeIn(element, {
+								duration: settings.duration,
+								easing: settings.easing
+							});
 						}
 					}
 				},
 				hide: function(){
 					module.debug('Showing nag', settings.animation.hide);
 					if(settings.animation.show == 'fade'){
-						//$module.fadeIn(settings.duration, settings.easing);
-						vs.fadeOut(element);
+						vs.fadeOut(element, {
+							duration: settings.duration,
+							easing: settings.easing
+						});
 					}
 					else {
-						//$module.slideUp(settings.duration, settings.easing);
-						vs.fadeOut(element);
+						vs.fadeOut(element, {
+							duration: settings.duration,
+							easing: settings.easing
+						});
 					}
 				},
 				onHide: function(){
