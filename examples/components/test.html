@@ -30,8 +30,9 @@
   <script type="text/javascript" src="../../dist/components/vs.js"></script>
   <script type="text/javascript" src="../../dist/components/rating.js"></script>
   <script type="text/javascript" src="../../dist/components/nag.js"></script>
-  <script type="text/javascript" src="../../dist/components/popup.js"></script>
   <script type="text/javascript" src="../../dist/components/dimmer.js"></script>
+
+  <script type="text/javascript" src="../../dist/components/popup.js"></script>
   <script type="text/javascript" src="../../dist/components/transition.js"></script>
 
   <!--- Show Names -->
@@ -46,27 +47,19 @@
 
   <!--- Example Javascript -->
   <script>
-  $(document)
-    .ready(function() {
-      var ratings = vs.rating(".star.rating"),
-          nag = vs.nag(".cookie.nag", {
-            key: "accepts-cookies",
-            value: true
-          });
-
-
-      $('.special.card .image').dimmer({
-        on: 'hover'
-      });
-      
-      
-      $('.card .dimmer')
-        .dimmer({
+  $(document).ready(function() {
+    var ratings = vs.rating(".star.rating"),
+        nag = vs.nag(".cookie.nag", {
+          key: "accepts-cookies",
+          value: true
+        }),
+        dimmer = vs.dimmer(".special.card .image", {
           on: 'hover'
-        })
-      ;
-    })
-  ;
+        }),
+        dimmer2 = vs.dimmer(".card .dimmer", {
+          on: 'hover'
+        });
+  });
   </script>
 </head>
 

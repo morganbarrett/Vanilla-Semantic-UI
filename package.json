@@ -14,7 +14,7 @@
     "url": "https://github.com/morganbarrett/Vanilla-Semantic-UI/issues"
   },
   "scripts": {
-    "install": "gulp install"
+    "gInstall": "gulp install"
   },
   "peerDependencies": {
     "better-console": "*",
@@ -65,7 +65,7 @@
     "gulp-help": "^1.6.1",
     "gulp-if": "^2.0.2",
     "gulp-json-editor": "^2.2.1",
-    "gulp-less": "^3.3.2",
+    "gulp-less": "^4.0.0",
     "gulp-clean-css": "^3.7.0",
     "gulp-notify": "^3.0.0",
     "gulp-plumber": "^1.1.0",
