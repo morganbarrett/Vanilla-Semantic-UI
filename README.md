@@ -1,6 +1,12 @@
-![Semantic](http://semantic-ui.com/images/logo.png)
+<p align="center">
+  <a href="https://react.semantic-ui.com">
+    <img height="200" src="https://raw.githubusercontent.com/morganbarrett/Vanilla-Semantic-UI/master/logo.png">
+  </a>
+</p>
 
-# Vanilla Semantic UI
+<h1 align="center">
+	Vanilla Semantic UI
+</h1>
 
 Vanilla Semantic UI removes the jQuery dependency from [Semantic](http://www.semantic-ui.com), a UI framework designed for theming.
 
