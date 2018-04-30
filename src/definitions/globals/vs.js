@@ -1,5 +1,5 @@
 /*!
- * # Vanilla Semantic UI 0.0.1 - Core
+ * # Vanilla Semantic UI - Core
  * http://github.com/morganbarrett/vanilla-semantic-ui/
  *
  * Released under the MIT license

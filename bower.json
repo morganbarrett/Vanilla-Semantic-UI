@@ -5,9 +5,7 @@
   "author": {
     "name" : "Morgan Barrett"
   },
-  "dependencies": {
-    "jquery"      : ">=1.8"
-  },
+  "dependencies": {},
   "main": [
     "src/semantic.less",
     "dist/semantic.js"

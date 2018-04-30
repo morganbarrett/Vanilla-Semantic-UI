@@ -8,6 +8,8 @@ var
 module.exports = {
 
   banner : release.banner,
+  head : release.head,
+  foot : release.foot,
 
   log: {
     created: function(file) {
@@ -39,8 +41,8 @@ module.exports = {
 
       // add version to first comment
       license: {
-        in  : /(^\/\*[\s\S]+)( Semantic UI )([\s\S]+?\*\/)/,
-        out : '$1 Vanilla$2' + release.version + ' $3'
+        in  : /(^\/\*[\s\S]+)( Vanilla Semantic UI )([\s\S]+?\*\/)/,
+        out : '$1$2' + release.version + ' $3'
       },
 
       // adds uniform spacing around comments

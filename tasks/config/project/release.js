@@ -56,7 +56,13 @@ module.exports = {
     + ' * Released under the MIT license' + '\n'
     + ' * http://opensource.org/licenses/MIT' + '\n'
     + ' *' + '\n'
-    + ' */' + '\n',
+    + ' */' + '\n\n',
+
+  head: "var vs = (function(window, document, undefined){\n" +
+          "\t'use strict';\n\n",
+
+  foot:   '\n\treturn vs;' +
+        '\n})(window, document);\n',
 
   version    : version
 

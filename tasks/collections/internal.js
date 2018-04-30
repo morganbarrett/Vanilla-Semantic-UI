@@ -18,7 +18,9 @@ module.exports = function(gulp) {
     clone      = require('gulp-clone'),
     dedupe     = require('gulp-dedupe'),
     gulpif     = require('gulp-if'),
+    indent     = require('gulp-indent'),
     header     = require('gulp-header'),
+    footer     = require('gulp-footer'),
     less       = require('gulp-less'),
     minifyCSS  = require('gulp-clean-css'),
     plumber    = require('gulp-plumber'),
@@ -41,6 +43,8 @@ module.exports = function(gulp) {
     output     = config.paths.output,
 
     banner     = tasks.banner,
+    head       = tasks.head,
+    foot       = tasks.foot,
     filenames  = tasks.filenames,
     log        = tasks.log,
     settings   = tasks.settings
@@ -83,7 +87,12 @@ module.exports = function(gulp) {
       .pipe(dedupe())
       .pipe(replace(assets.uncompressed, assets.packaged))
       .pipe(concat(filenames.concatenatedJS))
-        .pipe(header(banner, settings.header))
+        .pipe(indent({
+          tabs:true,
+          amount:1
+        }))
+        .pipe(header(banner + head, settings.header))
+        .pipe(footer(foot))
         .pipe(gulpif(config.hasPermission, chmod(config.permission)))
         .pipe(gulp.dest(output.packaged))
         .pipe(print(log.created))
@@ -96,6 +105,12 @@ module.exports = function(gulp) {
       .pipe(dedupe())
       .pipe(replace(assets.uncompressed, assets.packaged))
       .pipe(concat(filenames.concatenatedMinifiedJS))
+        .pipe(indent({
+          tabs:true,
+          amount:1
+        }))
+        .pipe(header(head))
+        .pipe(footer(foot))
         .pipe(uglify(settings.concatUglify))
         .pipe(header(banner, settings.header))
         .pipe(gulpif(config.hasPermission, chmod(config.permission)))
@@ -203,7 +218,12 @@ module.exports = function(gulp) {
       .pipe(plumber())
       .pipe(replace(assets.uncompressed, assets.packaged))
       .pipe(concat(filenames.concatenatedJS))
-        .pipe(header(banner, settings.header))
+        .pipe(indent({
+          tabs:true,
+          amount:1
+        }))
+        .pipe(header(banner + head, settings.header))
+        .pipe(footer(foot))
         .pipe(gulpif(config.hasPermission, chmod(config.permission)))
         .pipe(gulp.dest(docsOutput.packaged))
         .pipe(print(log.created))
@@ -217,7 +237,12 @@ module.exports = function(gulp) {
       .pipe(replace(assets.uncompressed, assets.packaged))
       .pipe(concat(filenames.concatenatedMinifiedJS))
         .pipe(uglify(settings.concatUglify))
-        .pipe(header(banner, settings.header))
+        .pipe(indent({
+          tabs:true,
+          amount:1
+        }))
+        .pipe(header(banner + head, settings.header))
+        .pipe(footer(foot))
         .pipe(gulpif(config.hasPermission, chmod(config.permission)))
         .pipe(gulp.dest(docsOutput.packaged))
         .pipe(print(log.created))

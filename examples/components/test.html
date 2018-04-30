@@ -27,7 +27,9 @@
   <!--- Component JS -->
   <script src="../assets/library/jquery.min.js"></script>
   <script src="../assets/library/iframe-content.js"></script>
+
   <script type="text/javascript" src="../../dist/components/vs.js"></script>
+  <script type="text/javascript" src="../../dist/components/utils.js"></script>
   <script type="text/javascript" src="../../dist/components/rating.js"></script>
   <script type="text/javascript" src="../../dist/components/nag.js"></script>
   <script type="text/javascript" src="../../dist/components/dimmer.js"></script>
@@ -48,12 +50,12 @@
   <!--- Example Javascript -->
   <script>
   $(document).ready(function() {
-    var ratings = vs.rating(".star.rating"),
-        nag = vs.nag(".cookie.nag", {
+    var ratings = vs(".star.rating").rating(),
+        nag = vs(".cookie.nag").nag({
           key: "accepts-cookies",
-          value: true
+          value: "bob"
         }),
-        dimmer = vs.dimmer(".card .dimmer", {
+        dimmer = vs(".card .dimmer").dimmer({
           on: 'hover'
         });
   });

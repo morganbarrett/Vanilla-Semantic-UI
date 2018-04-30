@@ -8,9 +8,7 @@
  *
  */
 
-;(function ($, window, document, undefined) {
-
-$.site = $.fn.site = function(parameters) {
+/*$.site = $.fn.site = function(parameters) {
   var
     time           = new Date().getTime(),
     performance    = [],
@@ -481,7 +479,4 @@ $.extend($.expr[ ":" ], {
       // support: jQuery < 1.8
       return !!$.data(elem, match[ 3 ]);
     }
-});
-
-
-})( jQuery, window, document );
+});*/

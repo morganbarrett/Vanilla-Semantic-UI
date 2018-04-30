@@ -41,10 +41,10 @@ module.exports = {
   },
 
   // components to include in package
-  components: [
+  components: [    
+    // globals
     "vs",
-    
-    // global
+    "utils",
     'reset',
     'site',
 

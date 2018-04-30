@@ -12,8 +12,7 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
-      // require jquery
-      'server/files/javascript/library/jquery.js',
+ 
       // read css from compiled css
       'docs/build/uncompressed/**/*.css',
       // read js from src js

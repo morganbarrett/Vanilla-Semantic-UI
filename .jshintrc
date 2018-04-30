@@ -9,7 +9,6 @@
     "describe"              : true,
     "expect"                : true,
     "it"                    : true,
-    "jQuery"                : true,
     "loadFixtures"          : true,
     "module"                : true,
     "requestAnimationFrame" : true,

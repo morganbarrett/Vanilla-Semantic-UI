@@ -8,18 +8,7 @@
  *
  */
 
-;(function ($, window, document, undefined) {
-
-'use strict';
-
-window = (typeof window != 'undefined' && window.Math == Math)
-  ? window
-  : (typeof self != 'undefined' && self.Math == Math)
-    ? self
-    : Function('return this')()
-;
-
-$.fn.visibility = function(parameters) {
+/*$.fn.visibility = function(parameters) {
   var
     $allModules    = $(this),
     moduleSelector = $allModules.selector || '',
@@ -1305,7 +1294,4 @@ $.fn.visibility.settings = {
     method  : 'The method you called is not defined.',
     visible : 'Element is hidden, you must call refresh after element becomes visible'
   }
-
-};
-
-})( jQuery, window, document );
+};*/

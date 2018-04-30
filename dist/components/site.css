@@ -1,5 +1,5 @@
 /*!
- * # Vanilla Semantic UI 0.0.1 - Site
+ * # Semantic UI - Site
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -13,7 +13,12 @@
              Page
 *******************************/
 
-@import url('https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic&subset=latin');
+@font-face {
+  font-family: 'Gothic A1';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Gothic A1 Regular'), local('GothicA1-Regular'), url(https://fonts.gstatic.com/s/gothica1/v2/CSR94z5ZnPydRjlCCwlKa8cq.ttf) format('truetype');
+}
 html,
 body {
   height: 100%;

@@ -1,15 +1,15 @@
 /*******************************
-             Docs
+             Vanilla-Semantic-UI-Docs
 *******************************/
 
-/* Paths used for "serve-docs" and "build-docs" tasks */
+/* Paths used for "serve-Vanilla-Semantic-UI-Docs" and "build-Vanilla-Semantic-UI-Docs" tasks */
 module.exports = {
   base: '',
   globs: {
     eco: '**/*.html.eco'
   },
   paths: {
-    clean: '../docs/out/dist/',
+    clean: '../Vanilla-Semantic-UI-Docs/out/dist/',
     source: {
       config      : 'src/theme.config',
       definitions : 'src/definitions/',
@@ -17,16 +17,16 @@ module.exports = {
       themes      : 'src/themes/'
     },
     output: {
-      examples     : '../docs/out/examples/',
-      less         : '../docs/out/src/',
-      metadata     : '../docs/out/',
-      packaged     : '../docs/out/dist/',
-      uncompressed : '../docs/out/dist/components/',
-      compressed   : '../docs/out/dist/components/',
-      themes       : '../docs/out/dist/themes/'
+      examples     : '../Vanilla-Semantic-UI-Docs/out/examples/',
+      less         : '../Vanilla-Semantic-UI-Docs/out/src/',
+      metadata     : '../Vanilla-Semantic-UI-Docs/out/',
+      packaged     : '../Vanilla-Semantic-UI-Docs/out/dist/',
+      uncompressed : '../Vanilla-Semantic-UI-Docs/out/dist/components/',
+      compressed   : '../Vanilla-Semantic-UI-Docs/out/dist/components/',
+      themes       : '../Vanilla-Semantic-UI-Docs/out/dist/themes/'
     },
     template: {
-      eco: '../docs/server/documents/'
+      eco: '../Vanilla-Semantic-UI-Docs/server/documents/'
     },
   }
 };

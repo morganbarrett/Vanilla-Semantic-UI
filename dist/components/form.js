@@ -1,5 +1,5 @@
 /*!
- * # Vanilla Semantic UI 0.0.1 - Form Validation
+ * # Semantic UI - Form Validation
  * http://github.com/semantic-org/semantic-ui/
  *
  *
@@ -8,18 +8,7 @@
  *
  */
 
-;(function ($, window, document, undefined) {
-
-'use strict';
-
-window = (typeof window != 'undefined' && window.Math == Math)
-  ? window
-  : (typeof self != 'undefined' && self.Math == Math)
-    ? self
-    : Function('return this')()
-;
-
-$.fn.form = function(parameters) {
+/*$.fn.form = function(parameters) {
   var
     $allModules      = $(this),
     moduleSelector   = $allModules.selector || '',
@@ -1700,7 +1689,4 @@ $.fn.form.settings = {
       return (value.split(',').length <= maxCount);
     }
   }
-
-};
-
-})( jQuery, window, document );
+};*/
