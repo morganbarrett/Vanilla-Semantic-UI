@@ -201,6 +201,7 @@ vs.dimmer = function(element, settings, time, performance){
 
 					vs.fadeIn(dimmer, {
 						to: settings.opacity,
+						display: "flex",
 						duration: module.get.duration(),
 						ondone: function(){
 							dimmer.removeAttribute('style');

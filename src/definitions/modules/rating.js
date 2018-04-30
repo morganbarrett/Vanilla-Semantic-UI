@@ -68,6 +68,10 @@ vs.rating = function(element, settings, time, performance){
 		},
 		event: {
 			mouseenter: function(event){
+				if(!vs.checkTarget(event, selector.icon)){
+					return;
+				}
+
 				vs.nextAll(this, function(elem){
 					elem.classList.remove(className.selected);
 				});
@@ -82,12 +86,20 @@ vs.rating = function(element, settings, time, performance){
 				vs.prevAll(this, addClass);
 			},
 			mouseleave: function(event){
+				if(!vs.checkTarget(event, selector.icon)){
+					return;
+				}
+
 				element.classList.remove(className.selected);
 				for(var i in icons){
 					icons[i].classList.remove(className.selected);
 				}
 			},
 			click: function(event){
+				if(!vs.checkTarget(event, selector.icon)){
+					return;
+				}
+
 				var currentRating = module.get.rating(),
 					rating        = icons.indexOf(event.target) + 1,
 					canClear      = (settings.clearable == 'auto')

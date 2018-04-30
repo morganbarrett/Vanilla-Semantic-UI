@@ -35,10 +35,11 @@ vs.nag = function(element, settings, time, performance){
 		initialize: function(){
 			module.verbose('Initializing element');
 
-			//$module
-			//	.on('click' + eventNamespace, selector.close, module.dismiss)
-
-			element.onclick = module.dismiss;
+			element.onclick = function(event){
+				if(vs.checkTarget(event, selector.close)){
+					module.dismiss(event);
+				}
+			}
 			element[moduleNamespace] = module;
 
 			if(settings.detachable && $module.parentElement !== context){
