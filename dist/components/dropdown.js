@@ -7,7 +7,7 @@
  *
  */
 
-vs.dropdown = function(element, settings, time, performance){
+vs.dropdown = function(element, settings){
 	var className = settings.className,
 		message = settings.message,
 		fields = settings.fields,
@@ -3601,7 +3601,7 @@ vs.dropdown = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 
 	return module;
 };

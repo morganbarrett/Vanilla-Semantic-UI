@@ -7,7 +7,7 @@
  *
  */
 
-vs.accordion = function(element, settings, time, performance){
+vs.accordion = function(element, settings){
 	var className = settings.className,
 		namespace = settings.namespace,
 		selector = settings.selector,
@@ -18,8 +18,7 @@ vs.accordion = function(element, settings, time, performance){
 		//$content = $module.find(selector.content),
 		instance = element[moduleNamespace],
 		observer,
-		module
-	;
+		module;
 
 	/*module = {
 
@@ -492,7 +491,7 @@ vs.accordion = function(element, settings, time, performance){
 		}
 	};*/
 	
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

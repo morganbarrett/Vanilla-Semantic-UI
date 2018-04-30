@@ -7,7 +7,7 @@
  *
  */
 
-vs.progress = function(element, settings, time, performance){
+vs.progress = function(element, settings){
 	var className = settings.className,
 		metadata = settings.metadata,
 		namespace = settings.namespace,
@@ -773,7 +773,7 @@ vs.progress = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

@@ -20,42 +20,130 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	var vs = function(modules){
+	var vs = function(elements){
 		var obj = {};
 
-		if(typeof modules === "string"){
-			var elems = document.querySelectorAll(modules);
-			modules = [].slice.call(elems);
-		} else if(typeof modules !== "object"){
-			modules = [modules];
+		if(typeof elements === "string"){
+			var elems = document.querySelectorAll(elements);
+			elements = [].slice.call(elems);
+		} else if(typeof elements !== "object"){
+			elements = [elements];
 		}
 
-		for(var f in vs){
-			var func = vs[f];
-			
-			if(func.settings != undefined){
-				obj[f] = (function(name, component){
-					return function(params){
-						var args = [{}, component.settings];
+		for(var c in vs){
+			var component = vs[c];
 
-						if(vs.isPlainObject(params)){
-							args.unshift(true);
-							args.push(params);
-						}
-
-						var extSettings = vs.extend.apply(this, args),
-							time = new Date().getTime(),
-							performance = [];
-
-						modules.forEach(function(element){
-							component(element, extSettings, time, performance);
-						});
-					};
-				})(f, func);
+			if(component.settings == undefined){
+				continue;
 			}
+
+			obj[c] = (function(comp){
+				return function(params){
+					var perf = [],
+						time = new Date().getTime(),
+						settings = vs.extend.apply(this,
+							vs.isPlainObject(params) ?
+								[true, {}, comp.settings, params] :
+								[{}, comp.settings]
+						);
+					
+					elements.forEach(function(element){
+						makeModule(comp, element, settings);
+					});
+				};
+			})(component);
 		}
 
 		return obj;
+	};
+
+	function makeModule(comp, element, settings){
+		var module = comp(element, settings);
+
+		module.debug = function(){
+			if(!settings.silent && settings.debug){
+				if(settings.performance){
+					module.performance.log(arguments);
+				}
+				else {
+					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
+					module.debug.apply(console, arguments);
+				}
+			}
+		};
+
+		module.verbose = function(){
+			if(!settings.silent && settings.verbose && settings.debug){
+				if(settings.performance){
+					module.performance.log(arguments);
+				}
+				else {
+					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
+					module.verbose.apply(console, arguments);
+				}
+			}
+		};
+
+		module.error = function(){
+			if(!settings.silent){
+				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
+				module.error.apply(console, arguments);
+			}
+		};
+
+		module.performance = {
+			log: function(message){
+				var
+					currentTime,
+					executionTime,
+					previousTime
+				;
+				if(settings.performance){
+					currentTime   = new Date().getTime();
+					previousTime  = time || currentTime;
+					executionTime = currentTime - previousTime;
+					time          = currentTime;
+					performance.push({
+						'Name'           : message[0],
+						'Arguments'      : [].slice.call(message, 1) || '',
+						'Element'        : element,
+						'Execution Time' : executionTime
+					});
+				}
+				clearTimeout(module.performance.timer);
+				module.performance.timer = setTimeout(module.performance.display, 500);
+			},
+			display: function(){
+				var title = settings.name + ':',
+					totalTime = 0;
+
+				time = false;
+				clearTimeout(module.performance.timer);
+				performance.forEach(function(data, index){
+					totalTime += data['Execution Time'];
+				});
+				title += ' ' + totalTime + 'ms';
+				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
+					console.groupCollapsed(title);
+					if(console.table){
+						console.table(performance);
+					}
+					else {
+						performance.forEach(function(data, index){
+							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
+						});
+					}
+					console.groupEnd();
+				}
+				performance = [];
+			}
+		};
+
+		if(module.initialize){
+			module.initialize();
+		}
+
+		return module;
 	};
 
 	vs.invoke = function(query, passedArguments){
@@ -108,6 +196,10 @@ var vs = (function(window, document, undefined){
 	 * http://opensource.org/licenses/MIT
 	 *
 	 */
+
+	vs.checkTarget = function(event, test){			
+		return event.target.matches(test);
+	}
 
 	vs.isPlainObject = function(obj){
 		if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
@@ -2389,7 +2481,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.accordion = function(element, settings, time, performance){
+	vs.accordion = function(element, settings){
 		var className = settings.className,
 			namespace = settings.namespace,
 			selector = settings.selector,
@@ -2400,8 +2492,7 @@ var vs = (function(window, document, undefined){
 			//$content = $module.find(selector.content),
 			instance = element[moduleNamespace],
 			observer,
-			module
-		;
+			module;
 
 		/*module = {
 
@@ -2874,7 +2965,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 		
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -2934,7 +3025,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.checkbox = function(element, settings, time, performance){
+	vs.checkbox = function(element, settings){
 		var className = settings.className,
 			namespace = settings.namespace,
 			selector = settings.selector,
@@ -3640,7 +3731,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -3708,7 +3799,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.dimmer = function(element, settings, time, performance){
+	vs.dimmer = function(element, settings){
 		var selector = settings.selector,
 			namespace = settings.namespace,
 			className = settings.className,
@@ -3768,8 +3859,18 @@ var vs = (function(window, document, undefined){
 			bind: {
 				events: function(){
 					if(settings.on == 'hover'){
-						dimmable.onmouseover = module.show;
-						dimmable.onmouseout = module.hide;
+						dimmable.onmouseover = function(event){
+							if(event.target.parentElement == dimmable){
+								module.show();
+							}
+						}
+
+						dimmable.onmouseout = function(event){
+							console.log(event.target.parentElement == dimmable, event.target.parentElement, dimmable)
+							if(event.target.parentElement == dimmable){
+								module.hide();
+							}
+						}
 					} else if(settings.on == 'click'){
 						dimmable[clickEvent] = module.toggle;
 					}
@@ -3902,6 +4003,7 @@ var vs = (function(window, document, undefined){
 
 						vs.fadeIn(dimmer, {
 							to: settings.opacity,
+							display: "flex",
 							duration: module.get.duration(),
 							ondone: function(){
 								dimmer.removeAttribute('style');
@@ -3980,7 +4082,7 @@ var vs = (function(window, document, undefined){
 					return dimmer.classList.contains(className.active);
 				},
 				animating: function(){
-					return ( dimmer.matches(':animated') || dimmer.classList.contains(className.animating) );
+					return dimmer.classList.contains(className.animating);
 				},
 				closable: function(){
 					if(settings.closable == 'auto'){
@@ -4075,120 +4177,10 @@ var vs = (function(window, document, undefined){
 						dimmer.classList.remove(variation);
 					}
 				}
-			},
-			setting: function(name, value){
-				module.debug('Changing setting', name, value);
-				if( vs.isPlainObject(name) ){
-					vs.extend(true, settings, name);
-				}
-				else if(value !== undefined){
-					if(vs.isPlainObject(settings[name])){
-						vs.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value){
-				if( vs.isPlainObject(name) ){
-					vs.extend(true, module, name);
-				}
-				else if(value !== undefined){
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function(){
-				if(!settings.silent && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function(){
-				if(!settings.silent && settings.verbose && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function(){
-				if(!settings.silent){
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message){
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance){
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function(){
-					var title = settings.name + ':',
-						totalTime = 0;
-
-					time = false;
-					clearTimeout(module.performance.timer);
-					performance.forEach(function(data, index){
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector){
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if(modules.length > 1){
-						title += ' ' + '(' + modules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
-						console.groupCollapsed(title);
-						if(console.table){
-							console.table(performance);
-						}
-						else {
-							performance.forEach(function(data, index){
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
 			}
 		};
 
 		module.preinitialize();
-		module.initialize();
 
 		return module;
 	};
@@ -4203,7 +4195,7 @@ var vs = (function(window, document, undefined){
 		dimmerName: false,
 		variation: false,
 		closable: 'auto',
-		useCSS: true,
+		useCSS: false,
 		transition: 'fade',
 		on: false,
 		opacity: 'auto',
@@ -4250,7 +4242,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.dropdown = function(element, settings, time, performance){
+	vs.dropdown = function(element, settings){
 		var className = settings.className,
 			message = settings.message,
 			fields = settings.fields,
@@ -7844,7 +7836,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 
 		return module;
 	};
@@ -8110,7 +8102,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.embed = function(element, settings, time, performance){
+	vs.embed = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			sources = settings.sources,
@@ -8120,206 +8112,176 @@ var vs = (function(window, document, undefined){
 			templates = settings.templates,
 			eventNamespace = '.' + namespace,
 			moduleNamespace = 'module-' + namespace,
-			/*$placeholder    = $module.find(selector.placeholder),
-			$icon           = $module.find(selector.icon),
-			$embed          = $module.find(selector.embed),*/
+			placeholder = element.querySelectorAll(selector.placeholder),
+			icon = element.querySelectorAll(selector.icon),
+			embed = element.querySelectorAll(selector.embed),
 			instance = element[moduleNamespace],
 			module;
 
-		/*module = {
-
-			initialize: function() {
+		module = {
+			initialize: function(){
 				module.debug('Initializing embed');
 				module.determine.autoplay();
 				module.create();
 				module.bind.events();
 				module.instantiate();
 			},
-
-			instantiate: function() {
+			instantiate: function(){
 				module.verbose('Storing instance of module', module);
 				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
+				element[moduleNamespace] = module;
 			},
-
-			destroy: function() {
+			destroy: function(){
 				module.verbose('Destroying previous instance of embed');
 				module.reset();
-				$module
-					.removeData(moduleNamespace)
-					.off(eventNamespace)
-				;
+				element.removeEvents();
+				element[moduleNamespace] = undefined;
 			},
-
-			refresh: function() {
+			refresh: function(){
 				module.verbose('Refreshing selector cache');
-				$placeholder = $module.find(selector.placeholder);
-				$icon        = $module.find(selector.icon);
-				$embed       = $module.find(selector.embed);
+				placeholder = element.querySelector(selector.placeholder);
+				icon = element.querySelector(selector.icon);
+				embed = element.querySelector(selector.embed);
 			},
-
 			bind: {
-				events: function() {
-					if( module.has.placeholder() ) {
+				events: function(){
+					if( module.has.placeholder() ){
 						module.debug('Adding placeholder events');
-						$module
-							.on('click' + eventNamespace, selector.placeholder, module.createAndShow)
-							.on('click' + eventNamespace, selector.icon, module.createAndShow)
-						;
+						element.onclick = function(event){
+							if(vs.checkTarget(event, selector.placeholder) || vs.checkTarget(event, selector.icon)){
+								module.createAndShow();
+							}
+						}
 					}
 				}
 			},
+			create: function(){
+				var placeholder = module.get.placeholder();
 
-			create: function() {
-				var
-					placeholder = module.get.placeholder()
-				;
-				if(placeholder) {
+				if(placeholder){
 					module.createPlaceholder();
 				}
 				else {
 					module.createAndShow();
 				}
 			},
-
-			createPlaceholder: function(placeholder) {
-				var
-					icon  = module.get.icon(),
+			createPlaceholder: function(placeholder){
+				var icon  = module.get.icon(),
 					url   = module.get.url(),
-					embed = module.generate.embed(url)
-				;
+					embed = module.generate.embed(url);
+
 				placeholder = placeholder || module.get.placeholder();
-				$module.html( templates.placeholder(placeholder, icon) );
+				element.innerHTML = templates.placeholder(placeholder, icon);
 				module.debug('Creating placeholder for embed', placeholder, icon);
 			},
-
-			createEmbed: function(url) {
+			createEmbed: function(url){
 				module.refresh();
 				url = url || module.get.url();
-				$embed = $('<div/>')
-					.addClass(className.embed)
-					.html( module.generate.embed(url) )
-					.appendTo($module)
-				;
+				embed = document.createElement('div');
+				embed.classList.add(className.embed);
+				embed.innerHTML = module.generate.embed(url);
+				element.append(embed);
 				settings.onCreate.call(element, url);
-				module.debug('Creating embed object', $embed);
+				module.debug('Creating embed object', embed);
 			},
-
-			changeEmbed: function(url) {
-				$embed
-					.html( module.generate.embed(url) )
-				;
+			changeEmbed: function(url){
+				embed.innerHTML = module.generate.embed(url);
 			},
-
-			createAndShow: function() {
+			createAndShow: function(){
 				module.createEmbed();
 				module.show();
 			},
-
-			// sets new embed
-			change: function(source, id, url) {
+			change: function(source, id, url){
 				module.debug('Changing video to ', source, id, url);
-				$module
-					.data(metadata.source, source)
-					.data(metadata.id, id)
-				;
-				if(url) {
-					$module.data(metadata.url, url);
+				element.dataset[metadata.source] = source;
+				element.dataset[metadata.id] = id;
+				
+				if(url){
+					element.dataset[metadata.url, url];
+				} else {
+					element.dataset[metadata.url] = undefined;
 				}
-				else {
-					$module.removeData(metadata.url);
-				}
-				if(module.has.embed()) {
+
+				if(module.has.embed()){
 					module.changeEmbed();
-				}
-				else {
+				} else {
 					module.create();
 				}
 			},
-
-			// clears embed
-			reset: function() {
+			reset: function(){
 				module.debug('Clearing embed and showing placeholder');
 				module.remove.active();
 				module.remove.embed();
 				module.showPlaceholder();
 				settings.onReset.call(element);
 			},
-
-			// shows current embed
-			show: function() {
+			show: function(){
 				module.debug('Showing embed');
 				module.set.active();
 				settings.onDisplay.call(element);
 			},
-
-			hide: function() {
+			hide: function(){
 				module.debug('Hiding embed');
 				module.showPlaceholder();
 			},
-
-			showPlaceholder: function() {
+			showPlaceholder: function(){
 				module.debug('Showing placeholder image');
 				module.remove.active();
 				settings.onPlaceholderDisplay.call(element);
 			},
-
 			get: {
-				id: function() {
-					return settings.id || $module.data(metadata.id);
+				id: function(){
+					return settings.id || element.dataset[metadata.id];
 				},
-				placeholder: function() {
-					return settings.placeholder || $module.data(metadata.placeholder);
+				placeholder: function(){
+					return settings.placeholder || element.dataset[metadata.placeholder];
 				},
-				icon: function() {
+				icon: function(){
 					return (settings.icon)
 						? settings.icon
-						: ($module.data(metadata.icon) !== undefined)
-							? $module.data(metadata.icon)
+						: (element.dataset[metadata.icon] !== undefined)
+							? element.dataset[metadata.icon]
 							: module.determine.icon()
 					;
 				},
-				source: function(url) {
+				source: function(url){
 					return (settings.source)
 						? settings.source
-						: ($module.data(metadata.source) !== undefined)
-							? $module.data(metadata.source)
+						: (element.dataset[metadata.source] !== undefined)
+							? element.dataset[metadata.source]
 							: module.determine.source()
 					;
 				},
-				type: function() {
+				type: function(){
 					var source = module.get.source();
 					return (sources[source] !== undefined)
 						? sources[source].type
 						: false
 					;
 				},
-				url: function() {
+				url: function(){
 					return (settings.url)
 						? settings.url
-						: ($module.data(metadata.url) !== undefined)
-							? $module.data(metadata.url)
+						: (element.dataset[metadata.url] !== undefined)
+							? element.dataset[metadata.url]
 							: module.determine.url()
 					;
 				}
 			},
-
 			determine: {
-				autoplay: function() {
-					if(module.should.autoplay()) {
+				autoplay: function(){
+					if(module.should.autoplay()){
 						settings.autoplay = true;
 					}
 				},
-				source: function(url) {
-					var
-						matchedSource = false
-					;
+				source: function(url){
+					var matchedSource = false;
+
 					url = url || module.get.url();
-					if(url) {
-						$.each(sources, function(name, source) {
-							if(url.search(source.domain) !== -1) {
+					
+					if(url){
+						sources.forEach(sources, function(source, name){
+							if(url.search(source.domain) !== -1){
 								matchedSource = name;
 								return false;
 							}
@@ -8327,7 +8289,7 @@ var vs = (function(window, document, undefined){
 					}
 					return matchedSource;
 				},
-				icon: function() {
+				icon: function(){
 					var
 						source = module.get.source()
 					;
@@ -8336,54 +8298,45 @@ var vs = (function(window, document, undefined){
 						: false
 					;
 				},
-				url: function() {
-					var
-						id     = settings.id     || $module.data(metadata.id),
-						source = settings.source || $module.data(metadata.source),
-						url
-					;
-					url = (sources[source] !== undefined)
-						? sources[source].url.replace('{id}', id)
-						: false
-					;
-					if(url) {
-						$module.data(metadata.url, url);
+				url: function(){
+					var id = settings.id || element.dataset[metadata.id],
+						source = settings.source || element.dataset[metadata.source],
+						url = (sources[source] !== undefined) ?
+							sources[source].url.replace('{id}', id) : false;
+					
+					if(url){
+						element.dataset[metadata.url] = url;
 					}
+
 					return url;
 				}
 			},
-
-
 			set: {
-				active: function() {
-					$module.addClass(className.active);
+				active: function(){
+					element.classList.add(className.active);
 				}
 			},
-
 			remove: {
-				active: function() {
-					$module.removeClass(className.active);
+				active: function(){
+					element.classList.remove(className.active);
 				},
-				embed: function() {
-					$embed.empty();
+				embed: function(){
+					embed.innerHTML = "";
 				}
 			},
-
 			encode: {
-				parameters: function(parameters) {
-					var
-						urlString = [],
-						index
-					;
-					for (index in parameters) {
+				parameters: function(parameters){
+					var urlString = [],
+						index;
+
+					for (index in parameters){
 						urlString.push( encodeURIComponent(index) + '=' + encodeURIComponent( parameters[index] ) );
 					}
 					return urlString.join('&amp;');
 				}
 			},
-
 			generate: {
-				embed: function(url) {
+				embed: function(url){
 					module.debug('Generating embed html');
 					var
 						source = module.get.source(),
@@ -8391,280 +8344,103 @@ var vs = (function(window, document, undefined){
 						parameters
 					;
 					url = module.get.url(url);
-					if(url) {
+					if(url){
 						parameters = module.generate.parameters(source);
 						html       = templates.iframe(url, parameters);
 					}
 					else {
-						module.error(error.noURL, $module);
+						module.error(error.noURL, element);
 					}
 					return html;
 				},
-				parameters: function(source, extraParameters) {
-					var
-						parameters = (sources[source] && sources[source].parameters !== undefined)
-							? sources[source].parameters(settings)
-							: {}
-					;
+				parameters: function(source, extraParameters){
+					var parameters = (sources[source] && sources[source].parameters !== undefined) ?
+						sources[source].parameters(settings) : {};
+
 					extraParameters = extraParameters || settings.parameters;
-					if(extraParameters) {
-						parameters = $.extend({}, parameters, extraParameters);
+					
+					if(extraParameters){
+						parameters = vs.extend({}, parameters, extraParameters);
 					}
+
 					parameters = settings.onEmbed(parameters);
 					return module.encode.parameters(parameters);
 				}
 			},
-
 			has: {
-				embed: function() {
-					return ($embed.length > 0);
+				embed: function(){
+					return (embed.length > 0);
 				},
-				placeholder: function() {
-					return settings.placeholder || $module.data(metadata.placeholder);
+				placeholder: function(){
+					return settings.placeholder || element.dataset[metadata.placeholder];
 				}
 			},
-
 			should: {
-				autoplay: function() {
+				autoplay: function(){
 					return (settings.autoplay === 'auto')
-						? (settings.placeholder || $module.data(metadata.placeholder) !== undefined)
+						? (settings.placeholder || element.dataset[metadata.placeholder] !== undefined)
 						: settings.autoplay
 					;
 				}
 			},
-
 			is: {
-				video: function() {
+				video: function(){
 					return module.get.type() == 'video';
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if($allModules.length > 1) {
-						title += ' ' + '(' + $allModules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
-		};*/
+		};
 
-		//module.initialize();
-		
 		return module;
 	};
 
+
 	vs.embed.settings = {
-		name        : 'Embed',
-		namespace   : 'embed',
-
-		silent      : false,
-		debug       : false,
-		verbose     : false,
-		performance : true,
-
-		icon     : false,
-		source   : false,
-		url      : false,
-		id       : false,
-
-		// standard video settings
-		autoplay  : 'auto',
-		color     : '#444444',
-		hd        : true,
-		brandedUI : false,
-
-		// additional parameters to include with the embed
+		name: 'Embed',
+		namespace: 'embed',
+		silent: false,
+		debug: false,
+		verbose: false,
+		performance: true,
+		icon: false,
+		source: false,
+		url: false,
+		id: false,
+		autoplay: 'auto',
+		color: '#444444',
+		hd: true,
+		brandedUI: false,
 		parameters: false,
-
-		onDisplay            : function() {},
-		onPlaceholderDisplay : function() {},
-		onReset              : function() {},
-		onCreate             : function(url) {},
-		onEmbed              : function(parameters) {
+		api     : false,
+		onPause : function(){},
+		onPlay  : function(){},
+		onStop  : function(){},
+		onDisplay: function(){},
+		onPlaceholderDisplay: function(){},
+		onReset: function(){},
+		onCreate: function(url){},
+		onEmbed: function(parameters){
 			return parameters;
 		},
-
-		metadata    : {
-			id          : 'id',
-			icon        : 'icon',
-			placeholder : 'placeholder',
-			source      : 'source',
-			url         : 'url'
+		className: {
+			active: 'active',
+			embed: 'embed'
 		},
-
-		error : {
-			noURL  : 'No URL specified',
-			method : 'The method you called is not defined'
+		error: {
+			noURL: 'No URL specified',
+			method: 'The method you called is not defined'
 		},
-
-		className : {
-			active : 'active',
-			embed  : 'embed'
-		},
-
 		selector : {
 			embed       : '.embed',
 			placeholder : '.placeholder',
 			icon        : '.icon'
 		},
-
+		metadata: {
+			id: 'id',
+			icon: 'icon',
+			placeholder: 'placeholder',
+			source: 'source',
+			url: 'url'
+		},
 		sources: {
 			youtube: {
 				name   : 'youtube',
@@ -8672,7 +8448,7 @@ var vs = (function(window, document, undefined){
 				icon   : 'video play',
 				domain : 'youtube.com',
 				url    : '//www.youtube.com/embed/{id}',
-				parameters: function(settings) {
+				parameters: function(settings){
 					return {
 						autohide       : !settings.brandedUI,
 						autoplay       : settings.autoplay,
@@ -8689,7 +8465,7 @@ var vs = (function(window, document, undefined){
 				icon   : 'video play',
 				domain : 'vimeo.com',
 				url    : '//player.vimeo.com/video/{id}',
-				parameters: function(settings) {
+				parameters: function(settings){
 					return {
 						api      : settings.api,
 						autoplay : settings.autoplay,
@@ -8701,11 +8477,10 @@ var vs = (function(window, document, undefined){
 				}
 			}
 		},
-
 		templates: {
-			iframe : function(url, parameters) {
+			iframe : function(url, parameters){
 				var src = url;
-				if (parameters) {
+				if (parameters){
 						src += '?' + parameters;
 				}
 				return ''
@@ -8714,25 +8489,19 @@ var vs = (function(window, document, undefined){
 					+ ' frameborder="0" scrolling="no" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>'
 				;
 			},
-			placeholder : function(image, icon) {
+			placeholder : function(image, icon){
 				var
 					html = ''
 				;
-				if(icon) {
+				if(icon){
 					html += '<i class="' + icon + ' icon"></i>';
 				}
-				if(image) {
+				if(image){
 					html += '<img class="placeholder" src="' + image + '">';
 				}
 				return html;
 			}
-		},
-
-		// NOT YET IMPLEMENTED
-		api     : false,
-		onPause : function() {},
-		onPlay  : function() {},
-		onStop  : function() {}
+		}
 	};
 
 	/*!
@@ -8744,7 +8513,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.modal = function(element, settings, time, performance){
+	vs.modal = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			namespace = settings.namespace,
@@ -9540,7 +9309,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -9633,7 +9402,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.nag = function(element, settings, time, performance){
+	vs.nag = function(element, settings){
 		var className = settings.className,
 			selector = settings.selector,
 			error = settings.error,
@@ -9661,10 +9430,11 @@ var vs = (function(window, document, undefined){
 			initialize: function(){
 				module.verbose('Initializing element');
 
-				//$module
-				//	.on('click' + eventNamespace, selector.close, module.dismiss)
-
-				element.onclick = module.dismiss;
+				element.onclick = function(event){
+					if(vs.checkTarget(event, selector.close)){
+						module.dismiss(event);
+					}
+				}
 				element[moduleNamespace] = module;
 
 				if(settings.detachable && $module.parentElement !== context){
@@ -9829,113 +9599,8 @@ var vs = (function(window, document, undefined){
 						module.error(error.noStorage);
 					}
 				}
-			},
-			setting: function(name, value){
-				module.debug('Changing setting', name, value);
-				if( vs.isPlainObject(name) ){
-					vs.extend(true, settings, name);
-				}
-				else if(value !== undefined){
-					if(vs.isPlainObject(settings[name])){
-						vs.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value){
-				if( vs.isPlainObject(name) ){
-					vs.extend(true, module, name);
-				}
-				else if(value !== undefined){
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function(){
-				if(!settings.silent && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function(){
-				if(!settings.silent && settings.verbose && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function(){
-				if(!settings.silent){
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message){
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance){
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function(){
-					var title = settings.name + ':',
-						totalTime = 0;
-
-					time = false;
-					clearTimeout(module.performance.timer);
-					performance.forEach(function(data, index){
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
-						console.groupCollapsed(title);
-						if(console.table){
-							console.table(performance);
-						}
-						else {
-							performance.forEach(function(data, index){
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
 			}
 		};
-
-		module.initialize();
 
 		return module;
 	};
@@ -9987,7 +9652,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.popup = function(element, settings, time, performance){
+	vs.popup = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			error = settings.error,
@@ -11228,7 +10893,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 
 		return module;
 	};
@@ -11444,7 +11109,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.progress = function(element, settings, time, performance){
+	vs.progress = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
 			namespace = settings.namespace,
@@ -12210,7 +11875,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -12306,7 +11971,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.rating = function(element, settings, time, performance){
+	vs.rating = function(element, settings){
 		var namespace = settings.namespace,
 			className = settings.className,
 			metadata = settings.metadata,
@@ -12367,6 +12032,10 @@ var vs = (function(window, document, undefined){
 			},
 			event: {
 				mouseenter: function(event){
+					if(!vs.checkTarget(event, selector.icon)){
+						return;
+					}
+
 					vs.nextAll(this, function(elem){
 						elem.classList.remove(className.selected);
 					});
@@ -12381,12 +12050,20 @@ var vs = (function(window, document, undefined){
 					vs.prevAll(this, addClass);
 				},
 				mouseleave: function(event){
+					if(!vs.checkTarget(event, selector.icon)){
+						return;
+					}
+
 					element.classList.remove(className.selected);
 					for(var i in icons){
 						icons[i].classList.remove(className.selected);
 					}
 				},
 				click: function(event){
+					if(!vs.checkTarget(event, selector.icon)){
+						return;
+					}
+
 					var currentRating = module.get.rating(),
 						rating        = icons.indexOf(event.target) + 1,
 						canClear      = (settings.clearable == 'auto')
@@ -12488,117 +12165,8 @@ var vs = (function(window, document, undefined){
 				initialLoad: function(){
 					initialLoad = true;
 				}
-			},
-			setting: function(name, value){
-				module.debug('Changing setting', name, value);
-				if(vs.isPlainObject(name)){
-					vs.extend(true, settings, name);
-				}
-				else if(value !== undefined){
-					if(isPlainObject(settings[name])){
-						vs.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value){
-				if(vs.isPlainObject(name)){
-					vs.extend(true, module, name);
-				}
-				else if(value !== undefined){
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function(){
-				if(!settings.silent && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function(){
-				if(!settings.silent && settings.verbose && settings.debug){
-					if(settings.performance){
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function(){
-				if(!settings.silent){
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message){
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance){
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function(){
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					performance.forEach(function(data, index){
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(modules.length > 1){
-						title += ' ' + '(' + modules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
-						console.groupCollapsed(title);
-						if(console.table){
-							console.table(performance);
-						}
-						else {
-							performance.forEach(function(data, index){
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
 			}
-		}
-
-		module.initialize();
+		};
 
 		return module;
 	};
@@ -12657,7 +12225,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.search = function(element, settings, time, performance){
+	vs.search = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
 			regExp = settings.regExp,
@@ -13801,7 +13369,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 		
-		//module.initialize();
+		module = {};
 
 		return module;
 	};
@@ -14105,7 +13673,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.shape = function(element, settings, time, performance){
+	vs.shape = function(element, settings){
 		var namespace = settings.namespace,
 			selector = settings.selector,
 			error = settings.error,
@@ -14881,7 +14449,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -14954,7 +14522,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.sidebar = function(element, settings, time, performance){
+	vs.sidebar = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			namespace = settings.namespace,
@@ -15820,7 +15388,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 
 		return module;
 	};
@@ -15914,7 +15482,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.sticky = function(element, settings, time, performance){
+	vs.sticky = function(element, settings){
 		var className = settings.className,
 			namespace = settings.namespace,
 			error = settings.error,
@@ -16729,7 +16297,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 
 		return module;
 	};
@@ -16811,7 +16379,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.tab = function(element, settings, time, performance){
+	vs.tab = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
 			selector = settings.selector,
@@ -17611,7 +17179,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 		
-		//module.initialize();
+		module = {};
 		
 		return module;
 	};
@@ -17697,7 +17265,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.transition = function(element, settings, time, performance){
+	vs.transition = function(element, settings){
 		var settings,
 			instance,
 			error,
@@ -18651,7 +18219,7 @@ var vs = (function(window, document, undefined){
 			}
 		};*/
 
-		//module.initialize();
+		module = {};
 
 		return module;
 	};

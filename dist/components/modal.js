@@ -7,7 +7,7 @@
  *
  */
 
-vs.modal = function(element, settings, time, performance){
+vs.modal = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
 		namespace = settings.namespace,
@@ -803,7 +803,7 @@ vs.modal = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

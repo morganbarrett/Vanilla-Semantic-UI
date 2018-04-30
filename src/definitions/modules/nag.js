@@ -7,7 +7,7 @@
  *
  */
 
-vs.nag = function(element, settings, time, performance){
+vs.nag = function(element, settings){
 	var className = settings.className,
 		selector = settings.selector,
 		error = settings.error,
@@ -204,113 +204,8 @@ vs.nag = function(element, settings, time, performance){
 					module.error(error.noStorage);
 				}
 			}
-		},
-		setting: function(name, value){
-			module.debug('Changing setting', name, value);
-			if( vs.isPlainObject(name) ){
-				vs.extend(true, settings, name);
-			}
-			else if(value !== undefined){
-				if(vs.isPlainObject(settings[name])){
-					vs.extend(true, settings[name], value);
-				}
-				else {
-					settings[name] = value;
-				}
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value){
-			if( vs.isPlainObject(name) ){
-				vs.extend(true, module, name);
-			}
-			else if(value !== undefined){
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function(){
-			if(!settings.silent && settings.debug){
-				if(settings.performance){
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function(){
-			if(!settings.silent && settings.verbose && settings.debug){
-				if(settings.performance){
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function(){
-			if(!settings.silent){
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message){
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance){
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function(){
-				var title = settings.name + ':',
-					totalTime = 0;
-
-				time = false;
-				clearTimeout(module.performance.timer);
-				performance.forEach(function(data, index){
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0){
-					console.groupCollapsed(title);
-					if(console.table){
-						console.table(performance);
-					}
-					else {
-						performance.forEach(function(data, index){
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
 		}
 	};
-
-	module.initialize();
 
 	return module;
 };

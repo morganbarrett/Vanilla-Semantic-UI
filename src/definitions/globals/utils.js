@@ -7,6 +7,10 @@
  *
  */
 
+vs.checkTarget = function(event, test){			
+	return event.target.matches(test);
+}
+
 vs.isPlainObject = function(obj){
 	if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
 		return false;

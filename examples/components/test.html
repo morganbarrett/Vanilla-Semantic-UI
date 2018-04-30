@@ -33,6 +33,7 @@
   <script type="text/javascript" src="../../dist/components/rating.js"></script>
   <script type="text/javascript" src="../../dist/components/nag.js"></script>
   <script type="text/javascript" src="../../dist/components/dimmer.js"></script>
+  <script type="text/javascript" src="../../dist/components/embed.js"></script>
 
   <script type="text/javascript" src="../../dist/components/popup.js"></script>
   <script type="text/javascript" src="../../dist/components/transition.js"></script>
@@ -57,6 +58,10 @@
         }),
         dimmer = vs(".card .dimmer").dimmer({
           on: 'hover'
+        }),
+        embed = vs(".ui.embed").embed({
+          source: 'youtube',
+          id: 'O6Xo21L0ybE'
         });
   });
   </script>
@@ -70,6 +75,8 @@
   </span>
   <i class="close icon"></i>
 </div>
+
+<div class="ui embed" data-source="youtube" data-id="O6Xo21L0ybE"></div>
 
 <div class="ui four cards">
   <div class="ui card">

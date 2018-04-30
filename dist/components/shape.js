@@ -7,7 +7,7 @@
  *
  */
 
-vs.shape = function(element, settings, time, performance){
+vs.shape = function(element, settings){
 	var namespace = settings.namespace,
 		selector = settings.selector,
 		error = settings.error,
@@ -783,7 +783,7 @@ vs.shape = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

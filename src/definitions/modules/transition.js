@@ -7,7 +7,7 @@
  *
  */
 
-vs.transition = function(element, settings, time, performance){
+vs.transition = function(element, settings){
 	var settings,
 		instance,
 		error,
@@ -961,7 +961,7 @@ vs.transition = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 
 	return module;
 };

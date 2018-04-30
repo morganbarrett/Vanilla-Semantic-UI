@@ -7,7 +7,7 @@
  *
  */
 
-vs.tab = function(element, settings, time, performance){
+vs.tab = function(element, settings){
 	var className = settings.className,
 		metadata = settings.metadata,
 		selector = settings.selector,
@@ -807,7 +807,7 @@ vs.tab = function(element, settings, time, performance){
 		}
 	};*/
 	
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

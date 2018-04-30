@@ -7,7 +7,7 @@
  *
  */
 
-vs.search = function(element, settings, time, performance){
+vs.search = function(element, settings){
 	var className = settings.className,
 		metadata = settings.metadata,
 		regExp = settings.regExp,
@@ -1151,7 +1151,7 @@ vs.search = function(element, settings, time, performance){
 		}
 	};*/
 	
-	//module.initialize();
+	module = {};
 
 	return module;
 };

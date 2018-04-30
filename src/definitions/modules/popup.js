@@ -7,7 +7,7 @@
  *
  */
 
-vs.popup = function(element, settings, time, performance){
+vs.popup = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
 		error = settings.error,
@@ -1248,7 +1248,7 @@ vs.popup = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 
 	return module;
 };

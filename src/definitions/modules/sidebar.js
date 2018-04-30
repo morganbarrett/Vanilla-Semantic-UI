@@ -7,7 +7,7 @@
  *
  */
 
-vs.sidebar = function(element, settings, time, performance){
+vs.sidebar = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
 		namespace = settings.namespace,
@@ -873,7 +873,7 @@ vs.sidebar = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 
 	return module;
 };

@@ -7,7 +7,7 @@
  *
  */
 
-vs.sticky = function(element, settings, time, performance){
+vs.sticky = function(element, settings){
 	var className = settings.className,
 		namespace = settings.namespace,
 		error = settings.error,
@@ -822,7 +822,7 @@ vs.sticky = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 
 	return module;
 };

@@ -7,7 +7,7 @@
  *
  */
 
-vs.checkbox = function(element, settings, time, performance){
+vs.checkbox = function(element, settings){
 	var className = settings.className,
 		namespace = settings.namespace,
 		selector = settings.selector,
@@ -713,7 +713,7 @@ vs.checkbox = function(element, settings, time, performance){
 		}
 	};*/
 
-	//module.initialize();
+	module = {};
 	
 	return module;
 };

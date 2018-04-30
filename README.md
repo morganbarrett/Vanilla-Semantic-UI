@@ -47,7 +47,7 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 * checkbox.js
 * ~~dimmer.js~~ ✓
 * dropdown.js
-* embed.js
+* ~~embed.js~~ ✓
 * modal.js
 * ~~nag.js~~ ✓
 * popup.js
