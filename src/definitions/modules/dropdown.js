@@ -7,19 +7,16 @@
  *
  */
 
-vs.dropdown = function(element, settings){
+ui.dropdown = function(element, settings){
 	var className = settings.className,
 		message = settings.message,
 		fields = settings.fields,
 		keys = settings.keys,
 		metadata = settings.metadata,
-		namespace = settings.namespace,
 		regExp = settings.regExp,
 		selector = settings.selector,
 		error = settings.error,
 		templates = settings.templates,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
 		/*$context        = $(settings.context),
 		$text           = $module.find(selector.text),
 		$search         = $module.find(selector.search),
@@ -34,7 +31,6 @@ vs.dropdown = function(element, settings){
 		activated = false,
 		itemActivated = false,
 		internalChange = false,
-		instance = element[moduleNamespace],
 		initialLoad,
 		pageLostFocus,
 		willRefocus,
@@ -72,14 +68,6 @@ vs.dropdown = function(element, settings){
 				module.instantiate();
 			}
 
-		},
-
-		instantiate: function() {
-			module.verbose('Storing instance of dropdown', module);
-			instance = module;
-			$module
-				.data(moduleNamespace, module)
-			;
 		},
 
 		destroy: function() {
@@ -168,11 +156,11 @@ vs.dropdown = function(element, settings){
 							.html(html)
 							.attr('data-' + metadata.value, value)
 							.attr('data-' + metadata.text, value)
-							.addClass(className.addition)
-							.addClass(className.item)
+							.classList.add(className.addition)
+							.classList.add(className.item)
 						;
 						if(settings.hideAdditions) {
-							$userChoice.addClass(className.hidden);
+							$userChoice.classList.add(className.hidden);
 						}
 						$userChoices = ($userChoices === undefined)
 							? $userChoice
@@ -197,13 +185,13 @@ vs.dropdown = function(element, settings){
 			},
 			menu: function() {
 				$menu = $('<div />')
-					.addClass(className.menu)
+					.classList.add(className.menu)
 					.appendTo($module)
 				;
 			},
 			sizer: function() {
 				$sizer = $('<span />')
-					.addClass(className.sizer)
+					.classList.add(className.sizer)
 					.insertAfter($search)
 				;
 			}
@@ -231,7 +219,7 @@ vs.dropdown = function(element, settings){
 					.not(selector.unselectable)
 					.not(selector.addition + selector.hidden)
 						.eq(0)
-						.addClass(className.selected)
+						.classList.add(className.selected)
 				;
 			},
 			nextAvailable: function($selected) {
@@ -243,11 +231,11 @@ vs.dropdown = function(element, settings){
 				;
 				if(hasNext) {
 					module.verbose('Moving selection to', $nextAvailable);
-					$nextAvailable.addClass(className.selected);
+					$nextAvailable.classList.add(className.selected);
 				}
 				else {
 					module.verbose('Moving selection to', $prevAvailable);
-					$prevAvailable.addClass(className.selected);
+					$prevAvailable.classList.add(className.selected);
 				}
 			}
 		},
@@ -280,7 +268,7 @@ vs.dropdown = function(element, settings){
 				if( module.is.search() && !module.has.search() ) {
 					module.verbose('Adding search input');
 					$search = $('<input />')
-						.addClass(className.search)
+						.classList.add(className.search)
 						.prop('autocomplete', 'off')
 						.insertBefore($text)
 					;
@@ -314,12 +302,12 @@ vs.dropdown = function(element, settings){
 					module.debug('Creating entire dropdown from select');
 					$module = $('<div />')
 						.attr('class', $input.attr('class') )
-						.addClass(className.selection)
-						.addClass(className.dropdown)
+						.classList.add(className.selection)
+						.classList.add(className.dropdown)
 						.html( templates.dropdown(selectValues) )
 						.insertBefore($input)
 					;
-					if($input.hasClass(className.multiple) && $input.prop('multiple') === false) {
+					if($input.classList.contains(className.multiple) && $input.prop('multiple') === false) {
 						module.error(error.missingMultiple);
 						$input.prop('multiple', true);
 					}
@@ -328,7 +316,7 @@ vs.dropdown = function(element, settings){
 					}
 					if ($input.prop('disabled')) {
 						module.debug('Disabling dropdown');
-						$module.addClass(className.disabled);
+						$module.classList.add(className.disabled);
 					}
 					$input
 						.removeAttr('class')
@@ -787,7 +775,7 @@ vs.dropdown = function(element, settings){
 			if(results) {
 				$item
 					.not(results)
-					.addClass(className.filtered)
+					.classList.add(className.filtered)
 				;
 			}
 		},
@@ -829,7 +817,7 @@ vs.dropdown = function(element, settings){
 		filterActive: function() {
 			if(settings.useLabels) {
 				$item.filter('.' + className.active)
-					.addClass(className.filtered)
+					.classList.add(className.filtered)
 				;
 			}
 		},
@@ -995,15 +983,15 @@ vs.dropdown = function(element, settings){
 							: $label.prevUntil($prevActive).add($activeLabels).add($label)
 					;
 					if(event.shiftKey) {
-						$activeLabels.removeClass(className.active);
-						$range.addClass(className.active);
+						$activeLabels.classList.remove(className.active);
+						$range.classList.add(className.active);
 					}
 					else if(event.ctrlKey) {
 						$label.toggleClass(className.active);
 					}
 					else {
-						$activeLabels.removeClass(className.active);
-						$label.addClass(className.active);
+						$activeLabels.classList.remove(className.active);
+						$label.classList.add(className.active);
 					}
 					settings.onLabelSelect.apply(this, $labels.filter('.' + className.active));
 				}
@@ -1013,7 +1001,7 @@ vs.dropdown = function(element, settings){
 					var
 						$label = $(this).parent()
 					;
-					if( $label.hasClass(className.active) ) {
+					if( $label.classList.contains(className.active) ) {
 						// remove all selected labels
 						module.remove.activeLabels();
 					}
@@ -1206,22 +1194,22 @@ vs.dropdown = function(element, settings){
 							// activate previous label
 							if((isFocused || caretAtStart) && !hasActiveLabel) {
 								module.verbose('Selecting previous label');
-								$label.last().addClass(className.active);
+								$label.last().classList.add(className.active);
 							}
 							else if(hasActiveLabel) {
 								if(!event.shiftKey) {
 									module.verbose('Selecting previous label');
-									$label.removeClass(className.active);
+									$label.classList.remove(className.active);
 								}
 								else {
 									module.verbose('Adding previous label to selection');
 								}
 								if(isFirstLabel && !hasMultipleActive) {
-									$activeLabel.addClass(className.active);
+									$activeLabel.classList.add(className.active);
 								}
 								else {
 									$activeLabel.prev(selector.siblingLabel)
-										.addClass(className.active)
+										.classList.add(className.active)
 										.end()
 									;
 								}
@@ -1231,13 +1219,13 @@ vs.dropdown = function(element, settings){
 						else if(pressedKey == keys.rightArrow) {
 							// activate first label
 							if(isFocused && !hasActiveLabel) {
-								$label.first().addClass(className.active);
+								$label.first().classList.add(className.active);
 							}
 							// activate next label
 							if(hasActiveLabel) {
 								if(!event.shiftKey) {
 									module.verbose('Selecting next label');
-									$label.removeClass(className.active);
+									$label.classList.remove(className.active);
 								}
 								else {
 									module.verbose('Adding next label to selection');
@@ -1248,18 +1236,18 @@ vs.dropdown = function(element, settings){
 											module.focusSearch();
 										}
 										else {
-											$label.removeClass(className.active);
+											$label.classList.remove(className.active);
 										}
 									}
 									else if(hasMultipleActive) {
-										$activeLabel.next(selector.siblingLabel).addClass(className.active);
+										$activeLabel.next(selector.siblingLabel).classList.add(className.active);
 									}
 									else {
-										$activeLabel.addClass(className.active);
+										$activeLabel.classList.add(className.active);
 									}
 								}
 								else {
-									$activeLabel.next(selector.siblingLabel).addClass(className.active);
+									$activeLabel.next(selector.siblingLabel).classList.add(className.active);
 								}
 								event.preventDefault();
 							}
@@ -1272,18 +1260,18 @@ vs.dropdown = function(element, settings){
 										module.focusSearch();
 									}
 								}
-								$activeLabel.last().next(selector.siblingLabel).addClass(className.active);
+								$activeLabel.last().next(selector.siblingLabel).classList.add(className.active);
 								module.remove.activeLabels($activeLabel);
 								event.preventDefault();
 							}
 							else if(caretAtStart && !hasActiveLabel && pressedKey == keys.backspace) {
 								module.verbose('Removing last label on input backspace');
-								$activeLabel = $label.last().addClass(className.active);
+								$activeLabel = $label.last().classList.add(className.active);
 								module.remove.activeLabels($activeLabel);
 							}
 						}
 						else {
-							$activeLabel.removeClass(className.active);
+							$activeLabel.classList.remove(className.active);
 						}
 					}
 				}
@@ -1306,7 +1294,7 @@ vs.dropdown = function(element, settings){
 							: $menu.children(':not(.' + className.filtered +')'),
 						$subMenu              = $selectedItem.children(selector.menu),
 						$parentMenu           = $selectedItem.closest(selector.menu),
-						inVisibleMenu         = ($parentMenu.hasClass(className.visible) || $parentMenu.hasClass(className.animating) || $parentMenu.parent(selector.menu).length > 0),
+						inVisibleMenu         = ($parentMenu.classList.contains(className.visible) || $parentMenu.classList.contains(className.animating) || $parentMenu.parent(selector.menu).length > 0),
 						hasSubMenu            = ($subMenu.length> 0),
 						hasSelectedItem       = ($selectedItem.length > 0),
 						selectedIsSelectable  = ($selectedItem.not(selector.unselectable).length > 0),
@@ -1355,11 +1343,11 @@ vs.dropdown = function(element, settings){
 									module.verbose('Left key pressed, closing sub-menu');
 									module.animate.hide(false, $parentMenu);
 									$selectedItem
-										.removeClass(className.selected)
+										.classList.remove(className.selected)
 									;
 									$parentMenu
 										.closest(selector.item)
-											.addClass(className.selected)
+											.classList.add(className.selected)
 									;
 									event.preventDefault();
 								}
@@ -1371,11 +1359,11 @@ vs.dropdown = function(element, settings){
 									module.verbose('Right key pressed, opening sub-menu');
 									module.animate.show(false, $subMenu);
 									$selectedItem
-										.removeClass(className.selected)
+										.classList.remove(className.selected)
 									;
 									$subMenu
 										.find(selector.item).eq(0)
-											.addClass(className.selected)
+											.classList.add(className.selected)
 									;
 									event.preventDefault();
 								}
@@ -1396,10 +1384,10 @@ vs.dropdown = function(element, settings){
 							else {
 								module.verbose('Up key pressed, changing active item');
 								$selectedItem
-									.removeClass(className.selected)
+									.classList.remove(className.selected)
 								;
 								$nextItem
-									.addClass(className.selected)
+									.classList.add(className.selected)
 								;
 								module.set.scrollPosition($nextItem);
 								if(settings.selectOnKeydown && module.is.single()) {
@@ -1423,10 +1411,10 @@ vs.dropdown = function(element, settings){
 							else {
 								module.verbose('Down key pressed, changing active item');
 								$item
-									.removeClass(className.selected)
+									.classList.remove(className.selected)
 								;
 								$nextItem
-									.addClass(className.selected)
+									.classList.add(className.selected)
 								;
 								module.set.scrollPosition($nextItem);
 								if(settings.selectOnKeydown && module.is.single()) {
@@ -1931,7 +1919,7 @@ vs.dropdown = function(element, settings){
 					if(selectionCount >= settings.maxSelections) {
 						module.debug('Maximum selection count reached');
 						if(settings.useLabels) {
-							$item.addClass(className.filtered);
+							$item.classList.add(className.filtered);
 							module.add.message(message.maxSelections);
 						}
 						return true;
@@ -2082,7 +2070,7 @@ vs.dropdown = function(element, settings){
 				var
 					text
 				;
-				if(settings.placeholder !== false && $text.hasClass(className.placeholder)) {
+				if(settings.placeholder !== false && $text.classList.contains(className.placeholder)) {
 					text = module.get.text();
 					module.verbose('Saving placeholder text as', text);
 					$module.data(metadata.placeholderText, text);
@@ -2148,10 +2136,10 @@ vs.dropdown = function(element, settings){
 			if($nextSelectedItem.length > 0) {
 				module.debug('Scrolling page', direction, $nextSelectedItem);
 				$currentItem
-					.removeClass(className.selected)
+					.classList.remove(className.selected)
 				;
 				$nextSelectedItem
-					.addClass(className.selected)
+					.classList.add(className.selected)
 				;
 				if(settings.selectOnKeydown && module.is.single()) {
 					module.set.selectedItem($nextSelectedItem);
@@ -2181,24 +2169,24 @@ vs.dropdown = function(element, settings){
 				}
 				if(hasSearchValue || (isSearchMultiple && valueIsSet)) {
 					module.verbose('Hiding placeholder text');
-					$text.addClass(className.filtered);
+					$text.classList.add(className.filtered);
 				}
 				else if(!isMultiple || (isSearchMultiple && !valueIsSet)) {
 					module.verbose('Showing placeholder text');
-					$text.removeClass(className.filtered);
+					$text.classList.remove(className.filtered);
 				}
 			},
 			empty: function() {
-				$module.addClass(className.empty);
+				$module.classList.add(className.empty);
 			},
 			loading: function() {
-				$module.addClass(className.loading);
+				$module.classList.add(className.loading);
 			},
 			placeholderText: function(text) {
 				text = text || module.get.placeholderText();
 				module.debug('Setting placeholder text', text);
 				module.set.text(text);
-				$text.addClass(className.placeholder);
+				$text.classList.add(className.placeholder);
 			},
 			tabbable: function() {
 				if( module.is.searchSelection() ) {
@@ -2229,10 +2217,10 @@ vs.dropdown = function(element, settings){
 			},
 			activeItem: function($item) {
 				if( settings.allowAdditions && $item.filter(selector.addition).length > 0 ) {
-					$item.addClass(className.filtered);
+					$item.classList.add(className.filtered);
 				}
 				else {
-					$item.addClass(className.active);
+					$item.classList.add(className.active);
 				}
 			},
 			partialSearch: function(text) {
@@ -2266,7 +2254,7 @@ vs.dropdown = function(element, settings){
 				if($item && $menu.length > 0 && hasActive) {
 					itemOffset = $item.position().top;
 
-					$menu.addClass(className.loading);
+					$menu.classList.add(className.loading);
 					menuScroll = $menu.scrollTop();
 					menuOffset = $menu.offset().top;
 					itemOffset = $item.offset().top;
@@ -2280,7 +2268,7 @@ vs.dropdown = function(element, settings){
 					if(forceScroll || abovePage || belowPage) {
 						$menu.scrollTop(offset);
 					}
-					$menu.removeClass(className.loading);
+					$menu.classList.remove(className.loading);
 				}
 			},
 			text: function(text) {
@@ -2296,11 +2284,11 @@ vs.dropdown = function(element, settings){
 					}
 					else {
 						if(text !== module.get.placeholderText()) {
-							$text.removeClass(className.placeholder);
+							$text.classList.remove(className.placeholder);
 						}
 						module.debug('Changing text', text, $text);
 						$text
-							.removeClass(className.filtered)
+							.classList.remove(className.filtered)
 						;
 						if(settings.preserveHTML) {
 							$text.html(text);
@@ -2353,8 +2341,8 @@ vs.dropdown = function(element, settings){
 				if($nextValue) {
 					module.verbose('Scrolling to next value with letter', letter);
 					module.set.scrollPosition($nextValue);
-					$selectedItem.removeClass(className.selected);
-					$nextValue.addClass(className.selected);
+					$selectedItem.classList.remove(className.selected);
+					$nextValue.classList.add(className.selected);
 					if(settings.selectOnKeydown && module.is.single()) {
 						module.set.selectedItem($nextValue);
 					}
@@ -2381,11 +2369,11 @@ vs.dropdown = function(element, settings){
 			},
 			upward: function($currentMenu) {
 				var $element = $currentMenu || $module;
-				$element.addClass(className.upward);
+				$element.classList.add(className.upward);
 			},
 			leftward: function($currentMenu) {
 				var $element = $currentMenu || $menu;
-				$element.addClass(className.leftward);
+				$element.classList.add(className.leftward);
 			},
 			value: function(value, text, $selected) {
 				var
@@ -2437,14 +2425,14 @@ vs.dropdown = function(element, settings){
 			},
 			active: function() {
 				$module
-					.addClass(className.active)
+					.classList.add(className.active)
 				;
 			},
 			multiple: function() {
-				$module.addClass(className.multiple);
+				$module.classList.add(className.multiple);
 			},
 			visible: function() {
-				$module.addClass(className.visible);
+				$module.classList.add(className.visible);
 			},
 			exactly: function(value, $selectedItem) {
 				module.debug('Setting selected to exact values');
@@ -2482,9 +2470,9 @@ vs.dropdown = function(element, settings){
 							selectedText   = module.get.choiceText($selected),
 							selectedValue  = module.get.choiceValue($selected, selectedText),
 
-							isFiltered     = $selected.hasClass(className.filtered),
-							isActive       = $selected.hasClass(className.active),
-							isUserValue    = $selected.hasClass(className.addition),
+							isFiltered     = $selected.classList.contains(className.filtered),
+							isActive       = $selected.classList.contains(className.active),
+							isUserValue    = $selected.classList.contains(className.addition),
 							shouldAnimate  = (isMultiple && $selectedItem.length == 1)
 						;
 						if(isMultiple) {
@@ -2517,8 +2505,8 @@ vs.dropdown = function(element, settings){
 							module.set.text(selectedText);
 							module.set.value(selectedValue, selectedText, $selected);
 							$selected
-								.addClass(className.active)
-								.addClass(className.selected)
+								.classList.add(className.active)
+								.classList.add(className.selected)
 							;
 						}
 					})
@@ -2539,7 +2527,7 @@ vs.dropdown = function(element, settings){
 					escapedValue = escapedValue.toLowerCase();
 				}
 				$label =  $('<a />')
-					.addClass(className.label)
+					.classList.add(className.label)
 					.attr('data-' + metadata.value, escapedValue)
 					.html(templates.label(escapedValue, text))
 				;
@@ -2550,12 +2538,12 @@ vs.dropdown = function(element, settings){
 					return;
 				}
 				if(settings.label.variation) {
-					$label.addClass(settings.label.variation);
+					$label.classList.add(settings.label.variation);
 				}
 				if(shouldAnimate === true) {
 					module.debug('Animating in label', $label);
 					$label
-						.addClass(className.hidden)
+						.classList.add(className.hidden)
 						.insertBefore($next)
 						.transition(settings.label.transition, settings.label.duration)
 					;
@@ -2580,7 +2568,7 @@ vs.dropdown = function(element, settings){
 				else {
 					$message = $('<div/>')
 						.html(html)
-						.addClass(className.message)
+						.classList.add(className.message)
 						.appendTo($menu)
 					;
 				}
@@ -2602,7 +2590,7 @@ vs.dropdown = function(element, settings){
 				}
 				$('<option/>')
 					.prop('value', escapedValue)
-					.addClass(className.addition)
+					.classList.add(className.addition)
 					.html(value)
 					.appendTo($input)
 				;
@@ -2630,7 +2618,7 @@ vs.dropdown = function(element, settings){
 						.data(metadata.text, value)
 						.attr('data-' + metadata.value, value)
 						.attr('data-' + metadata.text, value)
-						.removeClass(className.filtered)
+						.classList.remove(className.filtered)
 					;
 					if(!settings.hideAdditions) {
 						html = settings.templates.addition( module.add.variables(message.addResult, value) );
@@ -2649,9 +2637,9 @@ vs.dropdown = function(element, settings){
 				}
 				if(!settings.hideAdditions || module.is.allFiltered()) {
 					$addition
-						.addClass(className.selected)
+						.classList.add(className.selected)
 						.siblings()
-						.removeClass(className.selected)
+						.classList.remove(className.selected)
 					;
 				}
 				module.refreshItems();
@@ -2726,43 +2714,43 @@ vs.dropdown = function(element, settings){
 
 		remove: {
 			active: function() {
-				$module.removeClass(className.active);
+				$module.classList.remove(className.active);
 			},
 			activeLabel: function() {
-				$module.find(selector.label).removeClass(className.active);
+				$module.find(selector.label).classList.remove(className.active);
 			},
 			empty: function() {
-				$module.removeClass(className.empty);
+				$module.classList.remove(className.empty);
 			},
 			loading: function() {
-				$module.removeClass(className.loading);
+				$module.classList.remove(className.loading);
 			},
 			initialLoad: function() {
 				initialLoad = false;
 			},
 			upward: function($currentMenu) {
 				var $element = $currentMenu || $module;
-				$element.removeClass(className.upward);
+				$element.classList.remove(className.upward);
 			},
 			leftward: function($currentMenu) {
 				var $element = $currentMenu || $menu;
-				$element.removeClass(className.leftward);
+				$element.classList.remove(className.leftward);
 			},
 			visible: function() {
-				$module.removeClass(className.visible);
+				$module.classList.remove(className.visible);
 			},
 			activeItem: function() {
-				$item.removeClass(className.active);
+				$item.classList.remove(className.active);
 			},
 			filteredItem: function() {
 				if(settings.useLabels && module.has.maxSelections() ) {
 					return;
 				}
 				if(settings.useLabels && module.is.multiple()) {
-					$item.not('.' + className.active).removeClass(className.filtered);
+					$item.not('.' + className.active).classList.remove(className.filtered);
 				}
 				else {
-					$item.removeClass(className.filtered);
+					$item.classList.remove(className.filtered);
 				}
 				module.remove.empty();
 			},
@@ -2772,7 +2760,7 @@ vs.dropdown = function(element, settings){
 					$option      = $input.find('option[value="' + module.escape.string(escapedValue) + '"]'),
 					hasOption    = ($option.length > 0)
 				;
-				if(!hasOption || !$option.hasClass(className.addition)) {
+				if(!hasOption || !$option.classList.contains(className.addition)) {
 					return;
 				}
 				// temporarily disconnect observer
@@ -2839,17 +2827,17 @@ vs.dropdown = function(element, settings){
 							module.remove.value(selectedValue, selectedText, $selected);
 						}
 						$selected
-							.removeClass(className.filtered)
-							.removeClass(className.active)
+							.classList.remove(className.filtered)
+							.classList.remove(className.active)
 						;
 						if(settings.useLabels) {
-							$selected.removeClass(className.selected);
+							$selected.classList.remove(className.selected);
 						}
 					})
 				;
 			},
 			selectedItem: function() {
-				$item.removeClass(className.selected);
+				$item.classList.remove(className.selected);
 			},
 			value: function(removedValue, removedText, $removedItem) {
 				var
@@ -3060,7 +3048,7 @@ vs.dropdown = function(element, settings){
 
 		is: {
 			active: function() {
-				return $module.hasClass(className.active);
+				return $module.classList.contains(className.active);
 			},
 			animatingInward: function() {
 				return $menu.transition('is inward');
@@ -3085,10 +3073,10 @@ vs.dropdown = function(element, settings){
 			},
 			leftward: function($subMenu) {
 				var $selectedMenu = $subMenu || $menu;
-				return $selectedMenu.hasClass(className.leftward);
+				return $selectedMenu.classList.contains(className.leftward);
 			},
 			disabled: function() {
-				return $module.hasClass(className.disabled);
+				return $module.classList.contains(className.disabled);
 			},
 			focused: function() {
 				return (document.activeElement === $module[0]);
@@ -3118,7 +3106,7 @@ vs.dropdown = function(element, settings){
 				return found;
 			},
 			multiple: function() {
-				return $module.hasClass(className.multiple);
+				return $module.classList.contains(className.multiple);
 			},
 			remote: function() {
 				return settings.apiSettings && module.can.useAPI();
@@ -3139,25 +3127,25 @@ vs.dropdown = function(element, settings){
 				return selectChanged;
 			},
 			search: function() {
-				return $module.hasClass(className.search);
+				return $module.classList.contains(className.search);
 			},
 			searchSelection: function() {
 				return ( module.has.search() && $search.parent(selector.dropdown).length === 1 );
 			},
 			selection: function() {
-				return $module.hasClass(className.selection);
+				return $module.classList.contains(className.selection);
 			},
 			userValue: function(value) {
 				return ($.inArray(value, module.get.userValues()) !== -1);
 			},
 			upward: function($menu) {
 				var $element = $menu || $module;
-				return $element.hasClass(className.upward);
+				return $element.classList.contains(className.upward);
 			},
 			visible: function($subMenu) {
 				return ($subMenu)
-					? $subMenu.hasClass(className.visible)
-					: $menu.hasClass(className.visible)
+					? $subMenu.classList.contains(className.visible)
+					: $menu.classList.contains(className.visible)
 				;
 			},
 			verticallyScrollableContext: function() {
@@ -3186,7 +3174,7 @@ vs.dropdown = function(element, settings){
 				if(!module.has.maxSelections()) {
 					return true;
 				}
-				if(module.has.maxSelections() && $item.hasClass(className.active)) {
+				if(module.has.maxSelections() && $item.classList.contains(className.active)) {
 					return true;
 				}
 				return false;
@@ -3199,7 +3187,7 @@ vs.dropdown = function(element, settings){
 					calculations
 				;
 				$currentMenu
-					.addClass(className.loading)
+					.classList.add(className.loading)
 				;
 				calculations = {
 					context: {
@@ -3233,7 +3221,7 @@ vs.dropdown = function(element, settings){
 					module.verbose('Dropdown cannot fit below, opening upward', onScreen);
 					canOpenDownward = false;
 				}
-				$currentMenu.removeClass(className.loading);
+				$currentMenu.classList.remove(className.loading);
 				return canOpenDownward;
 			},
 			openRightward: function($subMenu) {
@@ -3244,7 +3232,7 @@ vs.dropdown = function(element, settings){
 					calculations
 				;
 				$currentMenu
-					.addClass(className.loading)
+					.classList.add(className.loading)
 				;
 				calculations = {
 					context: {
@@ -3267,7 +3255,7 @@ vs.dropdown = function(element, settings){
 					module.verbose('Dropdown cannot fit in context rightward', isOffscreenRight);
 					canOpenRightward = false;
 				}
-				$currentMenu.removeClass(className.loading);
+				$currentMenu.classList.remove(className.loading);
 				return canOpenRightward;
 			},
 			click: function() {
@@ -3436,168 +3424,6 @@ vs.dropdown = function(element, settings){
 				text =  String(text);
 				return text.replace(regExp.escape, '\\$&');
 			}
-		},
-
-		setting: function(name, value) {
-			module.debug('Changing setting', name, value);
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				if($.isPlainObject(settings[name])) {
-					$.extend(true, settings[name], value);
-				}
-				else {
-					settings[name] = value;
-				}
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						module.error(error.method, query);
-						return false;
-					}
-				});
-			}
-			if ( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 
@@ -3606,7 +3432,7 @@ vs.dropdown = function(element, settings){
 	return module;
 };
 
-vs.dropdown.settings = {
+ui.dropdown.settings = {
 
 	silent                 : false,
 	debug                  : false,
@@ -3792,7 +3618,7 @@ vs.dropdown.settings = {
 	}
 };
 
-vs.dropdown.settings.templates = {
+ui.dropdown.settings.templates = {
 
 	// generates dropdown from select values
 	dropdown: function(select) {

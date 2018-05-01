@@ -7,11 +7,11 @@
  *
  */
 
-vs.checkTarget = function(event, test){			
+ui.checkTarget = function(event, test){			
 	return event.target.matches(test);
 }
 
-vs.isPlainObject = function(obj){
+ui.isPlainObject = function(obj){
 	if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
 		return false;
 	}
@@ -23,7 +23,7 @@ vs.isPlainObject = function(obj){
 	return true;
 }
 
-vs.extend = function(){
+ui.extend = function(){
 	var extended = {};
 	var deep = false;
 	var i = 0;
@@ -38,7 +38,7 @@ vs.extend = function(){
 		for ( var prop in obj ) {
 			if ( Object.prototype.hasOwnProperty.call( obj, prop ) ) {
 				if ( deep && Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
-					extended[prop] = vs.extend( true, extended[prop], obj[prop] );
+					extended[prop] = ui.extend( true, extended[prop], obj[prop] );
 				} else {
 					extended[prop] = obj[prop];
 				}
@@ -54,23 +54,23 @@ vs.extend = function(){
 	return extended;
 }
 
-vs.isVisible = function(e){
+ui.isVisible = function(e){
 	return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 }
 
-vs.prevAll = function(elem, func){
+ui.prevAll = function(elem, func){
 	while(elem = elem.previousElementSibling){
 		func(elem);
 	}
 }
 
-vs.nextAll = function(elem, func){
+ui.nextAll = function(elem, func){
 	while(elem = elem.nextElementSibling){
 		func(elem);
 	}
 }
 
-vs.fadeIn = function(elem, opts){
+ui.fadeIn = function(elem, opts){
 	elem.style.opacity = 0;
 	elem.style.display = opts.display || "block";
 
@@ -90,7 +90,7 @@ vs.fadeIn = function(elem, opts){
 	})();
 }
 
-vs.fadeOut = function(elem, opts){
+ui.fadeOut = function(elem, opts){
 	elem.style.opacity = 1;
 
 	(function fade() {
@@ -98,7 +98,7 @@ vs.fadeOut = function(elem, opts){
 			elem.style.display = "none";
 
 			if(typeof opts.ondone == "function"){
-				opts.ondone();
+				opts.ondone(elem);
 			}
 		} else {
 			requestAnimationFrame(fade);

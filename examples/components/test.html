@@ -1,194 +1,274 @@
 <!DOCTYPE html>
 <html>
-<head>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Test</title>
 
-  <meta charset="utf-8" />
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <title>Test</title>
+    <link rel="stylesheet" type="text/css" href="../../dist/components/reset.css">
+    <link rel="stylesheet" type="text/css" href="../../dist/components/site.css">
+    <link rel="stylesheet" type="text/css" href="../../dist/components/grid.css">
+    <link rel="stylesheet" type="text/css" href="../../dist/vanilla-semantic.css">
 
-  <!--- Site CSS -->
-  <link rel="stylesheet" type="text/css" href="../../dist/components/reset.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/site.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/grid.css">
 
-  <!--- Component CSS -->
-  <link rel="stylesheet" type="text/css" href="../../dist/components/icon.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/button.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/card.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/label.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/image.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/reveal.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/dimmer.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/rating.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/transition.css">
-  <link rel="stylesheet" type="text/css" href="../../dist/components/popup.css">
+    <script type="text/javascript" src="../../dist/vanilla-semantic.js"></script>
+    <script src="../assets/library/jquery.min.js"></script>
+    <script src="../assets/library/iframe-content.js"></script>
+    <script src="../assets/show-examples.js"></script>
 
-  <!--- Component JS -->
-  <script src="../assets/library/jquery.min.js"></script>
-  <script src="../assets/library/iframe-content.js"></script>
+    <!--- Example CSS -->
+    <style>
+      body {
+        padding: 1em;
+      }
+    </style>
 
-  <script type="text/javascript" src="../../dist/components/vs.js"></script>
-  <script type="text/javascript" src="../../dist/components/utils.js"></script>
-  <script type="text/javascript" src="../../dist/components/rating.js"></script>
-  <script type="text/javascript" src="../../dist/components/nag.js"></script>
-  <script type="text/javascript" src="../../dist/components/dimmer.js"></script>
-  <script type="text/javascript" src="../../dist/components/embed.js"></script>
+    <!--- Example Javascript -->
+    <script>
+      $(document).ready(function() {
+        var ratings = ui(".star.rating").rating(),
+            nag = ui(".cookie.nag").nag({
+              key: "accepts-cookies",
+              value: "bob"
+            }),
+            dimmer = ui(".card .dimmer").dimmer({
+              on: 'hover'
+            }),
+            embed = ui(".ui.embed").embed({
+              source: 'youtube',
+              id: 'O6Xo21L0ybE'
+            }),
+            accordion = ui(".ui.accordion").accordion(),
+            masterCheckbox = ui('.checkbox').checkbox({
+              // check all children
+              onChecked: function() {
+                alert("hey");
+              },
+              onUnchecked: function() {
+                alert("bye")
+              }
+            }),
+            progress = ui('.ui.progress').progress({
+              duration: 200,
+              total: 200,
+              text: {
+                active: '{value} of {total} done'
+              }
+            });
+      });
+    </script>
+  </head>
 
-  <script type="text/javascript" src="../../dist/components/popup.js"></script>
-  <script type="text/javascript" src="../../dist/components/transition.js"></script>
+  <body>
+    <div class="ui cookie nag">
+      <span class="title">
+        We use cookies to ensure you get the best experience on our website
+      </span>
+      <i class="close icon"></i>
+    </div>
 
-  <!--- Show Names -->
-  <script src="../assets/show-examples.js"></script>
+    <div class="ui indicating progress" data-value="176" data-total="200" id="example5">
+      <div class="bar">
+        <div class="progress"></div>
+      </div>
+      <div class="label"></div>
+    </div>
 
-  <!--- Example CSS -->
-  <style>
-    body {
-      padding: 1em;
-    }
-  </style>
-
-  <!--- Example Javascript -->
-  <script>
-  $(document).ready(function() {
-    var ratings = vs(".star.rating").rating(),
-        nag = vs(".cookie.nag").nag({
-          key: "accepts-cookies",
-          value: "bob"
-        }),
-        dimmer = vs(".card .dimmer").dimmer({
-          on: 'hover'
-        }),
-        embed = vs(".ui.embed").embed({
-          source: 'youtube',
-          id: 'O6Xo21L0ybE'
-        });
-  });
-  </script>
-</head>
-
-<body>
-
-<div class="ui cookie nag">
-  <span class="title">
-    We use cookies to ensure you get the best experience on our website
-  </span>
-  <i class="close icon"></i>
-</div>
-
-<div class="ui embed" data-source="youtube" data-id="O6Xo21L0ybE"></div>
-
-<div class="ui four cards">
-  <div class="ui card">
-    <div class="image">
-      <div class="ui blurring inverted dimmer">
-        <div class="content">
-          <div class="center">
-            <div class="ui teal button">Add Friend</div>
+    <div class="ui celled relaxed list">
+      <div class="item">
+        <div class="ui master checkbox">
+          <input type="checkbox" name="fruits">
+          <label>Fruits</label>
+        </div>
+        <div class="list">
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="apple">
+              <label>Apple</label>
+            </div>
+          </div>
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="orange">
+              <label>Orange</label>
+            </div>
+          </div>
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="pear">
+              <label>Pear</label>
+            </div>
           </div>
         </div>
       </div>
-      <img src="../assets/images/wireframe/image.png">
-    </div>
-    <div class="content">
-      <div class="header">Title</div>
-      <div class="meta">
-        <a class="group">Meta</a>
-      </div>
-      <div class="description">One or two sentence description that may go to several lines</div>
-    </div>
-    <div class="extra content">
-      <a class="right floated created">Arbitrary</a>
-      <a class="friends">
-        Arbitrary</a>
-    </div>
-  </div>
-  <div class="ui card">
-    <div class="blurring dimmable image">
-      <div class="ui dimmer">
-        <div class="content">
-          <div class="center">
-            <div class="ui inverted button">Call to Action</div>
+      <div class="item">
+        <div class="ui master checkbox">
+          <input type="checkbox" name="vegetables">
+          <label>Vegetables</label>
+        </div>
+        <div class="list">
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="lettuce">
+              <label>Lettuce</label>
+            </div>
+          </div>
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="carrot">
+              <label>Carrot</label>
+            </div>
+          </div>
+          <div class="item">
+            <div class="ui child checkbox">
+              <input type="checkbox" name="spinach">
+              <label>Spinach</label>
+            </div>
           </div>
         </div>
       </div>
-      <img src="../assets/images/wireframe/image.png">
     </div>
-    <div class="content">
-      <a class="header">Name</a>
-      <div class="meta">
-        <span class="date">Date</span>
-      </div>
-    </div>
-    <div class="extra content">
-      <a>
-        <i class="users icon"></i>
-        Users
-      </a>
-    </div>
-  </div>
-  <div class="ui card">
-    <div class="ui slide right reveal image">
-      <div class="visible content">
-        <img class="ui fluid image" src="../assets/images/avatar/nan.jpg">
-      </div>
-      <div class="hidden content">
-        <img class="ui fluid image" src="../assets/images/avatar/tom.jpg">
-      </div>
-    </div>
-    <div class="content">
-      <img src="../assets/images/wireframe/paragraph.png" class="ui wireframe image">
-    </div>
-  </div>
-  <div class="ui card">
-    <div class="ui move reveal image">
-      <div class="visible content">
-        <img class="ui fluid image" src="../assets/images/avatar/tom.jpg">
-      </div>
-      <div class="hidden content">
-        <img class="ui fluid image" src="../assets/images/avatar/nan.jpg">
-      </div>
-    </div>
-    <div class="content">
-      <img src="../assets/images/wireframe/paragraph.png" class="ui wireframe image">
-    </div>
-  </div>
-</div>
 
-<div class="ui four cards">
-  <div class="card">
-    <div class="image">
-      <img src="../assets/images/wireframe/image.png">
+    <div class="ui styled accordion">
+      <div class="active title">
+        <i class="dropdown icon"></i>
+        What is a dog?
+      </div>
+      <div class="active content">
+        <p>A dog is a type of domesticated animal. Known for its loyalty and faithfulness, it can be found as a welcome guest in many households across the world.</p>
+      </div>
+      <div class="title">
+        <i class="dropdown icon"></i>
+        What kinds of dogs are there?
+      </div>
+      <div class="content">
+        <p>There are many breeds of dogs. Each breed varies in size and temperament. Owners often select a breed of dog that they find to be compatible with their own lifestyle and desires from a companion.</p>
+      </div>
+      <div class="title">
+        <i class="dropdown icon"></i>
+        How do you acquire a dog?
+      </div>
+      <div class="content">
+        <p>Three common ways for a prospective owner to acquire a dog is from pet shops, private owners, or shelters.</p>
+        <p>A pet shop may be the most convenient way to buy a dog. Buying a dog from a private owner allows you to assess the pedigree and upbringing of your dog before choosing to take it home. Lastly, finding your dog from a shelter, helps give a good home to a dog who may not find one so readily.</p>
+      </div>
     </div>
-    <div class="extra center aligned">
-      <div data-rating="4" class="ui star rating"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="image">
-      <img src="../assets/images/wireframe/image.png">
-    </div>
-    <div class="extra center aligned">
-      <div data-rating="2" class="ui star rating"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="image">
-      <img src="../assets/images/wireframe/image.png">
-    </div>
-    <div class="extra center aligned">
-      <div data-rating="3" class="ui star rating"></div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="image">
-      <img src="../assets/images/wireframe/image.png">
-    </div>
-    <div class="extra center aligned">
-      <div data-rating="4" class="ui star rating"></div>
-    </div>
-  </div>
-</div>
 
-</body>
+
+    <div class="ui four cards">
+      <div class="ui card">
+        <div class="image">
+          <div class="ui blurring inverted dimmer">
+            <div class="content">
+              <div class="center">
+                <div class="ui teal button">Add Friend</div>
+              </div>
+            </div>
+          </div>
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="content">
+          <div class="header">Title</div>
+          <div class="meta">
+            <a class="group">Meta</a>
+          </div>
+          <div class="description">One or two sentence description that may go to several lines</div>
+        </div>
+        <div class="extra content">
+          <a class="right floated created">Arbitrary</a>
+          <a class="friends">
+            Arbitrary</a>
+        </div>
+      </div>
+      <div class="ui card">
+        <div class="blurring dimmable image">
+          <div class="ui dimmer">
+            <div class="content">
+              <div class="center">
+                <div class="ui inverted button">Call to Action</div>
+              </div>
+            </div>
+          </div>
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="content">
+          <a class="header">Name</a>
+          <div class="meta">
+            <span class="date">Date</span>
+          </div>
+        </div>
+        <div class="extra content">
+          <a>
+            <i class="users icon"></i>
+            Users
+          </a>
+        </div>
+      </div>
+      <div class="ui card">
+        <div class="ui slide right reveal image">
+          <div class="visible content">
+            <img class="ui fluid image" src="../assets/images/avatar/nan.jpg">
+          </div>
+          <div class="hidden content">
+            <img class="ui fluid image" src="../assets/images/avatar/tom.jpg">
+          </div>
+        </div>
+        <div class="content">
+          <img src="../assets/images/wireframe/paragraph.png" class="ui wireframe image">
+        </div>
+      </div>
+      <div class="ui card">
+        <div class="ui move reveal image">
+          <div class="visible content">
+            <img class="ui fluid image" src="../assets/images/avatar/tom.jpg">
+          </div>
+          <div class="hidden content">
+            <img class="ui fluid image" src="../assets/images/avatar/nan.jpg">
+          </div>
+        </div>
+        <div class="content">
+          <img src="../assets/images/wireframe/paragraph.png" class="ui wireframe image">
+        </div>
+      </div>
+    </div>
+
+    <div class="ui four cards">
+      <div class="card">
+        <div class="image">
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="extra center aligned">
+          <div data-rating="4" class="ui star rating"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="image">
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="extra center aligned">
+          <div data-rating="2" class="ui star rating"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="image">
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="extra center aligned">
+          <div data-rating="3" class="ui star rating"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="image">
+          <img src="../assets/images/wireframe/image.png">
+        </div>
+        <div class="extra center aligned">
+          <div data-rating="4" data-max="5" class="ui star rating"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ui embed" data-source="youtube" data-id="O6Xo21L0ybE"></div>
+
+  </body>
 </html>

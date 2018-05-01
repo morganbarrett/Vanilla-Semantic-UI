@@ -58,10 +58,10 @@ module.exports = {
     + ' *' + '\n'
     + ' */' + '\n\n',
 
-  head: "var vs = (function(window, document, undefined){\n" +
+  head: "(function(window, document, undefined){\n" +
           "\t'use strict';\n\n",
 
-  foot:   '\n\treturn vs;' +
+  foot:   '\n\twindow.ui = ui;' +
         '\n})(window, document);\n',
 
   version    : version

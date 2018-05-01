@@ -7,15 +7,11 @@
  *
  */
 
-vs.nag = function(element, settings){
+ui.nag = function(element, settings){
 	var className = settings.className,
 		selector = settings.selector,
 		error = settings.error,
-		namespace = settings.namespace,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = namespace + 'Module',
 		context = document.querySelector(settings.context ? settings.context : "body"),
-		instance = element[moduleNamespace],
 		moduleOffset,
 		moduleHeight,
 		contextWidth,
@@ -36,11 +32,10 @@ vs.nag = function(element, settings){
 			module.verbose('Initializing element');
 
 			element.onclick = function(event){
-				if(vs.checkTarget(event, selector.close)){
+				if(ui.checkTarget(event, selector.close)){
 					module.dismiss(event);
 				}
 			}
-			element[moduleNamespace] = module;
 
 			if(settings.detachable && $module.parentElement !== context){
 				element.remove();
@@ -55,23 +50,17 @@ vs.nag = function(element, settings){
 
 			module.show();
 		},
-		destroy: function(){
-			module.verbose('Destroying instance');
-			element.onclick = undefined;
-			element[moduleNamespace] = undefined;
-		},
 		show: function(){
-			if(module.should.show() && !vs.isVisible(element)){
-				console.log("hey")
+			if(module.should.show() && !ui.isVisible(element)){
 				module.debug('Showing nag', settings.animation.show);
 				if(settings.animation.show == 'fade'){
-					vs.fadeIn(element, {
+					ui.fadeIn(element, {
 						duration: settings.duration,
 						easing: settings.easing
 					});
 				}
 				else {
-					vs.fadeIn(element, {
+					ui.fadeIn(element, {
 						duration: settings.duration,
 						easing: settings.easing
 					});
@@ -81,13 +70,13 @@ vs.nag = function(element, settings){
 		hide: function(){
 			module.debug('Showing nag', settings.animation.hide);
 			if(settings.animation.show == 'fade'){
-				vs.fadeOut(element, {
+				ui.fadeOut(element, {
 					duration: settings.duration,
 					easing: settings.easing
 				});
 			}
 			else {
-				vs.fadeOut(element, {
+				ui.fadeOut(element, {
 					duration: settings.duration,
 					easing: settings.easing
 				});
@@ -177,7 +166,10 @@ vs.nag = function(element, settings){
 				} else if(document.cookie !== undefined){
 					var reg = new RegExp("[; ]" + key + "=([^\\s;]*)");
 					var sMatch = (' ' + document.cookie).match(reg);
+					
+					if(sMatch && sMatch[1]){
 						storedValue = sMatch[1];
+					}
 				} else {
 					module.error(error.noCookieStorage);
 				}
@@ -210,13 +202,11 @@ vs.nag = function(element, settings){
 	return module;
 };
 
-vs.nag.settings = {
-	name: 'Nag',
+ui.nag.settings = {
 	silent: false,
 	debug: false,
 	verbose: false,
 	performance: true,
-	namespace: 'Nag',
 	persist: false,
 	displayTime: 0,
 	context: false,

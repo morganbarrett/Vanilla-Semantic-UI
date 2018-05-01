@@ -7,7 +7,7 @@
  *
  */
 
-var vs = function(elements){
+var ui = function(elements){
 	var obj = {};
 
 	if(typeof elements === "string"){
@@ -17,35 +17,44 @@ var vs = function(elements){
 		elements = [elements];
 	}
 
-	for(var c in vs){
-		var component = vs[c];
-
-		if(component.settings == undefined){
+	for(var c in ui){
+		if(ui[c].settings == undefined){
 			continue;
 		}
 
-		obj[c] = (function(comp){
+		obj[c] = (function(name, comp){
 			return function(params){
-				var perf = [],
+				var args = [{}, comp.settings],
 					time = new Date().getTime(),
-					settings = vs.extend.apply(this,
-						vs.isPlainObject(params) ?
-							[true, {}, comp.settings, params] :
-							[{}, comp.settings]
-					);
+					perf = [];
+
+				if(ui.isPlainObject(params)){
+					args = [true, {}, comp.settings, params];
+				}
+				
+				var settings = ui.extend.apply(this, args);
 				
 				elements.forEach(function(element){
-					makeModule(comp, element, settings);
+					element[name] = makeModule(name, comp, element, settings);
 				});
 			};
-		})(component);
+		})(c, ui[c]);
 	}
 
 	return obj;
 };
 
-function makeModule(comp, element, settings){
-	var module = comp(element, settings);
+function makeModule(name, comp, element, settings){
+	var instance = element[name],
+		module = comp(element, settings, instance);
+
+	module.destroy = function(){
+		module.verbose('Destroying previous instance', instance);
+		if(module.unbind.events){
+			module.unbind.events();
+		}
+		element[name] = undefined;
+	};
 
 	module.debug = function(){
 		if(!settings.silent && settings.debug){
@@ -125,15 +134,14 @@ function makeModule(comp, element, settings){
 			performance = [];
 		}
 	};
-
-	if(module.initialize){
-		module.initialize();
-	}
+	
+	module.verbose('Instantiating module', settings);
+	if(module.initialize) module.initialize();
 
 	return module;
 };
 
-vs.invoke = function(query, passedArguments){
+ui.invoke = function(query, passedArguments){
 	var object = instance,
 		maxDepth,
 		found,
@@ -147,14 +155,14 @@ vs.invoke = function(query, passedArguments){
 				? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
 				: query
 			;
-			if( vs.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
+			if( ui.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
 				object = object[camelCaseValue];
 			}
 			else if( object[camelCaseValue] !== undefined ) {
 				found = object[camelCaseValue];
 				return false;
 			}
-			else if( vs.isPlainObject( object[value] ) && (depth != maxDepth) ) {
+			else if( ui.isPlainObject( object[value] ) && (depth != maxDepth) ) {
 				object = object[value];
 			}
 			else if( object[value] !== undefined ) {

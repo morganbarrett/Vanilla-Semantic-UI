@@ -7,19 +7,15 @@
  *
  */
 
-vs.shape = function(element, settings){
-	var namespace = settings.namespace,
-		selector = settings.selector,
+ui.shape = function(element, settings){
+	var selector = settings.selector,
 		error = settings.error,
 		className = settings.className,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
-		//$sides        = $module.find(selector.sides),
-		//$side         = $module.find(selector.side),
+		sides = element.querySelectorAll(selector.sides),
+		side = element.querySelectorAll(selector.side),
 		nextIndex = false,
-		$activeSide,
-		$nextSide,
-		instance = element[moduleNamespace],
+		activeSide,
+		nextSide,
 		module;
 
 	/*module = {
@@ -28,22 +24,6 @@ vs.shape = function(element, settings){
 			module.verbose('Initializing module for', element);
 			module.set.defaultSide();
 			module.instantiate();
-		},
-
-		instantiate: function() {
-			module.verbose('Storing instance of module', module);
-			instance = module;
-			$module
-				.data(moduleNamespace, instance)
-			;
-		},
-
-		destroy: function() {
-			module.verbose('Destroying previous module for', element);
-			$module
-				.removeData(moduleNamespace)
-				.off(eventNamespace)
-			;
 		},
 
 		refresh: function() {
@@ -75,7 +55,7 @@ vs.shape = function(element, settings){
 			if(module.get.transitionEvent()) {
 				module.verbose('Starting CSS animation');
 				$module
-					.addClass(className.animating)
+					.classList.add(className.animating)
 				;
 				$sides
 					.css(propertyObject)
@@ -84,10 +64,10 @@ vs.shape = function(element, settings){
 				module.set.duration(settings.duration);
 				requestAnimationFrame(function() {
 					$module
-						.addClass(className.animating)
+						.classList.add(className.animating)
 					;
 					$activeSide
-						.addClass(className.hidden)
+						.classList.add(className.hidden)
 					;
 				});
 			}
@@ -111,7 +91,7 @@ vs.shape = function(element, settings){
 		reset: function() {
 			module.verbose('Animating states reset');
 			$module
-				.removeClass(className.animating)
+				.classList.remove(className.animating)
 				.attr('style', '')
 				.removeAttr('style')
 			;
@@ -123,10 +103,10 @@ vs.shape = function(element, settings){
 			$side
 				.attr('style', '')
 				.removeAttr('style')
-				.removeClass(className.hidden)
+				.classList.remove(className.hidden)
 			;
 			$nextSide
-				.removeClass(className.animating)
+				.classList.remove(className.animating)
 				.attr('style', '')
 				.removeAttr('style')
 			;
@@ -137,7 +117,7 @@ vs.shape = function(element, settings){
 				return ($side.filter('.' + className.active)[0] == $nextSide[0]);
 			},
 			animating: function() {
-				return $module.hasClass(className.animating);
+				return $module.classList.contains(className.animating);
 			}
 		},
 
@@ -190,7 +170,7 @@ vs.shape = function(element, settings){
 
 			stageSize: function() {
 				var
-					$clone      = $module.clone().addClass(className.loading),
+					$clone      = $module.clone().classList.add(className.loading),
 					$activeSide = $clone.find('.' + settings.className.active),
 					$nextSide   = (nextIndex)
 						? $clone.find(selector.side).eq(nextIndex)
@@ -208,8 +188,8 @@ vs.shape = function(element, settings){
 							? $module.height()
 							: settings.height
 				;
-				$activeSide.removeClass(className.active);
-				$nextSide.addClass(className.active);
+				$activeSide.classList.remove(className.active);
+				$nextSide.classList.add(className.active);
 				$clone.insertAfter($module);
 				$clone.remove();
 				if(settings.width != 'auto') {
@@ -236,10 +216,10 @@ vs.shape = function(element, settings){
 			active: function() {
 				module.verbose('Setting new side to active', $nextSide);
 				$side
-					.removeClass(className.active)
+					.classList.remove(className.active)
 				;
 				$nextSide
-					.addClass(className.active)
+					.classList.add(className.active)
 				;
 				settings.onChange.call($nextSide[0]);
 				module.set.defaultSide();
@@ -483,7 +463,7 @@ vs.shape = function(element, settings){
 					})
 				;
 				$nextSide
-					.addClass(className.animating)
+					.classList.add(className.animating)
 					.css({
 						'top'       : box.origin + 'px',
 						'transform' : 'rotateX(90deg) translateZ(' + box.depth.next + 'px)'
@@ -513,7 +493,7 @@ vs.shape = function(element, settings){
 					})
 				;
 				$nextSide
-					.addClass(className.animating)
+					.classList.add(className.animating)
 					.css({
 						'top'       : box.origin + 'px',
 						'transform' : 'rotateX(-90deg) translateZ(' + box.depth.next + 'px)'
@@ -547,7 +527,7 @@ vs.shape = function(element, settings){
 					})
 				;
 				$nextSide
-					.addClass(className.animating)
+					.classList.add(className.animating)
 					.css({
 						'left'      : box.origin + 'px',
 						'transform' : 'rotateY(-90deg) translateZ(' + box.depth.next + 'px)'
@@ -581,7 +561,7 @@ vs.shape = function(element, settings){
 					})
 				;
 				$nextSide
-					.addClass(className.animating)
+					.classList.add(className.animating)
 					.css({
 						'left'      : box.origin + 'px',
 						'transform' : 'rotateY(90deg) translateZ(' + box.depth.next + 'px)'
@@ -610,176 +590,13 @@ vs.shape = function(element, settings){
 					})
 				;
 				$nextSide
-					.addClass(className.animating)
+					.classList.add(className.animating)
 					.css({
 						'left'      : box.origin + 'px',
 						'transform' : 'rotateY(-180deg)'
 					})
 				;
 			}
-		},
-		setting: function(name, value) {
-			module.debug('Changing setting', name, value);
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				if($.isPlainObject(settings[name])) {
-					$.extend(true, settings[name], value);
-				}
-				else {
-					settings[name] = value;
-				}
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if($allModules.length > 1) {
-					title += ' ' + '(' + $allModules.length + ')';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						return false;
-					}
-				});
-			}
-			if ( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 
@@ -788,61 +605,31 @@ vs.shape = function(element, settings){
 	return module;
 };
 
-vs.shape.settings = {
-	// module info
-	name : 'Shape',
-
-	// hide all debug content
-	silent     : false,
-
-	// debug content outputted to console
-	debug      : false,
-
-	// verbose debug output
-	verbose    : false,
-
-	// fudge factor in pixels when swapping from 2d to 3d (can be useful to correct rounding errors)
-	jitter     : 0,
-
-	// performance data output
+ui.shape.settings = {
+	silent: false,
+	debug: false,
+	verbose: false,
+	jitter: 0,
 	performance: true,
-
-	// event namespace
-	namespace  : 'shape',
-
-	// width during animation, can be set to 'auto', initial', 'next' or pixel amount
+	namespace: 'shape',
 	width: 'initial',
-
-	// height during animation, can be set to 'auto', 'initial', 'next' or pixel amount
 	height: 'initial',
-
-	// callback occurs on side change
-	beforeChange : function() {},
-	onChange     : function() {},
-
-	// allow animation to same side
 	allowRepeats: false,
-
-	// animation duration
-	duration   : false,
-
-	// possible errors
+	duration: false,
+	beforeChange: function() {},
+	onChange: function() {},
+	selector: {
+		sides: '.sides',
+		side: '.side'
+	},
 	error: {
-		side   : 'You tried to switch to a side that does not exist.',
-		method : 'The method you called is not defined'
+		side: 'You tried to switch to a side that does not exist.',
+		method: 'The method you called is not defined'
 	},
-
-	// classnames used
-	className   : {
-		animating : 'animating',
-		hidden    : 'hidden',
-		loading   : 'loading',
-		active    : 'active'
-	},
-
-	// selectors used
-	selector    : {
-		sides : '.sides',
-		side  : '.side'
+	className: {
+		animating: 'animating',
+		hidden: 'hidden',
+		loading: 'loading',
+		active: 'active'
 	}
 };

@@ -7,20 +7,16 @@
  *
  */
 
-vs.embed = function(element, settings){
+ui.embed = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
 		sources = settings.sources,
 		error = settings.error,
 		metadata = settings.metadata,
-		namespace = settings.namespace,
 		templates = settings.templates,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
 		placeholder = element.querySelectorAll(selector.placeholder),
 		icon = element.querySelectorAll(selector.icon),
 		embed = element.querySelectorAll(selector.embed),
-		instance = element[moduleNamespace],
 		module;
 
 	module = {
@@ -29,18 +25,6 @@ vs.embed = function(element, settings){
 			module.determine.autoplay();
 			module.create();
 			module.bind.events();
-			module.instantiate();
-		},
-		instantiate: function(){
-			module.verbose('Storing instance of module', module);
-			instance = module;
-			element[moduleNamespace] = module;
-		},
-		destroy: function(){
-			module.verbose('Destroying previous instance of embed');
-			module.reset();
-			element.removeEvents();
-			element[moduleNamespace] = undefined;
 		},
 		refresh: function(){
 			module.verbose('Refreshing selector cache');
@@ -53,7 +37,7 @@ vs.embed = function(element, settings){
 				if( module.has.placeholder() ){
 					module.debug('Adding placeholder events');
 					element.onclick = function(event){
-						if(vs.checkTarget(event, selector.placeholder) || vs.checkTarget(event, selector.icon)){
+						if(ui.checkTarget(event, selector.placeholder) || ui.checkTarget(event, selector.icon)){
 							module.createAndShow();
 						}
 					}
@@ -265,7 +249,7 @@ vs.embed = function(element, settings){
 				extraParameters = extraParameters || settings.parameters;
 				
 				if(extraParameters){
-					parameters = vs.extend({}, parameters, extraParameters);
+					parameters = ui.extend({}, parameters, extraParameters);
 				}
 
 				parameters = settings.onEmbed(parameters);
@@ -298,10 +282,7 @@ vs.embed = function(element, settings){
 	return module;
 };
 
-
-vs.embed.settings = {
-	name: 'Embed',
-	namespace: 'embed',
+ui.embed.settings = {
 	silent: false,
 	debug: false,
 	verbose: false,

@@ -7,20 +7,16 @@
  *
  */
 
-vs.sidebar = function(element, settings){
+ui.sidebar = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
-		namespace = settings.namespace,
 		regExp = settings.regExp,
 		error = settings.error,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
 		/*$context        = $(settings.context),
 		$sidebars       = $module.children(selector.sidebar),
 		$fixed          = $context.children(selector.fixed),
 		$pusher         = $context.children(selector.pusher),
 		$style,*/
-		instance = element[moduleNamespace],
 		elementNamespace,
 		id,
 		currentScroll,
@@ -51,13 +47,6 @@ vs.sidebar = function(element, settings){
 			module.instantiate();
 		},
 
-		instantiate: function() {
-			module.verbose('Storing instance of module', module);
-			instance = module;
-			$module
-				.data(moduleNamespace, module)
-			;
-		},
 
 		create: {
 			id: function() {
@@ -470,7 +459,7 @@ vs.sidebar = function(element, settings){
 				module.set.animating();
 				module.remove.visible();
 				if(settings.dimPage && !module.othersVisible()) {
-					$pusher.removeClass(className.dimmed);
+					$pusher.classList.remove(className.dimmed);
 				}
 			};
 			transitionEnd = function(event) {
@@ -514,42 +503,42 @@ vs.sidebar = function(element, settings){
 			// ios only (scroll on html not document). This prevent auto-resize canvas/scroll in ios
 			// (This is no longer necessary in latest iOS)
 			ios: function() {
-				$html.addClass(className.ios);
+				$html.classList.add(className.ios);
 			},
 
 			// container
 			pushed: function() {
-				$context.addClass(className.pushed);
+				$context.classList.add(className.pushed);
 			},
 			pushable: function() {
-				$context.addClass(className.pushable);
+				$context.classList.add(className.pushable);
 			},
 
 			// pusher
 			dimmed: function() {
-				$pusher.addClass(className.dimmed);
+				$pusher.classList.add(className.dimmed);
 			},
 
 			// sidebar
 			active: function() {
-				$module.addClass(className.active);
+				$module.classList.add(className.active);
 			},
 			animating: function() {
-				$module.addClass(className.animating);
+				$module.classList.add(className.animating);
 			},
 			transition: function(transition) {
 				transition = transition || module.get.transition();
-				$module.addClass(transition);
+				$module.classList.add(transition);
 			},
 			direction: function(direction) {
 				direction = direction || module.get.direction();
-				$module.addClass(className[direction]);
+				$module.classList.add(className[direction]);
 			},
 			visible: function() {
-				$module.addClass(className.visible);
+				$module.classList.add(className.visible);
 			},
 			overlay: function() {
-				$module.addClass(className.overlay);
+				$module.classList.add(className.overlay);
 			}
 		},
 		remove: {
@@ -563,49 +552,49 @@ vs.sidebar = function(element, settings){
 
 			// ios scroll on html not document
 			ios: function() {
-				$html.removeClass(className.ios);
+				$html.classList.remove(className.ios);
 			},
 
 			// context
 			pushed: function() {
-				$context.removeClass(className.pushed);
+				$context.classList.remove(className.pushed);
 			},
 			pushable: function() {
-				$context.removeClass(className.pushable);
+				$context.classList.remove(className.pushable);
 			},
 
 			// sidebar
 			active: function() {
-				$module.removeClass(className.active);
+				$module.classList.remove(className.active);
 			},
 			animating: function() {
-				$module.removeClass(className.animating);
+				$module.classList.remove(className.animating);
 			},
 			transition: function(transition) {
 				transition = transition || module.get.transition();
-				$module.removeClass(transition);
+				$module.classList.remove(transition);
 			},
 			direction: function(direction) {
 				direction = direction || module.get.direction();
-				$module.removeClass(className[direction]);
+				$module.classList.remove(className[direction]);
 			},
 			visible: function() {
-				$module.removeClass(className.visible);
+				$module.classList.remove(className.visible);
 			},
 			overlay: function() {
-				$module.removeClass(className.overlay);
+				$module.classList.remove(className.overlay);
 			}
 		},
 
 		get: {
 			direction: function() {
-				if($module.hasClass(className.top)) {
+				if($module.classList.contains(className.top)) {
 					return className.top;
 				}
-				else if($module.hasClass(className.right)) {
+				else if($module.classList.contains(className.right)) {
 					return className.right;
 				}
-				else if($module.hasClass(className.bottom)) {
+				else if($module.classList.contains(className.bottom)) {
 					return className.bottom;
 				}
 				return className.left;
@@ -687,7 +676,7 @@ vs.sidebar = function(element, settings){
 				return !module.is.visible();
 			},
 			visible: function() {
-				return $module.hasClass(className.visible);
+				return $module.classList.contains(className.visible);
 			},
 			// alias
 			open: function() {
@@ -697,10 +686,10 @@ vs.sidebar = function(element, settings){
 				return module.is.hidden();
 			},
 			vertical: function() {
-				return $module.hasClass(className.top);
+				return $module.classList.contains(className.top);
 			},
 			animating: function() {
-				return $context.hasClass(className.animating);
+				return $context.classList.contains(className.animating);
 			},
 			rtl: function () {
 				if(module.cache.rtl === undefined) {
@@ -708,168 +697,6 @@ vs.sidebar = function(element, settings){
 				}
 				return module.cache.rtl;
 			}
-		},
-
-		setting: function(name, value) {
-			module.debug('Changing setting', name, value);
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				if($.isPlainObject(settings[name])) {
-					$.extend(true, settings[name], value);
-				}
-				else {
-					settings[name] = value;
-				}
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						module.error(error.method, query);
-						return false;
-					}
-				});
-			}
-			if ( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 
@@ -878,7 +705,7 @@ vs.sidebar = function(element, settings){
 	return module;
 };
 
-vs.sidebar.settings = {
+ui.sidebar.settings = {
 	name              : 'Sidebar',
 	namespace         : 'sidebar',
 

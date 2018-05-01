@@ -1,6 +1,6 @@
 $(document).ready(function(){
   // add popup to show name
-  vs('.ui').popup({
+  ui('.ui').popup({
     on        : 'hover',
     variation : 'small inverted',
     exclusive : true,

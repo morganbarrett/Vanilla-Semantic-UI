@@ -43,8 +43,8 @@ Although some components will work in IE9, [grids](http://semantic-ui.com/collec
 * site.js
 
 #### Modules
-* accordion.js
-* checkbox.js
+* ~~accordion.js~~ ✓
+* ~~checkbox.js~~ ✓
 * ~~dimmer.js~~ ✓
 * dropdown.js
 * ~~embed.js~~ ✓
@@ -69,7 +69,7 @@ $('.star.rating').rating({
 ```
 #### New (Vanilla) way
 ```javascript
-vs('.star.rating').rating({
+ui('.star.rating').rating({
 	initialRating: 3
 });
 ```

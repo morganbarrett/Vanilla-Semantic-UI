@@ -8,7 +8,7 @@
  *
  */
 
-var vs = (function(window, document, undefined){
+(function(window, document, undefined){
 	'use strict';
 
 	/*!
@@ -20,7 +20,7 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	var vs = function(elements){
+	var ui = function(elements){
 		var obj = {};
 
 		if(typeof elements === "string"){
@@ -30,35 +30,44 @@ var vs = (function(window, document, undefined){
 			elements = [elements];
 		}
 
-		for(var c in vs){
-			var component = vs[c];
-
-			if(component.settings == undefined){
+		for(var c in ui){
+			if(ui[c].settings == undefined){
 				continue;
 			}
 
-			obj[c] = (function(comp){
+			obj[c] = (function(name, comp){
 				return function(params){
-					var perf = [],
+					var args = [{}, comp.settings],
 						time = new Date().getTime(),
-						settings = vs.extend.apply(this,
-							vs.isPlainObject(params) ?
-								[true, {}, comp.settings, params] :
-								[{}, comp.settings]
-						);
+						perf = [];
+
+					if(ui.isPlainObject(params)){
+						args = [true, {}, comp.settings, params];
+					}
+					
+					var settings = ui.extend.apply(this, args);
 					
 					elements.forEach(function(element){
-						makeModule(comp, element, settings);
+						element[name] = makeModule(name, comp, element, settings);
 					});
 				};
-			})(component);
+			})(c, ui[c]);
 		}
 
 		return obj;
 	};
 
-	function makeModule(comp, element, settings){
-		var module = comp(element, settings);
+	function makeModule(name, comp, element, settings){
+		var instance = element[name],
+			module = comp(element, settings, instance);
+
+		module.destroy = function(){
+			module.verbose('Destroying previous instance', instance);
+			if(module.unbind.events){
+				module.unbind.events();
+			}
+			element[name] = undefined;
+		};
 
 		module.debug = function(){
 			if(!settings.silent && settings.debug){
@@ -138,15 +147,14 @@ var vs = (function(window, document, undefined){
 				performance = [];
 			}
 		};
-
-		if(module.initialize){
-			module.initialize();
-		}
+		
+		module.verbose('Instantiating module', settings);
+		if(module.initialize) module.initialize();
 
 		return module;
 	};
 
-	vs.invoke = function(query, passedArguments){
+	ui.invoke = function(query, passedArguments){
 		var object = instance,
 			maxDepth,
 			found,
@@ -160,14 +168,14 @@ var vs = (function(window, document, undefined){
 					? value + query[depth + 1].toUpperCase() + query[depth + 1].slice(1)
 					: query
 				;
-				if( vs.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
+				if( ui.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
 					object = object[camelCaseValue];
 				}
 				else if( object[camelCaseValue] !== undefined ) {
 					found = object[camelCaseValue];
 					return false;
 				}
-				else if( vs.isPlainObject( object[value] ) && (depth != maxDepth) ) {
+				else if( ui.isPlainObject( object[value] ) && (depth != maxDepth) ) {
 					object = object[value];
 				}
 				else if( object[value] !== undefined ) {
@@ -197,11 +205,11 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.checkTarget = function(event, test){			
+	ui.checkTarget = function(event, test){			
 		return event.target.matches(test);
 	}
 
-	vs.isPlainObject = function(obj){
+	ui.isPlainObject = function(obj){
 		if (typeof (obj) !== 'object' || obj.nodeType || obj !== null && obj !== undefined && obj === obj.window) {
 			return false;
 		}
@@ -213,7 +221,7 @@ var vs = (function(window, document, undefined){
 		return true;
 	}
 
-	vs.extend = function(){
+	ui.extend = function(){
 		var extended = {};
 		var deep = false;
 		var i = 0;
@@ -228,7 +236,7 @@ var vs = (function(window, document, undefined){
 			for ( var prop in obj ) {
 				if ( Object.prototype.hasOwnProperty.call( obj, prop ) ) {
 					if ( deep && Object.prototype.toString.call(obj[prop]) === '[object Object]' ) {
-						extended[prop] = vs.extend( true, extended[prop], obj[prop] );
+						extended[prop] = ui.extend( true, extended[prop], obj[prop] );
 					} else {
 						extended[prop] = obj[prop];
 					}
@@ -244,23 +252,23 @@ var vs = (function(window, document, undefined){
 		return extended;
 	}
 
-	vs.isVisible = function(e){
+	ui.isVisible = function(e){
 		return !!(e.offsetWidth || e.offsetHeight || e.getClientRects().length);
 	}
 
-	vs.prevAll = function(elem, func){
+	ui.prevAll = function(elem, func){
 		while(elem = elem.previousElementSibling){
 			func(elem);
 		}
 	}
 
-	vs.nextAll = function(elem, func){
+	ui.nextAll = function(elem, func){
 		while(elem = elem.nextElementSibling){
 			func(elem);
 		}
 	}
 
-	vs.fadeIn = function(elem, opts){
+	ui.fadeIn = function(elem, opts){
 		elem.style.opacity = 0;
 		elem.style.display = opts.display || "block";
 
@@ -280,7 +288,7 @@ var vs = (function(window, document, undefined){
 		})();
 	}
 
-	vs.fadeOut = function(elem, opts){
+	ui.fadeOut = function(elem, opts){
 		elem.style.opacity = 1;
 
 		(function fade() {
@@ -288,7 +296,7 @@ var vs = (function(window, document, undefined){
 				elem.style.display = "none";
 
 				if(typeof opts.ondone == "function"){
-					opts.ondone();
+					opts.ondone(elem);
 				}
 			} else {
 				requestAnimationFrame(fade);
@@ -2481,53 +2489,29 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.accordion = function(element, settings){
+	ui.accordion = function(element, settings){
 		var className = settings.className,
-			namespace = settings.namespace,
 			selector = settings.selector,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			//$title = $module.find(selector.title),
-			//$content = $module.find(selector.content),
-			instance = element[moduleNamespace],
+			title = element.querySelectorAll(selector.title),
 			observer,
 			module;
 
-		/*module = {
-
-			initialize: function() {
-				module.debug('Initializing', $module);
+		module = {
+			initialize: function(){
+				module.debug('Initializing', element);
 				module.bind.events();
-				if(settings.observeChanges) {
+				if(settings.observeChanges){
 					module.observeChanges();
 				}
-				module.instantiate();
 			},
-
-			instantiate: function() {
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
+			refresh: function(){
+				title = element.querySelector(selector.title);
+				content = element.querySelector(selector.content);
 			},
-
-			destroy: function() {
-				module.debug('Destroying previous instance', $module);
-				$module
-					.off(eventNamespace)
-					.removeData(moduleNamespace)
-				;
-			},
-
-			refresh: function() {
-				$title   = $module.find(selector.title);
-				$content = $module.find(selector.content);
-			},
-
-			observeChanges: function() {
-				if('MutationObserver' in window) {
-					observer = new MutationObserver(function(mutations) {
+			observeChanges: function(){
+				if('MutationObserver' in window){
+					observer = new MutationObserver(function(mutations){
 						module.debug('DOM tree modified, updating selector cache');
 						module.refresh();
 					});
@@ -2538,201 +2522,194 @@ var vs = (function(window, document, undefined){
 					module.debug('Setting up mutation observer', observer);
 				}
 			},
-
 			bind: {
-				events: function() {
+				events: function(){
 					module.debug('Binding delegated events');
-					$module
-						.on(settings.on + eventNamespace, selector.trigger, module.event.click)
-					;
+					element[settings.on] = function(event){
+						if(ui.checkTarget(event, selector.trigger)){
+							module.event.click(event.target);
+						}
+					}
 				}
 			},
-
 			event: {
-				click: function() {
-					module.toggle.call(this);
+				click: function(target){
+					module.toggle.call(targets);
 				}
 			},
+			toggle: function(query){
+				var activeTitle = (query !== undefined) ?
+									(typeof query === 'number') ? 
+										title[query] : query.closest(selector.title) :
+										element.closest(selector.title);
+				var activeContent = [];
 
-			toggle: function(query) {
-				var
-					$activeTitle = (query !== undefined)
-						? (typeof query === 'number')
-							? $title.eq(query)
-							: $(query).closest(selector.title)
-						: $(this).closest(selector.title),
-					$activeContent = $activeTitle.next($content),
-					isAnimating = $activeContent.hasClass(className.animating),
-					isActive    = $activeContent.hasClass(className.active),
-					isOpen      = (isActive && !isAnimating),
-					isOpening   = (!isActive && isAnimating)
+				activeTitle.forEach(function(title) {
+				    if (title.nextElementSibling && title.nextElementSibling.matches(selector.content))
+				        activeContent.push(title.nextElementSibling);
+				});
+
+				var isAnimating = activeContent.classList.contains(className.animating),
+					isActive = activeContent.classList.contains(className.active),
+					isOpen = (isActive && !isAnimating),
+					isOpening = (!isActive && isAnimating)
 				;
-				module.debug('Toggling visibility of content', $activeTitle);
-				if(isOpen || isOpening) {
-					if(settings.collapsible) {
-						module.close.call($activeTitle);
+				module.debug('Toggling visibility of content', activeTitle);
+				if(isOpen || isOpening){
+					if(settings.collapsible){
+						module.close.call(activeTitle);
 					}
 					else {
 						module.debug('Cannot close accordion content collapsing is disabled');
 					}
 				}
 				else {
-					module.open.call($activeTitle);
+					module.open.call(activeTitle);
 				}
 			},
+			open: function(query){
+				var activeTitle = (query !== undefined) ?
+									(typeof query === 'number') ? 
+										title[query] : query.closest(selector.title) :
+										element.closest(selector.title),
+					activeContent = activeTitle.query("+ " + selector.content),
+					isAnimating = activeContent.classList.contains(className.animating),
+					isActive = activeContent.classList.contains(className.active),
+					isOpen = (isActive || isAnimating);
 
-			open: function(query) {
-				var
-					$activeTitle = (query !== undefined)
-						? (typeof query === 'number')
-							? $title.eq(query)
-							: $(query).closest(selector.title)
-						: $(this).closest(selector.title),
-					$activeContent = $activeTitle.next($content),
-					isAnimating = $activeContent.hasClass(className.animating),
-					isActive    = $activeContent.hasClass(className.active),
-					isOpen      = (isActive || isAnimating)
-				;
-				if(isOpen) {
-					module.debug('Accordion already open, skipping', $activeContent);
+				if(isOpen){
+					module.debug('Accordion already open, skipping', activeContent);
 					return;
 				}
-				module.debug('Opening accordion content', $activeTitle);
-				settings.onOpening.call($activeContent);
-				settings.onChanging.call($activeContent);
-				if(settings.exclusive) {
-					module.closeOthers.call($activeTitle);
+
+				module.debug('Opening accordion content', activeTitle);
+				settings.onOpening.call(activeContent);
+				settings.onChanging.call(activeContent);
+
+				if(settings.exclusive){
+					module.closeOthers.call(activeTitle);
 				}
-				$activeTitle
-					.addClass(className.active)
-				;
-				$activeContent
-					.stop(true, true)
-					.addClass(className.animating)
-				;
-				if(settings.animateChildren) {
-					if($.fn.transition !== undefined && $module.transition('is supported')) {
-						$activeContent
-							.children()
-								.transition({
-									animation   : 'fade in',
+
+				activeTitle.classList.add(className.active);
+				activeTitle.classList.add(className.animating);
+
+				if(settings.animateChildren){
+					var transition = ui.transition !== undefined && ui.transition(element, 'is supported');
+
+					activeContent.children.forEach(function(child){
+						if(transition){
+							child.transition({
+								animation   : 'fade in',
+								queue       : false,
+								useFailSafe : true,
+								debug       : settings.debug,
+								verbose     : settings.verbose,
+								duration    : settings.duration
+							});
+						} else {
+							ui.fadeIn(child, {
+								duration: settings.duration,
+								ondone: module.resetOpacity
+							});
+						}
+					});
+				}
+
+				//activeContent.slideDown(settings.duration, settings.easing, function(){
+				ui.fadeIn(activeContent, {ondone: function(){
+					activeContent.classList.remove(className.animating);
+					activeContent.classList.add(className.active);
+						
+					module.reset.display.call(this);
+					settings.onOpen.call(this);
+					settings.onChange.call(this);
+				}});
+			},
+			close: function(query){
+				var activeTitle = (query !== undefined) ?
+									(typeof query === 'number') ? 
+										title[query] : query.closest(selector.title) :
+										element.closest(selector.title),
+					activeContent = activeTitle.query("+ " + selector.content),
+					isAnimating    = activeContent.classList.contains(className.animating),
+					isActive       = activeContent.classList.contains(className.active),
+					isOpening      = (!isActive && isAnimating),
+					isClosing      = (isActive && isAnimating);
+
+				if((isActive || isOpening) && !isClosing){
+					module.debug('Closing accordion content', activeContent);
+					
+					settings.onClosing.call(activeContent);
+					settings.onChanging.call(activeContent);
+			
+					activeTitle.classList.remove(className.active);
+					activeTitle.classList.remove(className.animating);
+
+					if(settings.animateChildren){
+						var transition = ui.transition !== undefined && ui.transition(element, 'is supported');
+
+						activeContent.children.forEach(function(child){
+							if(transition){
+								child.transition({
+									animation   : 'fade out',
 									queue       : false,
 									useFailSafe : true,
 									debug       : settings.debug,
 									verbose     : settings.verbose,
 									duration    : settings.duration
-								})
-						;
+								});
+							} else {
+								ui.fadeOut(child, {
+									duration: settings.duration,
+									ondone: module.resetOpacity
+								});
+							}
+						});
 					}
-					else {
-						$activeContent
-							.children()
-								.stop(true, true)
-								.animate({
-									opacity: 1
-								}, settings.duration, module.resetOpacity)
-						;
-					}
-				}
-				$activeContent
-					.slideDown(settings.duration, settings.easing, function() {
-						$activeContent
-							.removeClass(className.animating)
-							.addClass(className.active)
-						;
+					
+					//activeContent.slideUp(settings.duration, settings.easing, function(){
+					ui.fadeOut(activeContent, {ondone: function(){
+						activeContent.classList.remove(className.animating);
+						activeContent.classList.remove(className.active);
+						
 						module.reset.display.call(this);
-						settings.onOpen.call(this);
+						settings.onClose.call(this);
 						settings.onChange.call(this);
-					})
-				;
+					}});
+				}
 			},
-
-			close: function(query) {
-				var
-					$activeTitle = (query !== undefined)
-						? (typeof query === 'number')
-							? $title.eq(query)
-							: $(query).closest(selector.title)
-						: $(this).closest(selector.title),
-					$activeContent = $activeTitle.next($content),
-					isAnimating    = $activeContent.hasClass(className.animating),
-					isActive       = $activeContent.hasClass(className.active),
-					isOpening      = (!isActive && isAnimating),
-					isClosing      = (isActive && isAnimating)
-				;
-				if((isActive || isOpening) && !isClosing) {
-					module.debug('Closing accordion content', $activeContent);
-					settings.onClosing.call($activeContent);
-					settings.onChanging.call($activeContent);
-					$activeTitle
-						.removeClass(className.active)
-					;
-					$activeContent
-						.stop(true, true)
-						.addClass(className.animating)
-					;
-					if(settings.animateChildren) {
-						if($.fn.transition !== undefined && $module.transition('is supported')) {
-							$activeContent
-								.children()
-									.transition({
-										animation   : 'fade out',
-										queue       : false,
-										useFailSafe : true,
-										debug       : settings.debug,
-										verbose     : settings.verbose,
-										duration    : settings.duration
-									})
-							;
-						}
-						else {
-							$activeContent
-								.children()
-									.stop(true, true)
-									.animate({
-										opacity: 0
-									}, settings.duration, module.resetOpacity)
-							;
+			closeOthers: function(index){
+				var activeTitle = index !== undefined ? title[index] : element.closest(selector.title);
+				var parentTitles = [],
+					p;
+				
+				while (p = activeTitle.parentElement){
+					if(p.matches(selector.content)){
+						var prev = element.previousElementSibling;
+						if(prev && prev.matches('div')){
+							parentTitles.push(prev);
 						}
 					}
-					$activeContent
-						.slideUp(settings.duration, settings.easing, function() {
-							$activeContent
-								.removeClass(className.animating)
-								.removeClass(className.active)
-							;
-							module.reset.display.call(this);
-							settings.onClose.call(this);
-							settings.onChange.call(this);
-						})
-					;
 				}
-			},
+					
+				var activeAccordion = activeTitle.closest(selector.accordion),
+					activeSelector = selector.title + '.' + className.active + ':visible',
+					activeContent = selector.content + '.' + className.active + ':visible',
+					openTitles,
+					nestedTitles,
+					openContents;
 
-			closeOthers: function(index) {
-				var
-					$activeTitle = (index !== undefined)
-						? $title.eq(index)
-						: $(this).closest(selector.title),
-					$parentTitles    = $activeTitle.parents(selector.content).prev(selector.title),
-					$activeAccordion = $activeTitle.closest(selector.accordion),
-					activeSelector   = selector.title + '.' + className.active + ':visible',
-					activeContent    = selector.content + '.' + className.active + ':visible',
-					$openTitles,
-					$nestedTitles,
-					$openContents
-				;
-				if(settings.closeNested) {
-					$openTitles   = $activeAccordion.find(activeSelector).not($parentTitles);
-					$openContents = $openTitles.next($content);
+				if(settings.closeNested){
+					openTitles = activeAccordion.find(activeSelector).not($parentTitles);
+					openContents = openTitles.next($content);
+				} else {
+					openTitles = activeAccordion.find(activeSelector).not($parentTitles);
+					nestedTitles = activeAccordion.find(activeContent).find(activeSelector).not($parentTitles);
+					openTitles = openTitles.not($nestedTitles);
+					openContents = openTitles.next($content);
 				}
-				else {
-					$openTitles   = $activeAccordion.find(activeSelector).not($parentTitles);
-					$nestedTitles = $activeAccordion.find(activeContent).find(activeSelector).not($parentTitles);
-					$openTitles   = $openTitles.not($nestedTitles);
-					$openContents = $openTitles.next($content);
-				}
-				if( ($openTitles.length > 0) ) {
+
+				if( $openTitles.length > 0 ){
 					module.debug('Exclusive enabled, closing other content', $openTitles);
 					$openTitles
 						.removeClass(className.active)
@@ -2741,8 +2718,8 @@ var vs = (function(window, document, undefined){
 						.removeClass(className.animating)
 						.stop(true, true)
 					;
-					if(settings.animateChildren) {
-						if($.fn.transition !== undefined && $module.transition('is supported')) {
+					if(settings.animateChildren){
+						if($.fn.transition !== undefined && $module.transition('is supported')){
 							$openContents
 								.children()
 									.transition({
@@ -2765,249 +2742,62 @@ var vs = (function(window, document, undefined){
 						}
 					}
 					$openContents
-						.slideUp(settings.duration , settings.easing, function() {
+						.slideUp(settings.duration , settings.easing, function(){
 							$(this).removeClass(className.active);
 							module.reset.display.call(this);
 						})
 					;
 				}
 			},
-
 			reset: {
+				display: function(elem){
+					module.verbose('Removing inline display from element', elem);
+					elem.style.display = "";
 
-				display: function() {
-					module.verbose('Removing inline display from element', this);
-					$(this).css('display', '');
-					if( $(this).attr('style') === '') {
-						$(this)
-							.attr('style', '')
-							.removeAttr('style')
-						;
+					if(elem.getAttribute('style') === ''){
+						elem.setAttribute("style", "");
 					}
 				},
+				opacity: function(elem){
+					module.verbose('Removing inline opacity from element', elem);
+					elem.style.opacity = "";
 
-				opacity: function() {
-					module.verbose('Removing inline opacity from element', this);
-					$(this).css('opacity', '');
-					if( $(this).attr('style') === '') {
-						$(this)
-							.attr('style', '')
-							.removeAttr('style')
-						;
+					if(elem.getAttribute('style') === ''){
+						elem.setAttribute("style", "");
 					}
 				},
-
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				module.debug('Changing internal', name, value);
-				if(value !== undefined) {
-					if( $.isPlainObject(name) ) {
-						$.extend(true, module, name);
-					}
-					else {
-						module[name] = value;
-					}
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
-		};*/
-		
-		module = {};
-		
+		};
+			
 		return module;
 	};
 
-	vs.accordion.settings = {
-		name            : 'Accordion',
-		namespace       : 'accordion',
-
-		silent          : false,
-		debug           : false,
-		verbose         : false,
-		performance     : true,
-
-		on              : 'click', // event on title that opens accordion
-
-		observeChanges  : true,  // whether accordion should automatically refresh on DOM insertion
-
-		exclusive       : true,  // whether a single accordion content panel should be open at once
-		collapsible     : true,  // whether accordion content can be closed
-		closeNested     : false, // whether nested content should be closed when a panel is closed
-		animateChildren : true,  // whether children opacity should be animated
-
-		duration        : 350, // duration of animation
-		easing          : 'easeOutQuad', // easing equation for animation
-
-		onOpening       : function(){}, // callback before open animation
-		onClosing       : function(){}, // callback before closing animation
-		onChanging      : function(){}, // callback before closing or opening animation
-
-		onOpen          : function(){}, // callback after open animation
-		onClose         : function(){}, // callback after closing animation
-		onChange        : function(){}, // callback after closing or opening animation
-
+	ui.accordion.settings = {
+		silent: false,
+		debug: false,
+		verbose: false,
+		performance: true,
+		on: 'onclick', // event on title that opens accordion
+		observeChanges: true,  // whether accordion should automatically refresh on DOM insertion
+		exclusive: true,  // whether a single accordion content panel should be open at once
+		collapsible: true,  // whether accordion content can be closed
+		closeNested: false, // whether nested content should be closed when a panel is closed
+		animateChildren: true,  // whether children opacity should be animated
+		duration: 350, // duration of animation
+		easing: 'easeOutQuad', // easing equation for animation
+		onOpening: function(){}, // callback before open animation
+		onClosing: function(){}, // callback before closing animation
+		onChanging: function(){}, // callback before closing or opening animation
+		onOpen: function(){}, // callback after open animation
+		onClose: function(){}, // callback after closing animation
+		onChange: function(){}, // callback after closing or opening animation
 		error: {
 			method : 'The method you called is not defined'
 		},
-
 		className   : {
 			active    : 'active',
 			animating : 'animating'
 		},
-
 		selector    : {
 			accordion : '.accordion',
 			title     : '.title',
@@ -3025,24 +2815,20 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.checkbox = function(element, settings){
-		var className = settings.className,
-			namespace = settings.namespace,
-			selector = settings.selector,
+	ui.checkbox = function(element, settings){
+		var selector = settings.selector,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			//$label = $(this).children(selector.label),
-			//$input = $(this).children(selector.input),
-			//input = $input[0],
+			className = settings.className,
+			label = element.querySelectorAll(selector.label),
+			input = element.querySelectorAll(selector.input),
+			input = input[0],
 			initialLoad = false,
 			shortcutPressed = false,
-			instance = element[moduleNamespace],
 			observer,
 			module;
 
-		/*module = {
-			initialize: function() {
+		module = {
+			initialize: function(){
 				module.verbose('Initializing checkbox', settings);
 
 				module.create.label();
@@ -3052,42 +2838,24 @@ var vs = (function(window, document, undefined){
 				module.hide.input();
 
 				module.observeChanges();
-				module.instantiate();
 				module.setup();
 			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
-			},
-
-			destroy: function() {
-				module.verbose('Destroying module');
-				module.unbind.events();
-				module.show.input();
-				$module.removeData(moduleNamespace);
-			},
-
 			fix: {
-				reference: function() {
-					if( $module.is(selector.input) ) {
+				reference: function(){
+					if( element.matches(selector.input) ){
 						module.debug('Behavior called on <input> adjusting invoked element');
-						$module = $module.closest(selector.checkbox);
+						element = element.closest(selector.checkbox);
 						module.refresh();
 					}
 				}
 			},
-
-			setup: function() {
+			setup: function(){
 				module.set.initialLoad();
-				if( module.is.indeterminate() ) {
+				if( module.is.indeterminate() ){
 					module.debug('Initial value is indeterminate');
 					module.indeterminate();
 				}
-				else if( module.is.checked() ) {
+				else if( module.is.checked() ){
 					module.debug('Initial value is checked');
 					module.check();
 				}
@@ -3097,29 +2865,26 @@ var vs = (function(window, document, undefined){
 				}
 				module.remove.initialLoad();
 			},
-
-			refresh: function() {
-				$label = $module.children(selector.label);
-				$input = $module.children(selector.input);
-				input  = $input[0];
+			refresh: function(){
+				label = element.querySelectorAll("> " + selector.label);
+				input = element.querySelectorAll("> " + selector.input);
+				input  = input[0];
 			},
-
 			hide: {
-				input: function() {
+				input: function(){
 					module.verbose('Modifying <input> z-index to be unselectable');
-					$input.addClass(className.hidden);
+					input.classList.add(className.hidden);
 				}
 			},
 			show: {
-				input: function() {
+				input: function(){
 					module.verbose('Modifying <input> z-index to be selectable');
-					$input.removeClass(className.hidden);
+					input.classList.remove(className.hidden);
 				}
 			},
-
-			observeChanges: function() {
-				if('MutationObserver' in window) {
-					observer = new MutationObserver(function(mutations) {
+			observeChanges: function(){
+				if('MutationObserver' in window){
+					observer = new MutationObserver(function(mutations){
 						module.debug('DOM tree modified, updating selector cache');
 						module.refresh();
 					});
@@ -3130,58 +2895,49 @@ var vs = (function(window, document, undefined){
 					module.debug('Setting up mutation observer', observer);
 				}
 			},
-
-			attachEvents: function(selector, event) {
-				var
-					$element = $(selector)
-				;
-				event = $.isFunction(module[event])
-					? module[event]
-					: module.toggle
-				;
-				if($element.length > 0) {
+			attachEvents: function(selector, event){
+				var elems = document.querySelectorAll(selector);
+				
+				event = typeof module[event] == "function" ?
+							module[event] : module.toggle;
+				
+				if(elems.length > 0){
 					module.debug('Attaching checkbox events to element', selector, event);
-					$element
-						.on('click' + eventNamespace, event)
-					;
-				}
-				else {
+					elems.forEach(function(elem){
+						elem.onclick = event;
+					});
+				} else {
 					module.error(error.notFound);
 				}
 			},
-
 			event: {
-				click: function(event) {
-					var
-						$target = $(event.target)
-					;
-					if( $target.is(selector.input) ) {
+				click: function(event){
+					if(ui.checkTarget(event, selector.input)){
 						module.verbose('Using default check action on initialized checkbox');
 						return;
 					}
-					if( $target.is(selector.link) ) {
+					if(ui.checkTarget(event, selector.link)){
 						module.debug('Clicking link inside checkbox, skipping toggle');
 						return;
 					}
 					module.toggle();
-					$input.focus();
+					input.focus();
 					event.preventDefault();
 				},
-				keydown: function(event) {
-					var
-						key     = event.which,
+				keydown: function(event){
+					var key     = event.which,
 						keyCode = {
 							enter  : 13,
 							space  : 32,
 							escape : 27
-						}
-					;
-					if(key == keyCode.escape) {
+						};
+
+					if(key == keyCode.escape){
 						module.verbose('Escape key pressed blurring field');
-						$input.blur();
+						input.blur();
 						shortcutPressed = true;
 					}
-					else if(!event.ctrlKey && ( key == keyCode.space || key == keyCode.enter) ) {
+					else if(!event.ctrlKey && ( key == keyCode.space || key == keyCode.enter) ){
 						module.verbose('Enter/space key pressed, toggling checkbox');
 						module.toggle();
 						shortcutPressed = true;
@@ -3190,603 +2946,397 @@ var vs = (function(window, document, undefined){
 						shortcutPressed = false;
 					}
 				},
-				keyup: function(event) {
-					if(shortcutPressed) {
+				keyup: function(event){
+					if(shortcutPressed){
 						event.preventDefault();
 					}
 				}
 			},
-
-			check: function() {
-				if( !module.should.allowCheck() ) {
+			check: function(){
+				if( !module.should.allowCheck() ){
 					return;
 				}
-				module.debug('Checking checkbox', $input);
+				module.debug('Checking checkbox', input);
 				module.set.checked();
-				if( !module.should.ignoreCallbacks() ) {
+				if( !module.should.ignoreCallbacks() ){
 					settings.onChecked.call(input);
 					settings.onChange.call(input);
 				}
 			},
-
-			uncheck: function() {
-				if( !module.should.allowUncheck() ) {
+			uncheck: function(){
+				if( !module.should.allowUncheck() ){
 					return;
 				}
 				module.debug('Unchecking checkbox');
 				module.set.unchecked();
-				if( !module.should.ignoreCallbacks() ) {
+				if( !module.should.ignoreCallbacks() ){
 					settings.onUnchecked.call(input);
 					settings.onChange.call(input);
 				}
 			},
-
-			indeterminate: function() {
-				if( module.should.allowIndeterminate() ) {
+			indeterminate: function(){
+				if( module.should.allowIndeterminate() ){
 					module.debug('Checkbox is already indeterminate');
 					return;
 				}
 				module.debug('Making checkbox indeterminate');
 				module.set.indeterminate();
-				if( !module.should.ignoreCallbacks() ) {
+				if( !module.should.ignoreCallbacks() ){
 					settings.onIndeterminate.call(input);
 					settings.onChange.call(input);
 				}
 			},
-
-			determinate: function() {
-				if( module.should.allowDeterminate() ) {
+			determinate: function(){
+				if( module.should.allowDeterminate() ){
 					module.debug('Checkbox is already determinate');
 					return;
 				}
 				module.debug('Making checkbox determinate');
 				module.set.determinate();
-				if( !module.should.ignoreCallbacks() ) {
+				if( !module.should.ignoreCallbacks() ){
 					settings.onDeterminate.call(input);
 					settings.onChange.call(input);
 				}
 			},
-
-			enable: function() {
-				if( module.is.enabled() ) {
+			enable: function(){
+				if( module.is.enabled() ){
 					module.debug('Checkbox is already enabled');
 					return;
 				}
 				module.debug('Enabling checkbox');
 				module.set.enabled();
 				settings.onEnable.call(input);
-				// preserve legacy callbacks
-				settings.onEnabled.call(input);
 			},
-
-			disable: function() {
-				if( module.is.disabled() ) {
+			disable: function(){
+				if( module.is.disabled() ){
 					module.debug('Checkbox is already disabled');
 					return;
 				}
 				module.debug('Disabling checkbox');
 				module.set.disabled();
 				settings.onDisable.call(input);
-				// preserve legacy callbacks
-				settings.onDisabled.call(input);
 			},
-
 			get: {
-				radios: function() {
-					var
-						name = module.get.name()
-					;
-					return $('input[name="' + name + '"]').closest(selector.checkbox);
+				radios: function(){
+					var name = module.get.name();
+					return document.querySelector('input[name="' + name + '"]').closest(selector.checkbox);
 				},
-				otherRadios: function() {
-					return module.get.radios().not($module);
+				otherRadios: function(){
+					return module.get.radios().not(module);
 				},
-				name: function() {
-					return $input.attr('name');
+				name: function(){
+					return input.getAttribute('name');
 				}
 			},
-
 			is: {
-				initialLoad: function() {
+				initialLoad: function(){
 					return initialLoad;
 				},
-				radio: function() {
-					return ($input.hasClass(className.radio) || $input.attr('type') == 'radio');
+				radio: function(){
+					return (input.classList.contains(className.radio) || input.getAttribute('type') == 'radio');
 				},
-				indeterminate: function() {
-					return $input.prop('indeterminate') !== undefined && $input.prop('indeterminate');
+				indeterminate: function(){
+					return input.indeterminate !== undefined && input.indeterminate;
 				},
-				checked: function() {
-					return $input.prop('checked') !== undefined && $input.prop('checked');
+				checked: function(){
+					return input.checked !== undefined && input.checked;
 				},
-				disabled: function() {
-					return $input.prop('disabled') !== undefined && $input.prop('disabled');
+				disabled: function(){
+					return input.disabled !== undefined && input.disabled;
 				},
-				enabled: function() {
+				enabled: function(){
 					return !module.is.disabled();
 				},
-				determinate: function() {
+				determinate: function(){
 					return !module.is.indeterminate();
 				},
-				unchecked: function() {
+				unchecked: function(){
 					return !module.is.checked();
 				}
 			},
-
 			should: {
-				allowCheck: function() {
-					if(module.is.determinate() && module.is.checked() && !module.should.forceCallbacks() ) {
+				allowCheck: function(){
+					if(module.is.determinate() && module.is.checked() && !module.should.forceCallbacks() ){
 						module.debug('Should not allow check, checkbox is already checked');
 						return false;
 					}
-					if(settings.beforeChecked.apply(input) === false) {
+					if(settings.beforeChecked.apply(input) === false){
 						module.debug('Should not allow check, beforeChecked cancelled');
 						return false;
 					}
 					return true;
 				},
-				allowUncheck: function() {
-					if(module.is.determinate() && module.is.unchecked() && !module.should.forceCallbacks() ) {
+				allowUncheck: function(){
+					if(module.is.determinate() && module.is.unchecked() && !module.should.forceCallbacks() ){
 						module.debug('Should not allow uncheck, checkbox is already unchecked');
 						return false;
 					}
-					if(settings.beforeUnchecked.apply(input) === false) {
+					if(settings.beforeUnchecked.apply(input) === false){
 						module.debug('Should not allow uncheck, beforeUnchecked cancelled');
 						return false;
 					}
 					return true;
 				},
-				allowIndeterminate: function() {
-					if(module.is.indeterminate() && !module.should.forceCallbacks() ) {
+				allowIndeterminate: function(){
+					if(module.is.indeterminate() && !module.should.forceCallbacks() ){
 						module.debug('Should not allow indeterminate, checkbox is already indeterminate');
 						return false;
 					}
-					if(settings.beforeIndeterminate.apply(input) === false) {
+					if(settings.beforeIndeterminate.apply(input) === false){
 						module.debug('Should not allow indeterminate, beforeIndeterminate cancelled');
 						return false;
 					}
 					return true;
 				},
-				allowDeterminate: function() {
-					if(module.is.determinate() && !module.should.forceCallbacks() ) {
+				allowDeterminate: function(){
+					if(module.is.determinate() && !module.should.forceCallbacks() ){
 						module.debug('Should not allow determinate, checkbox is already determinate');
 						return false;
 					}
-					if(settings.beforeDeterminate.apply(input) === false) {
+					if(settings.beforeDeterminate.apply(input) === false){
 						module.debug('Should not allow determinate, beforeDeterminate cancelled');
 						return false;
 					}
 					return true;
 				},
-				forceCallbacks: function() {
+				forceCallbacks: function(){
 					return (module.is.initialLoad() && settings.fireOnInit);
 				},
-				ignoreCallbacks: function() {
+				ignoreCallbacks: function(){
 					return (initialLoad && !settings.fireOnInit);
 				}
 			},
-
 			can: {
-				change: function() {
-					return !( $module.hasClass(className.disabled) || $module.hasClass(className.readOnly) || $input.prop('disabled') || $input.prop('readonly') );
+				change: function(){
+					return !( element.classList.contains(className.disabled) || element.classList.contains(className.readOnly) || input.disabled || input.readonly );
 				},
-				uncheck: function() {
+				uncheck: function(){
 					return (typeof settings.uncheckable === 'boolean')
 						? settings.uncheckable
 						: !module.is.radio()
 					;
 				}
 			},
-
 			set: {
-				initialLoad: function() {
+				initialLoad: function(){
 					initialLoad = true;
 				},
-				checked: function() {
+				checked: function(){
 					module.verbose('Setting class to checked');
-					$module
-						.removeClass(className.indeterminate)
-						.addClass(className.checked)
-					;
-					if( module.is.radio() ) {
+					element.classList.remove(className.indeterminate);
+					element.classList.add(className.checked);
+						
+					if( module.is.radio() ){
 						module.uncheckOthers();
 					}
-					if(!module.is.indeterminate() && module.is.checked()) {
+
+					if(!module.is.indeterminate() && module.is.checked()){
 						module.debug('Input is already checked, skipping input property change');
 						return;
 					}
+
 					module.verbose('Setting state to checked', input);
-					$input
-						.prop('indeterminate', false)
-						.prop('checked', true)
-					;
+					
+					input.indeterminate = false;
+					input.checked = true;
+
 					module.trigger.change();
 				},
-				unchecked: function() {
+				unchecked: function(){
 					module.verbose('Removing checked class');
-					$module
-						.removeClass(className.indeterminate)
-						.removeClass(className.checked)
-					;
-					if(!module.is.indeterminate() &&  module.is.unchecked() ) {
+
+					element.classList.remove(className.indeterminate);
+					element.classList.remove(className.checked);
+
+					if(!module.is.indeterminate() &&  module.is.unchecked() ){
 						module.debug('Input is already unchecked');
 						return;
 					}
 					module.debug('Setting state to unchecked');
-					$input
-						.prop('indeterminate', false)
-						.prop('checked', false)
-					;
+					
+					input.indeterminate = false;
+					input.checked = false;
+
 					module.trigger.change();
 				},
-				indeterminate: function() {
+				indeterminate: function(){
 					module.verbose('Setting class to indeterminate');
-					$module
-						.addClass(className.indeterminate)
-					;
-					if( module.is.indeterminate() ) {
+					element.classList.add(className.indeterminate);
+					
+					if( module.is.indeterminate() ){
 						module.debug('Input is already indeterminate, skipping input property change');
 						return;
 					}
 					module.debug('Setting state to indeterminate');
-					$input
-						.prop('indeterminate', true)
-					;
+					input.indeterminate = true;
 					module.trigger.change();
 				},
-				determinate: function() {
+				determinate: function(){
 					module.verbose('Removing indeterminate class');
-					$module
-						.removeClass(className.indeterminate)
-					;
-					if( module.is.determinate() ) {
+					element.classList.remove(className.indeterminate);
+
+					if( module.is.determinate() ){
 						module.debug('Input is already determinate, skipping input property change');
 						return;
 					}
 					module.debug('Setting state to determinate');
-					$input
-						.prop('indeterminate', false)
-					;
+					input.indeterminate = false;
 				},
-				disabled: function() {
+				disabled: function(){
 					module.verbose('Setting class to disabled');
-					$module
-						.addClass(className.disabled)
-					;
-					if( module.is.disabled() ) {
+					element.classList.add(className.disabled);
+			
+					if( module.is.disabled() ){
 						module.debug('Input is already disabled, skipping input property change');
 						return;
 					}
 					module.debug('Setting state to disabled');
-					$input
-						.prop('disabled', 'disabled')
-					;
+					input.disabled = 'disabled';
 					module.trigger.change();
 				},
-				enabled: function() {
+				enabled: function(){
 					module.verbose('Removing disabled class');
-					$module.removeClass(className.disabled);
-					if( module.is.enabled() ) {
+					element.classList.remove(className.disabled);
+					if( module.is.enabled() ){
 						module.debug('Input is already enabled, skipping input property change');
 						return;
 					}
 					module.debug('Setting state to enabled');
-					$input
-						.prop('disabled', false)
-					;
+					input.disabled = false;
 					module.trigger.change();
 				},
-				tabbable: function() {
+				tabbable: function(){
 					module.verbose('Adding tabindex to checkbox');
-					if( $input.attr('tabindex') === undefined) {
-						$input.attr('tabindex', 0);
+					if( input.getAttribute('tabindex') === undefined){
+						input.setAttribute('tabindex', 0);
 					}
 				}
 			},
-
 			remove: {
-				initialLoad: function() {
+				initialLoad: function(){
 					initialLoad = false;
 				}
 			},
-
 			trigger: {
-				change: function() {
-					var
-						events       = document.createEvent('HTMLEvents'),
-						inputElement = $input[0]
-					;
-					if(inputElement) {
+				change: function(){
+					var events = document.createEvent('HTMLEvents'),
+						inputElement = input[0];
+					
+					if(inputElement){
 						module.verbose('Triggering native change event');
 						events.initEvent('change', true, false);
 						inputElement.dispatchEvent(events);
 					}
 				}
 			},
-
-
 			create: {
-				label: function() {
-					if($input.prevAll(selector.label).length > 0) {
-						$input.prev(selector.label).detach().insertAfter($input);
-						module.debug('Moving existing label', $label);
+				label: function(){
+					var prev = [];
+					
+					while(element.previousElementSibling && element.previousElementSibling.matches(selector.label)){
+						var n = element.previousElementSibling;
+						n.remove();
+						input.after(n);
+						module.debug('Moving existing label', label);
+						return;
 					}
-					else if( !module.has.label() ) {
-						$label = $('<label>').insertAfter($input);
-						module.debug('Creating label', $label);
-					}
+
+					label = document.createElement('label');
+					input.after(label);
+
+					module.debug('Creating label', label);
 				}
 			},
-
 			has: {
-				label: function() {
-					return ($label.length > 0);
+				label: function(){
+					return (label.length > 0);
 				}
 			},
-
 			bind: {
-				events: function() {
+				events: function(){
 					module.verbose('Attaching checkbox events');
-					$module
-						.on('click'   + eventNamespace, module.event.click)
-						.on('keydown' + eventNamespace, selector.input, module.event.keydown)
-						.on('keyup'   + eventNamespace, selector.input, module.event.keyup)
-					;
+
+					function check(func){
+						return function(event){
+							if(ui.checkTarget(event, selector.input)){
+								func();
+							}
+						}
+					};
+
+					element.onclick = module.event.click;
+					element.onkeydown = check(module.event.keydown);
+					element.onkeyup = check(module.event.keyup);
 				}
 			},
-
 			unbind: {
-				events: function() {
+				events: function(){
 					module.debug('Removing events');
-					$module
-						.off(eventNamespace)
-					;
+					element.onclick = undefined;
+					element.onkeydown = undefined;
+					element.onkeyup = undefined;
 				}
 			},
-
-			uncheckOthers: function() {
-				var
-					$radios = module.get.otherRadios()
-				;
-				module.debug('Unchecking other radios', $radios);
-				$radios.removeClass(className.checked);
+			uncheckOthers: function(){
+				var radios = module.get.otherRadios();
+				module.debug('Unchecking other radios', radios);
+				radios.classList.remove(className.checked);
 			},
-
-			toggle: function() {
-				if( !module.can.change() ) {
-					if(!module.is.radio()) {
+			toggle: function(){
+				if( !module.can.change() ){
+					if(!module.is.radio()){
 						module.debug('Checkbox is read-only or disabled, ignoring toggle');
 					}
 					return;
 				}
-				if( module.is.indeterminate() || module.is.unchecked() ) {
+				if( module.is.indeterminate() || module.is.unchecked() ){
 					module.debug('Currently unchecked');
 					module.check();
 				}
-				else if( module.is.checked() && module.can.uncheck() ) {
+				else if( module.is.checked() && module.can.uncheck() ){
 					module.debug('Currently checked');
 					module.uncheck();
 				}
-			},
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
-		};*/
-
-		module = {};
+		};
 		
 		return module;
 	};
 
-	vs.checkbox.settings = {
-		name                : 'Checkbox',
-		namespace           : 'checkbox',
-
-		silent              : false,
-		debug               : false,
-		verbose             : true,
-		performance         : true,
-
-		// delegated event context
-		uncheckable         : 'auto',
-		fireOnInit          : false,
-
-		onChange            : function(){},
-
-		beforeChecked       : function(){},
-		beforeUnchecked     : function(){},
-		beforeDeterminate   : function(){},
-		beforeIndeterminate : function(){},
-
-		onChecked           : function(){},
-		onUnchecked         : function(){},
-
-		onDeterminate       : function() {},
-		onIndeterminate     : function() {},
-
-		onEnable            : function(){},
-		onDisable           : function(){},
-
-		// preserve misspelled callbacks (will be removed in 3.0)
-		onEnabled           : function(){},
-		onDisabled          : function(){},
-
-		className       : {
-			checked       : 'checked',
-			indeterminate : 'indeterminate',
-			disabled      : 'disabled',
-			hidden        : 'hidden',
-			radio         : 'radio',
-			readOnly      : 'read-only'
+	ui.checkbox.settings = {
+		silent: false,
+		debug: false,
+		verbose: true,
+		performance: true,
+		uncheckable: 'auto',
+		fireOnInit: false,
+		onChange: function(){},
+		beforeChecked: function(){},
+		beforeUnchecked: function(){},
+		beforeDeterminate: function(){},
+		beforeIndeterminate: function(){},
+		onChecked: function(){},
+		onUnchecked: function(){},
+		onDeterminate: function(){},
+		onIndeterminate: function(){},
+		onEnable: function(){},
+		onDisable: function(){},
+		error: {
+			method: 'The method you called is not defined'
 		},
-
-		error     : {
-			method       : 'The method you called is not defined'
-		},
-
 		selector : {
-			checkbox : '.ui.checkbox',
-			label    : 'label, .box',
-			input    : 'input[type="checkbox"], input[type="radio"]',
-			link     : 'a[href]'
+			checkbox: '.ui.checkbox',
+			label: 'label, .box',
+			input: 'input[type="checkbox"], input[type="radio"]',
+			link: 'a[href]'
+		},
+		className: {
+			checked: 'checked',
+			indeterminate: 'indeterminate',
+			disabled: 'disabled',
+			hidden: 'hidden',
+			radio: 'radio',
+			readOnly: 'read-only'
 		}
 	};
 
@@ -3799,16 +3349,12 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.dimmer = function(element, settings){
+	ui.dimmer = function(element, settings){
 		var selector = settings.selector,
-			namespace = settings.namespace,
 			className = settings.className,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
 			clickEvent = ('ontouchstart' in document.documentElement)
 				? 'touchstart' : 'onclick',
-			instance = element[moduleNamespace],
 			dimmer,
 			dimmable,
 			module;
@@ -3841,20 +3387,6 @@ var vs = (function(window, document, undefined){
 
 				module.bind.events();
 				module.set.dimmable();
-				module.instantiate();
-			},
-			instantiate: function(){
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				element[moduleNamespace] = instance;
-			},
-			destroy: function(){
-				module.verbose('Destroying previous module', dimmer);
-				module.unbind.events();
-				module.remove.variation();
-				dimmable[clickEvent] = undefined;
-				dimmable.onmouseover = undefined;
-				dimmable.onmouseout = undefined;
 			},
 			bind: {
 				events: function(){
@@ -3866,7 +3398,6 @@ var vs = (function(window, document, undefined){
 						}
 
 						dimmable.onmouseout = function(event){
-							console.log(event.target.parentElement == dimmable, event.target.parentElement, dimmable)
 							if(event.target.parentElement == dimmable){
 								module.hide();
 							}
@@ -3970,12 +3501,12 @@ var vs = (function(window, document, undefined){
 						callback = function(){};
 					}
 
-					if(settings.useCSS && vs.transition !== undefined && vs.transition(dimmer, 'is supported')){
+					if(settings.useCSS && ui.transition !== undefined && ui.transition(dimmer, 'is supported')){
 						if(settings.opacity !== 'auto'){
 							module.set.opacity();
 						}
 
-						vs.transition(dimmer, {
+						ui.transition(dimmer, {
 							displayType : 'flex',
 							animation   : settings.transition + ' in',
 							queue       : false,
@@ -4001,7 +3532,7 @@ var vs = (function(window, document, undefined){
 						dimmer.style.width = "100%";
 						dimmer.style.height = "100%";
 
-						vs.fadeIn(dimmer, {
+						ui.fadeIn(dimmer, {
 							to: settings.opacity,
 							display: "flex",
 							duration: module.get.duration(),
@@ -4018,9 +3549,9 @@ var vs = (function(window, document, undefined){
 						callback = function(){};
 					}
 
-					if(settings.useCSS && vs.transition !== undefined && vs.transition(dimmer, 'is supported')){
+					if(settings.useCSS && ui.transition !== undefined && ui.transition(dimmer, 'is supported')){
 						module.verbose('Hiding dimmer with css');
-						vs.transition(dimmer, {
+						ui.transition(dimmer, {
 							displayType : 'flex',
 							animation   : settings.transition + ' out',
 							queue       : false,
@@ -4038,7 +3569,7 @@ var vs = (function(window, document, undefined){
 						module.verbose('Hiding dimmer with javascript');
 						module.remove.dimmed();
 						
-						vs.fadeOut(dimmer, {
+						ui.fadeOut(dimmer, {
 							duration: module.get.duration(),
 							ondone: function(){
 								module.remove.active();
@@ -4185,9 +3716,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.dimmer.settings = {
-		name: 'Dimmer',
-		namespace: 'dimmer',
+	ui.dimmer.settings = {
 		silent: false,
 		debug: false,
 		verbose: false,
@@ -4242,19 +3771,16 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.dropdown = function(element, settings){
+	ui.dropdown = function(element, settings){
 		var className = settings.className,
 			message = settings.message,
 			fields = settings.fields,
 			keys = settings.keys,
 			metadata = settings.metadata,
-			namespace = settings.namespace,
 			regExp = settings.regExp,
 			selector = settings.selector,
 			error = settings.error,
 			templates = settings.templates,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
 			/*$context        = $(settings.context),
 			$text           = $module.find(selector.text),
 			$search         = $module.find(selector.search),
@@ -4269,7 +3795,6 @@ var vs = (function(window, document, undefined){
 			activated = false,
 			itemActivated = false,
 			internalChange = false,
-			instance = element[moduleNamespace],
 			initialLoad,
 			pageLostFocus,
 			willRefocus,
@@ -4307,14 +3832,6 @@ var vs = (function(window, document, undefined){
 					module.instantiate();
 				}
 
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of dropdown', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
 			},
 
 			destroy: function() {
@@ -4403,11 +3920,11 @@ var vs = (function(window, document, undefined){
 								.html(html)
 								.attr('data-' + metadata.value, value)
 								.attr('data-' + metadata.text, value)
-								.addClass(className.addition)
-								.addClass(className.item)
+								.classList.add(className.addition)
+								.classList.add(className.item)
 							;
 							if(settings.hideAdditions) {
-								$userChoice.addClass(className.hidden);
+								$userChoice.classList.add(className.hidden);
 							}
 							$userChoices = ($userChoices === undefined)
 								? $userChoice
@@ -4432,13 +3949,13 @@ var vs = (function(window, document, undefined){
 				},
 				menu: function() {
 					$menu = $('<div />')
-						.addClass(className.menu)
+						.classList.add(className.menu)
 						.appendTo($module)
 					;
 				},
 				sizer: function() {
 					$sizer = $('<span />')
-						.addClass(className.sizer)
+						.classList.add(className.sizer)
 						.insertAfter($search)
 					;
 				}
@@ -4466,7 +3983,7 @@ var vs = (function(window, document, undefined){
 						.not(selector.unselectable)
 						.not(selector.addition + selector.hidden)
 							.eq(0)
-							.addClass(className.selected)
+							.classList.add(className.selected)
 					;
 				},
 				nextAvailable: function($selected) {
@@ -4478,11 +3995,11 @@ var vs = (function(window, document, undefined){
 					;
 					if(hasNext) {
 						module.verbose('Moving selection to', $nextAvailable);
-						$nextAvailable.addClass(className.selected);
+						$nextAvailable.classList.add(className.selected);
 					}
 					else {
 						module.verbose('Moving selection to', $prevAvailable);
-						$prevAvailable.addClass(className.selected);
+						$prevAvailable.classList.add(className.selected);
 					}
 				}
 			},
@@ -4515,7 +4032,7 @@ var vs = (function(window, document, undefined){
 					if( module.is.search() && !module.has.search() ) {
 						module.verbose('Adding search input');
 						$search = $('<input />')
-							.addClass(className.search)
+							.classList.add(className.search)
 							.prop('autocomplete', 'off')
 							.insertBefore($text)
 						;
@@ -4549,12 +4066,12 @@ var vs = (function(window, document, undefined){
 						module.debug('Creating entire dropdown from select');
 						$module = $('<div />')
 							.attr('class', $input.attr('class') )
-							.addClass(className.selection)
-							.addClass(className.dropdown)
+							.classList.add(className.selection)
+							.classList.add(className.dropdown)
 							.html( templates.dropdown(selectValues) )
 							.insertBefore($input)
 						;
-						if($input.hasClass(className.multiple) && $input.prop('multiple') === false) {
+						if($input.classList.contains(className.multiple) && $input.prop('multiple') === false) {
 							module.error(error.missingMultiple);
 							$input.prop('multiple', true);
 						}
@@ -4563,7 +4080,7 @@ var vs = (function(window, document, undefined){
 						}
 						if ($input.prop('disabled')) {
 							module.debug('Disabling dropdown');
-							$module.addClass(className.disabled);
+							$module.classList.add(className.disabled);
 						}
 						$input
 							.removeAttr('class')
@@ -5022,7 +4539,7 @@ var vs = (function(window, document, undefined){
 				if(results) {
 					$item
 						.not(results)
-						.addClass(className.filtered)
+						.classList.add(className.filtered)
 					;
 				}
 			},
@@ -5064,7 +4581,7 @@ var vs = (function(window, document, undefined){
 			filterActive: function() {
 				if(settings.useLabels) {
 					$item.filter('.' + className.active)
-						.addClass(className.filtered)
+						.classList.add(className.filtered)
 					;
 				}
 			},
@@ -5230,15 +4747,15 @@ var vs = (function(window, document, undefined){
 								: $label.prevUntil($prevActive).add($activeLabels).add($label)
 						;
 						if(event.shiftKey) {
-							$activeLabels.removeClass(className.active);
-							$range.addClass(className.active);
+							$activeLabels.classList.remove(className.active);
+							$range.classList.add(className.active);
 						}
 						else if(event.ctrlKey) {
 							$label.toggleClass(className.active);
 						}
 						else {
-							$activeLabels.removeClass(className.active);
-							$label.addClass(className.active);
+							$activeLabels.classList.remove(className.active);
+							$label.classList.add(className.active);
 						}
 						settings.onLabelSelect.apply(this, $labels.filter('.' + className.active));
 					}
@@ -5248,7 +4765,7 @@ var vs = (function(window, document, undefined){
 						var
 							$label = $(this).parent()
 						;
-						if( $label.hasClass(className.active) ) {
+						if( $label.classList.contains(className.active) ) {
 							// remove all selected labels
 							module.remove.activeLabels();
 						}
@@ -5441,22 +4958,22 @@ var vs = (function(window, document, undefined){
 								// activate previous label
 								if((isFocused || caretAtStart) && !hasActiveLabel) {
 									module.verbose('Selecting previous label');
-									$label.last().addClass(className.active);
+									$label.last().classList.add(className.active);
 								}
 								else if(hasActiveLabel) {
 									if(!event.shiftKey) {
 										module.verbose('Selecting previous label');
-										$label.removeClass(className.active);
+										$label.classList.remove(className.active);
 									}
 									else {
 										module.verbose('Adding previous label to selection');
 									}
 									if(isFirstLabel && !hasMultipleActive) {
-										$activeLabel.addClass(className.active);
+										$activeLabel.classList.add(className.active);
 									}
 									else {
 										$activeLabel.prev(selector.siblingLabel)
-											.addClass(className.active)
+											.classList.add(className.active)
 											.end()
 										;
 									}
@@ -5466,13 +4983,13 @@ var vs = (function(window, document, undefined){
 							else if(pressedKey == keys.rightArrow) {
 								// activate first label
 								if(isFocused && !hasActiveLabel) {
-									$label.first().addClass(className.active);
+									$label.first().classList.add(className.active);
 								}
 								// activate next label
 								if(hasActiveLabel) {
 									if(!event.shiftKey) {
 										module.verbose('Selecting next label');
-										$label.removeClass(className.active);
+										$label.classList.remove(className.active);
 									}
 									else {
 										module.verbose('Adding next label to selection');
@@ -5483,18 +5000,18 @@ var vs = (function(window, document, undefined){
 												module.focusSearch();
 											}
 											else {
-												$label.removeClass(className.active);
+												$label.classList.remove(className.active);
 											}
 										}
 										else if(hasMultipleActive) {
-											$activeLabel.next(selector.siblingLabel).addClass(className.active);
+											$activeLabel.next(selector.siblingLabel).classList.add(className.active);
 										}
 										else {
-											$activeLabel.addClass(className.active);
+											$activeLabel.classList.add(className.active);
 										}
 									}
 									else {
-										$activeLabel.next(selector.siblingLabel).addClass(className.active);
+										$activeLabel.next(selector.siblingLabel).classList.add(className.active);
 									}
 									event.preventDefault();
 								}
@@ -5507,18 +5024,18 @@ var vs = (function(window, document, undefined){
 											module.focusSearch();
 										}
 									}
-									$activeLabel.last().next(selector.siblingLabel).addClass(className.active);
+									$activeLabel.last().next(selector.siblingLabel).classList.add(className.active);
 									module.remove.activeLabels($activeLabel);
 									event.preventDefault();
 								}
 								else if(caretAtStart && !hasActiveLabel && pressedKey == keys.backspace) {
 									module.verbose('Removing last label on input backspace');
-									$activeLabel = $label.last().addClass(className.active);
+									$activeLabel = $label.last().classList.add(className.active);
 									module.remove.activeLabels($activeLabel);
 								}
 							}
 							else {
-								$activeLabel.removeClass(className.active);
+								$activeLabel.classList.remove(className.active);
 							}
 						}
 					}
@@ -5541,7 +5058,7 @@ var vs = (function(window, document, undefined){
 								: $menu.children(':not(.' + className.filtered +')'),
 							$subMenu              = $selectedItem.children(selector.menu),
 							$parentMenu           = $selectedItem.closest(selector.menu),
-							inVisibleMenu         = ($parentMenu.hasClass(className.visible) || $parentMenu.hasClass(className.animating) || $parentMenu.parent(selector.menu).length > 0),
+							inVisibleMenu         = ($parentMenu.classList.contains(className.visible) || $parentMenu.classList.contains(className.animating) || $parentMenu.parent(selector.menu).length > 0),
 							hasSubMenu            = ($subMenu.length> 0),
 							hasSelectedItem       = ($selectedItem.length > 0),
 							selectedIsSelectable  = ($selectedItem.not(selector.unselectable).length > 0),
@@ -5590,11 +5107,11 @@ var vs = (function(window, document, undefined){
 										module.verbose('Left key pressed, closing sub-menu');
 										module.animate.hide(false, $parentMenu);
 										$selectedItem
-											.removeClass(className.selected)
+											.classList.remove(className.selected)
 										;
 										$parentMenu
 											.closest(selector.item)
-												.addClass(className.selected)
+												.classList.add(className.selected)
 										;
 										event.preventDefault();
 									}
@@ -5606,11 +5123,11 @@ var vs = (function(window, document, undefined){
 										module.verbose('Right key pressed, opening sub-menu');
 										module.animate.show(false, $subMenu);
 										$selectedItem
-											.removeClass(className.selected)
+											.classList.remove(className.selected)
 										;
 										$subMenu
 											.find(selector.item).eq(0)
-												.addClass(className.selected)
+												.classList.add(className.selected)
 										;
 										event.preventDefault();
 									}
@@ -5631,10 +5148,10 @@ var vs = (function(window, document, undefined){
 								else {
 									module.verbose('Up key pressed, changing active item');
 									$selectedItem
-										.removeClass(className.selected)
+										.classList.remove(className.selected)
 									;
 									$nextItem
-										.addClass(className.selected)
+										.classList.add(className.selected)
 									;
 									module.set.scrollPosition($nextItem);
 									if(settings.selectOnKeydown && module.is.single()) {
@@ -5658,10 +5175,10 @@ var vs = (function(window, document, undefined){
 								else {
 									module.verbose('Down key pressed, changing active item');
 									$item
-										.removeClass(className.selected)
+										.classList.remove(className.selected)
 									;
 									$nextItem
-										.addClass(className.selected)
+										.classList.add(className.selected)
 									;
 									module.set.scrollPosition($nextItem);
 									if(settings.selectOnKeydown && module.is.single()) {
@@ -6166,7 +5683,7 @@ var vs = (function(window, document, undefined){
 						if(selectionCount >= settings.maxSelections) {
 							module.debug('Maximum selection count reached');
 							if(settings.useLabels) {
-								$item.addClass(className.filtered);
+								$item.classList.add(className.filtered);
 								module.add.message(message.maxSelections);
 							}
 							return true;
@@ -6317,7 +5834,7 @@ var vs = (function(window, document, undefined){
 					var
 						text
 					;
-					if(settings.placeholder !== false && $text.hasClass(className.placeholder)) {
+					if(settings.placeholder !== false && $text.classList.contains(className.placeholder)) {
 						text = module.get.text();
 						module.verbose('Saving placeholder text as', text);
 						$module.data(metadata.placeholderText, text);
@@ -6383,10 +5900,10 @@ var vs = (function(window, document, undefined){
 				if($nextSelectedItem.length > 0) {
 					module.debug('Scrolling page', direction, $nextSelectedItem);
 					$currentItem
-						.removeClass(className.selected)
+						.classList.remove(className.selected)
 					;
 					$nextSelectedItem
-						.addClass(className.selected)
+						.classList.add(className.selected)
 					;
 					if(settings.selectOnKeydown && module.is.single()) {
 						module.set.selectedItem($nextSelectedItem);
@@ -6416,24 +5933,24 @@ var vs = (function(window, document, undefined){
 					}
 					if(hasSearchValue || (isSearchMultiple && valueIsSet)) {
 						module.verbose('Hiding placeholder text');
-						$text.addClass(className.filtered);
+						$text.classList.add(className.filtered);
 					}
 					else if(!isMultiple || (isSearchMultiple && !valueIsSet)) {
 						module.verbose('Showing placeholder text');
-						$text.removeClass(className.filtered);
+						$text.classList.remove(className.filtered);
 					}
 				},
 				empty: function() {
-					$module.addClass(className.empty);
+					$module.classList.add(className.empty);
 				},
 				loading: function() {
-					$module.addClass(className.loading);
+					$module.classList.add(className.loading);
 				},
 				placeholderText: function(text) {
 					text = text || module.get.placeholderText();
 					module.debug('Setting placeholder text', text);
 					module.set.text(text);
-					$text.addClass(className.placeholder);
+					$text.classList.add(className.placeholder);
 				},
 				tabbable: function() {
 					if( module.is.searchSelection() ) {
@@ -6464,10 +5981,10 @@ var vs = (function(window, document, undefined){
 				},
 				activeItem: function($item) {
 					if( settings.allowAdditions && $item.filter(selector.addition).length > 0 ) {
-						$item.addClass(className.filtered);
+						$item.classList.add(className.filtered);
 					}
 					else {
-						$item.addClass(className.active);
+						$item.classList.add(className.active);
 					}
 				},
 				partialSearch: function(text) {
@@ -6501,7 +6018,7 @@ var vs = (function(window, document, undefined){
 					if($item && $menu.length > 0 && hasActive) {
 						itemOffset = $item.position().top;
 
-						$menu.addClass(className.loading);
+						$menu.classList.add(className.loading);
 						menuScroll = $menu.scrollTop();
 						menuOffset = $menu.offset().top;
 						itemOffset = $item.offset().top;
@@ -6515,7 +6032,7 @@ var vs = (function(window, document, undefined){
 						if(forceScroll || abovePage || belowPage) {
 							$menu.scrollTop(offset);
 						}
-						$menu.removeClass(className.loading);
+						$menu.classList.remove(className.loading);
 					}
 				},
 				text: function(text) {
@@ -6531,11 +6048,11 @@ var vs = (function(window, document, undefined){
 						}
 						else {
 							if(text !== module.get.placeholderText()) {
-								$text.removeClass(className.placeholder);
+								$text.classList.remove(className.placeholder);
 							}
 							module.debug('Changing text', text, $text);
 							$text
-								.removeClass(className.filtered)
+								.classList.remove(className.filtered)
 							;
 							if(settings.preserveHTML) {
 								$text.html(text);
@@ -6588,8 +6105,8 @@ var vs = (function(window, document, undefined){
 					if($nextValue) {
 						module.verbose('Scrolling to next value with letter', letter);
 						module.set.scrollPosition($nextValue);
-						$selectedItem.removeClass(className.selected);
-						$nextValue.addClass(className.selected);
+						$selectedItem.classList.remove(className.selected);
+						$nextValue.classList.add(className.selected);
 						if(settings.selectOnKeydown && module.is.single()) {
 							module.set.selectedItem($nextValue);
 						}
@@ -6616,11 +6133,11 @@ var vs = (function(window, document, undefined){
 				},
 				upward: function($currentMenu) {
 					var $element = $currentMenu || $module;
-					$element.addClass(className.upward);
+					$element.classList.add(className.upward);
 				},
 				leftward: function($currentMenu) {
 					var $element = $currentMenu || $menu;
-					$element.addClass(className.leftward);
+					$element.classList.add(className.leftward);
 				},
 				value: function(value, text, $selected) {
 					var
@@ -6672,14 +6189,14 @@ var vs = (function(window, document, undefined){
 				},
 				active: function() {
 					$module
-						.addClass(className.active)
+						.classList.add(className.active)
 					;
 				},
 				multiple: function() {
-					$module.addClass(className.multiple);
+					$module.classList.add(className.multiple);
 				},
 				visible: function() {
-					$module.addClass(className.visible);
+					$module.classList.add(className.visible);
 				},
 				exactly: function(value, $selectedItem) {
 					module.debug('Setting selected to exact values');
@@ -6717,9 +6234,9 @@ var vs = (function(window, document, undefined){
 								selectedText   = module.get.choiceText($selected),
 								selectedValue  = module.get.choiceValue($selected, selectedText),
 
-								isFiltered     = $selected.hasClass(className.filtered),
-								isActive       = $selected.hasClass(className.active),
-								isUserValue    = $selected.hasClass(className.addition),
+								isFiltered     = $selected.classList.contains(className.filtered),
+								isActive       = $selected.classList.contains(className.active),
+								isUserValue    = $selected.classList.contains(className.addition),
 								shouldAnimate  = (isMultiple && $selectedItem.length == 1)
 							;
 							if(isMultiple) {
@@ -6752,8 +6269,8 @@ var vs = (function(window, document, undefined){
 								module.set.text(selectedText);
 								module.set.value(selectedValue, selectedText, $selected);
 								$selected
-									.addClass(className.active)
-									.addClass(className.selected)
+									.classList.add(className.active)
+									.classList.add(className.selected)
 								;
 							}
 						})
@@ -6774,7 +6291,7 @@ var vs = (function(window, document, undefined){
 						escapedValue = escapedValue.toLowerCase();
 					}
 					$label =  $('<a />')
-						.addClass(className.label)
+						.classList.add(className.label)
 						.attr('data-' + metadata.value, escapedValue)
 						.html(templates.label(escapedValue, text))
 					;
@@ -6785,12 +6302,12 @@ var vs = (function(window, document, undefined){
 						return;
 					}
 					if(settings.label.variation) {
-						$label.addClass(settings.label.variation);
+						$label.classList.add(settings.label.variation);
 					}
 					if(shouldAnimate === true) {
 						module.debug('Animating in label', $label);
 						$label
-							.addClass(className.hidden)
+							.classList.add(className.hidden)
 							.insertBefore($next)
 							.transition(settings.label.transition, settings.label.duration)
 						;
@@ -6815,7 +6332,7 @@ var vs = (function(window, document, undefined){
 					else {
 						$message = $('<div/>')
 							.html(html)
-							.addClass(className.message)
+							.classList.add(className.message)
 							.appendTo($menu)
 						;
 					}
@@ -6837,7 +6354,7 @@ var vs = (function(window, document, undefined){
 					}
 					$('<option/>')
 						.prop('value', escapedValue)
-						.addClass(className.addition)
+						.classList.add(className.addition)
 						.html(value)
 						.appendTo($input)
 					;
@@ -6865,7 +6382,7 @@ var vs = (function(window, document, undefined){
 							.data(metadata.text, value)
 							.attr('data-' + metadata.value, value)
 							.attr('data-' + metadata.text, value)
-							.removeClass(className.filtered)
+							.classList.remove(className.filtered)
 						;
 						if(!settings.hideAdditions) {
 							html = settings.templates.addition( module.add.variables(message.addResult, value) );
@@ -6884,9 +6401,9 @@ var vs = (function(window, document, undefined){
 					}
 					if(!settings.hideAdditions || module.is.allFiltered()) {
 						$addition
-							.addClass(className.selected)
+							.classList.add(className.selected)
 							.siblings()
-							.removeClass(className.selected)
+							.classList.remove(className.selected)
 						;
 					}
 					module.refreshItems();
@@ -6961,43 +6478,43 @@ var vs = (function(window, document, undefined){
 
 			remove: {
 				active: function() {
-					$module.removeClass(className.active);
+					$module.classList.remove(className.active);
 				},
 				activeLabel: function() {
-					$module.find(selector.label).removeClass(className.active);
+					$module.find(selector.label).classList.remove(className.active);
 				},
 				empty: function() {
-					$module.removeClass(className.empty);
+					$module.classList.remove(className.empty);
 				},
 				loading: function() {
-					$module.removeClass(className.loading);
+					$module.classList.remove(className.loading);
 				},
 				initialLoad: function() {
 					initialLoad = false;
 				},
 				upward: function($currentMenu) {
 					var $element = $currentMenu || $module;
-					$element.removeClass(className.upward);
+					$element.classList.remove(className.upward);
 				},
 				leftward: function($currentMenu) {
 					var $element = $currentMenu || $menu;
-					$element.removeClass(className.leftward);
+					$element.classList.remove(className.leftward);
 				},
 				visible: function() {
-					$module.removeClass(className.visible);
+					$module.classList.remove(className.visible);
 				},
 				activeItem: function() {
-					$item.removeClass(className.active);
+					$item.classList.remove(className.active);
 				},
 				filteredItem: function() {
 					if(settings.useLabels && module.has.maxSelections() ) {
 						return;
 					}
 					if(settings.useLabels && module.is.multiple()) {
-						$item.not('.' + className.active).removeClass(className.filtered);
+						$item.not('.' + className.active).classList.remove(className.filtered);
 					}
 					else {
-						$item.removeClass(className.filtered);
+						$item.classList.remove(className.filtered);
 					}
 					module.remove.empty();
 				},
@@ -7007,7 +6524,7 @@ var vs = (function(window, document, undefined){
 						$option      = $input.find('option[value="' + module.escape.string(escapedValue) + '"]'),
 						hasOption    = ($option.length > 0)
 					;
-					if(!hasOption || !$option.hasClass(className.addition)) {
+					if(!hasOption || !$option.classList.contains(className.addition)) {
 						return;
 					}
 					// temporarily disconnect observer
@@ -7074,17 +6591,17 @@ var vs = (function(window, document, undefined){
 								module.remove.value(selectedValue, selectedText, $selected);
 							}
 							$selected
-								.removeClass(className.filtered)
-								.removeClass(className.active)
+								.classList.remove(className.filtered)
+								.classList.remove(className.active)
 							;
 							if(settings.useLabels) {
-								$selected.removeClass(className.selected);
+								$selected.classList.remove(className.selected);
 							}
 						})
 					;
 				},
 				selectedItem: function() {
-					$item.removeClass(className.selected);
+					$item.classList.remove(className.selected);
 				},
 				value: function(removedValue, removedText, $removedItem) {
 					var
@@ -7295,7 +6812,7 @@ var vs = (function(window, document, undefined){
 
 			is: {
 				active: function() {
-					return $module.hasClass(className.active);
+					return $module.classList.contains(className.active);
 				},
 				animatingInward: function() {
 					return $menu.transition('is inward');
@@ -7320,10 +6837,10 @@ var vs = (function(window, document, undefined){
 				},
 				leftward: function($subMenu) {
 					var $selectedMenu = $subMenu || $menu;
-					return $selectedMenu.hasClass(className.leftward);
+					return $selectedMenu.classList.contains(className.leftward);
 				},
 				disabled: function() {
-					return $module.hasClass(className.disabled);
+					return $module.classList.contains(className.disabled);
 				},
 				focused: function() {
 					return (document.activeElement === $module[0]);
@@ -7353,7 +6870,7 @@ var vs = (function(window, document, undefined){
 					return found;
 				},
 				multiple: function() {
-					return $module.hasClass(className.multiple);
+					return $module.classList.contains(className.multiple);
 				},
 				remote: function() {
 					return settings.apiSettings && module.can.useAPI();
@@ -7374,25 +6891,25 @@ var vs = (function(window, document, undefined){
 					return selectChanged;
 				},
 				search: function() {
-					return $module.hasClass(className.search);
+					return $module.classList.contains(className.search);
 				},
 				searchSelection: function() {
 					return ( module.has.search() && $search.parent(selector.dropdown).length === 1 );
 				},
 				selection: function() {
-					return $module.hasClass(className.selection);
+					return $module.classList.contains(className.selection);
 				},
 				userValue: function(value) {
 					return ($.inArray(value, module.get.userValues()) !== -1);
 				},
 				upward: function($menu) {
 					var $element = $menu || $module;
-					return $element.hasClass(className.upward);
+					return $element.classList.contains(className.upward);
 				},
 				visible: function($subMenu) {
 					return ($subMenu)
-						? $subMenu.hasClass(className.visible)
-						: $menu.hasClass(className.visible)
+						? $subMenu.classList.contains(className.visible)
+						: $menu.classList.contains(className.visible)
 					;
 				},
 				verticallyScrollableContext: function() {
@@ -7421,7 +6938,7 @@ var vs = (function(window, document, undefined){
 					if(!module.has.maxSelections()) {
 						return true;
 					}
-					if(module.has.maxSelections() && $item.hasClass(className.active)) {
+					if(module.has.maxSelections() && $item.classList.contains(className.active)) {
 						return true;
 					}
 					return false;
@@ -7434,7 +6951,7 @@ var vs = (function(window, document, undefined){
 						calculations
 					;
 					$currentMenu
-						.addClass(className.loading)
+						.classList.add(className.loading)
 					;
 					calculations = {
 						context: {
@@ -7468,7 +6985,7 @@ var vs = (function(window, document, undefined){
 						module.verbose('Dropdown cannot fit below, opening upward', onScreen);
 						canOpenDownward = false;
 					}
-					$currentMenu.removeClass(className.loading);
+					$currentMenu.classList.remove(className.loading);
 					return canOpenDownward;
 				},
 				openRightward: function($subMenu) {
@@ -7479,7 +6996,7 @@ var vs = (function(window, document, undefined){
 						calculations
 					;
 					$currentMenu
-						.addClass(className.loading)
+						.classList.add(className.loading)
 					;
 					calculations = {
 						context: {
@@ -7502,7 +7019,7 @@ var vs = (function(window, document, undefined){
 						module.verbose('Dropdown cannot fit in context rightward', isOffscreenRight);
 						canOpenRightward = false;
 					}
-					$currentMenu.removeClass(className.loading);
+					$currentMenu.classList.remove(className.loading);
 					return canOpenRightward;
 				},
 				click: function() {
@@ -7671,168 +7188,6 @@ var vs = (function(window, document, undefined){
 					text =  String(text);
 					return text.replace(regExp.escape, '\\$&');
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -7841,7 +7196,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.dropdown.settings = {
+	ui.dropdown.settings = {
 
 		silent                 : false,
 		debug                  : false,
@@ -8027,7 +7382,7 @@ var vs = (function(window, document, undefined){
 		}
 	};
 
-	vs.dropdown.settings.templates = {
+	ui.dropdown.settings.templates = {
 
 		// generates dropdown from select values
 		dropdown: function(select) {
@@ -8102,20 +7457,16 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.embed = function(element, settings){
+	ui.embed = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			sources = settings.sources,
 			error = settings.error,
 			metadata = settings.metadata,
-			namespace = settings.namespace,
 			templates = settings.templates,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
 			placeholder = element.querySelectorAll(selector.placeholder),
 			icon = element.querySelectorAll(selector.icon),
 			embed = element.querySelectorAll(selector.embed),
-			instance = element[moduleNamespace],
 			module;
 
 		module = {
@@ -8124,18 +7475,6 @@ var vs = (function(window, document, undefined){
 				module.determine.autoplay();
 				module.create();
 				module.bind.events();
-				module.instantiate();
-			},
-			instantiate: function(){
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				element[moduleNamespace] = module;
-			},
-			destroy: function(){
-				module.verbose('Destroying previous instance of embed');
-				module.reset();
-				element.removeEvents();
-				element[moduleNamespace] = undefined;
 			},
 			refresh: function(){
 				module.verbose('Refreshing selector cache');
@@ -8148,7 +7487,7 @@ var vs = (function(window, document, undefined){
 					if( module.has.placeholder() ){
 						module.debug('Adding placeholder events');
 						element.onclick = function(event){
-							if(vs.checkTarget(event, selector.placeholder) || vs.checkTarget(event, selector.icon)){
+							if(ui.checkTarget(event, selector.placeholder) || ui.checkTarget(event, selector.icon)){
 								module.createAndShow();
 							}
 						}
@@ -8360,7 +7699,7 @@ var vs = (function(window, document, undefined){
 					extraParameters = extraParameters || settings.parameters;
 					
 					if(extraParameters){
-						parameters = vs.extend({}, parameters, extraParameters);
+						parameters = ui.extend({}, parameters, extraParameters);
 					}
 
 					parameters = settings.onEmbed(parameters);
@@ -8393,10 +7732,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-
-	vs.embed.settings = {
-		name: 'Embed',
-		namespace: 'embed',
+	ui.embed.settings = {
 		silent: false,
 		debug: false,
 		verbose: false,
@@ -8513,21 +7849,17 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.modal = function(element, settings){
+	ui.modal = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
-			namespace = settings.namespace,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			/*$context        = $(settings.context),
-			$close          = $module.find(selector.close),
-			$allModals,
-			$otherModals,
-			$focusedElement,
-			$dimmable,
-			$dimmer,*/
-			instance = element[moduleNamespace],
+			context = element.querySelectorAll(settings.context),
+			close = element.querySelectorAll(selector.close),
+			allModals,
+			otherModals,
+			focusedElement,
+			dimmable,
+			dimmer,
 			ignoreRepeatedEvents = false,
 			elementEventNamespace,
 			id,
@@ -8548,14 +7880,6 @@ var vs = (function(window, document, undefined){
 					module.observeChanges();
 				}
 				module.instantiate();
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of modal');
-				instance = module;
-				$module
-					.data(moduleNamespace, instance)
-				;
 			},
 
 			create: {
@@ -8591,18 +7915,6 @@ var vs = (function(window, document, undefined){
 					elementEventNamespace = '.' + id;
 					module.verbose('Creating unique id for element', id);
 				}
-			},
-
-			destroy: function() {
-				module.verbose('Destroying previous modal');
-				$module
-					.removeData(moduleNamespace)
-					.off(eventNamespace)
-				;
-				$window.off(elementEventNamespace);
-				$dimmer.off(elementEventNamespace);
-				$close.off(eventNamespace);
-				$context.dimmer('destroy');
 			},
 
 			observeChanges: function() {
@@ -8966,7 +8278,7 @@ var vs = (function(window, document, undefined){
 
 			remove: {
 				active: function() {
-					$module.removeClass(className.active);
+					$module.classList.remove(className.active);
 				},
 				clickaway: function() {
 					$dimmer
@@ -8992,13 +8304,13 @@ var vs = (function(window, document, undefined){
 					;
 				},
 				scrolling: function() {
-					$dimmable.removeClass(className.scrolling);
-					$module.removeClass(className.scrolling);
+					$dimmable.classList.remove(className.scrolling);
+					$module.classList.remove(className.scrolling);
 				}
 			},
 
 			cacheSizes: function() {
-				$module.addClass(className.loading);
+				$module.classList.add(className.loading);
 				var
 					scrollHeight = $module.prop('scrollHeight'),
 					modalHeight  = $module.outerHeight()
@@ -9014,7 +8326,7 @@ var vs = (function(window, document, undefined){
 					};
 					module.cache.topOffset = -(module.cache.height / 2);
 				}
-				$module.removeClass(className.loading);
+				$module.classList.remove(className.loading);
 				module.debug('Caching modal and container sizes', module.cache);
 			},
 
@@ -9038,7 +8350,7 @@ var vs = (function(window, document, undefined){
 
 			is: {
 				active: function() {
-					return $module.hasClass(className.active);
+					return $module.classList.contains(className.active);
 				},
 				animating: function() {
 					return $module.transition('is supported')
@@ -9047,7 +8359,7 @@ var vs = (function(window, document, undefined){
 					;
 				},
 				scrolling: function() {
-					return $dimmable.hasClass(className.scrolling);
+					return $dimmable.classList.contains(className.scrolling);
 				},
 				modernBrowser: function() {
 					// appName for IE11 reports 'Netscape' can no longer use
@@ -9099,16 +8411,16 @@ var vs = (function(window, document, undefined){
 							? dimmerSettings.variation + ' inverted'
 							: 'inverted'
 						;
-						$dimmer.addClass(className.inverted);
+						$dimmer.classList.add(className.inverted);
 					}
 					else {
-						$dimmer.removeClass(className.inverted);
+						$dimmer.classList.remove(className.inverted);
 					}
 					if(settings.blurring) {
-						$dimmable.addClass(className.blurring);
+						$dimmable.classList.add(className.blurring);
 					}
 					else {
-						$dimmable.removeClass(className.blurring);
+						$dimmable.classList.remove(className.blurring);
 					}
 					$context.dimmer('setting', dimmerSettings);
 				},
@@ -9124,11 +8436,11 @@ var vs = (function(window, document, undefined){
 					}
 				},
 				active: function() {
-					$module.addClass(className.active);
+					$module.classList.add(className.active);
 				},
 				scrolling: function() {
-					$dimmable.addClass(className.scrolling);
-					$module.addClass(className.scrolling);
+					$dimmable.classList.add(className.scrolling);
+					$module.classList.add(className.scrolling);
 				},
 				type: function() {
 					if(module.can.fit()) {
@@ -9143,169 +8455,8 @@ var vs = (function(window, document, undefined){
 					}
 				},
 				undetached: function() {
-					$dimmable.addClass(className.undetached);
+					$dimmable.classList.add(className.undetached);
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -9314,7 +8465,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.modal.settings = {
+	ui.modal.settings = {
 		name           : 'Modal',
 		namespace      : 'modal',
 
@@ -9402,15 +8553,11 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.nag = function(element, settings){
+	ui.nag = function(element, settings){
 		var className = settings.className,
 			selector = settings.selector,
 			error = settings.error,
-			namespace = settings.namespace,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = namespace + 'Module',
 			context = document.querySelector(settings.context ? settings.context : "body"),
-			instance = element[moduleNamespace],
 			moduleOffset,
 			moduleHeight,
 			contextWidth,
@@ -9431,11 +8578,10 @@ var vs = (function(window, document, undefined){
 				module.verbose('Initializing element');
 
 				element.onclick = function(event){
-					if(vs.checkTarget(event, selector.close)){
+					if(ui.checkTarget(event, selector.close)){
 						module.dismiss(event);
 					}
 				}
-				element[moduleNamespace] = module;
 
 				if(settings.detachable && $module.parentElement !== context){
 					element.remove();
@@ -9450,23 +8596,17 @@ var vs = (function(window, document, undefined){
 
 				module.show();
 			},
-			destroy: function(){
-				module.verbose('Destroying instance');
-				element.onclick = undefined;
-				element[moduleNamespace] = undefined;
-			},
 			show: function(){
-				if(module.should.show() && !vs.isVisible(element)){
-					console.log("hey")
+				if(module.should.show() && !ui.isVisible(element)){
 					module.debug('Showing nag', settings.animation.show);
 					if(settings.animation.show == 'fade'){
-						vs.fadeIn(element, {
+						ui.fadeIn(element, {
 							duration: settings.duration,
 							easing: settings.easing
 						});
 					}
 					else {
-						vs.fadeIn(element, {
+						ui.fadeIn(element, {
 							duration: settings.duration,
 							easing: settings.easing
 						});
@@ -9476,13 +8616,13 @@ var vs = (function(window, document, undefined){
 			hide: function(){
 				module.debug('Showing nag', settings.animation.hide);
 				if(settings.animation.show == 'fade'){
-					vs.fadeOut(element, {
+					ui.fadeOut(element, {
 						duration: settings.duration,
 						easing: settings.easing
 					});
 				}
 				else {
-					vs.fadeOut(element, {
+					ui.fadeOut(element, {
 						duration: settings.duration,
 						easing: settings.easing
 					});
@@ -9572,7 +8712,10 @@ var vs = (function(window, document, undefined){
 					} else if(document.cookie !== undefined){
 						var reg = new RegExp("[; ]" + key + "=([^\\s;]*)");
 						var sMatch = (' ' + document.cookie).match(reg);
+						
+						if(sMatch && sMatch[1]){
 							storedValue = sMatch[1];
+						}
 					} else {
 						module.error(error.noCookieStorage);
 					}
@@ -9605,13 +8748,11 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.nag.settings = {
-		name: 'Nag',
+	ui.nag.settings = {
 		silent: false,
 		debug: false,
 		verbose: false,
 		performance: true,
-		namespace: 'Nag',
 		persist: false,
 		displayTime: 0,
 		context: false,
@@ -9652,14 +8793,11 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.popup = function(element, settings){
+	ui.popup = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
 			error = settings.error,
 			metadata = settings.metadata,
-			namespace = settings.namespace,
-			eventNamespace = '.' + settings.namespace,
-			moduleNamespace = 'module-' + namespace,
 			/*$context           = $(settings.context),
 			$scrollContext     = $(settings.scrollContext),
 			$boundary          = $(settings.boundary),
@@ -9671,7 +8809,6 @@ var vs = (function(window, document, undefined){
 			searchDepth = 0,
 			triedPositions = false,
 			openedWithTouch = false,
-			instance = element[moduleNamespace],
 			documentObserver,
 			elementNamespace,
 			id,
@@ -9691,14 +8828,6 @@ var vs = (function(window, document, undefined){
 					module.observeChanges();
 				}
 				module.instantiate();
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, instance)
-				;
 			},
 
 			observeChanges: function() {
@@ -9723,9 +8852,9 @@ var vs = (function(window, document, undefined){
 					}
 				}
 				if(settings.popup) {
-					$popup.addClass(className.loading);
+					$popup.classList.add(className.loading);
 					$offsetParent = module.get.offsetParent();
-					$popup.removeClass(className.loading);
+					$popup.classList.remove(className.loading);
 					if(settings.movePopup && module.has.popup() && module.get.offsetParent($popup)[0] !== $offsetParent[0]) {
 						module.debug('Moving popup to the same offset parent as target');
 						$popup
@@ -9852,7 +8981,7 @@ var vs = (function(window, document, undefined){
 						});
 					}
 					$popup = $('<div/>')
-						.addClass(className.popup)
+						.classList.add(className.popup)
 						.data(metadata.activator, $module)
 						.html(html)
 					;
@@ -10489,9 +9618,9 @@ var vs = (function(window, document, undefined){
 					// tentatively place on stage
 					$popup
 						.css(positioning)
-						.removeClass(className.position)
-						.addClass(position)
-						.addClass(className.loading)
+						.classList.remove(className.position)
+						.classList.add(position)
+						.classList.add(className.loading)
 					;
 
 					popupOffset = module.get.popupOffset();
@@ -10544,28 +9673,28 @@ var vs = (function(window, document, undefined){
 					variation = variation || module.get.variation();
 					if(variation && module.has.popup() ) {
 						module.verbose('Adding variation to popup', variation);
-						$popup.addClass(variation);
+						$popup.classList.add(variation);
 					}
 				},
 
 				visible: function() {
-					$module.addClass(className.visible);
+					$module.classList.add(className.visible);
 				}
 			},
 
 			remove: {
 				loading: function() {
-					$popup.removeClass(className.loading);
+					$popup.classList.remove(className.loading);
 				},
 				variation: function(variation) {
 					variation = variation || module.get.variation();
 					if(variation) {
 						module.verbose('Removing variation', variation);
-						$popup.removeClass(variation);
+						$popup.classList.remove(variation);
 					}
 				},
 				visible: function() {
-					$module.removeClass(className.visible);
+					$module.classList.remove(className.visible);
 				},
 				attempts: function() {
 					module.verbose('Resetting all searched positions');
@@ -10698,22 +9827,22 @@ var vs = (function(window, document, undefined){
 					return module.supports.svg() && (element instanceof SVGGraphicsElement);
 				},
 				basic: function() {
-					return $module.hasClass(className.basic);
+					return $module.classList.contains(className.basic);
 				},
 				active: function() {
-					return $module.hasClass(className.active);
+					return $module.classList.contains(className.active);
 				},
 				animating: function() {
-					return ($popup !== undefined && $popup.hasClass(className.animating) );
+					return ($popup !== undefined && $popup.classList.contains(className.animating) );
 				},
 				fluid: function() {
-					return ($popup !== undefined && $popup.hasClass(className.fluid));
+					return ($popup !== undefined && $popup.classList.contains(className.fluid));
 				},
 				visible: function() {
-					return ($popup !== undefined && $popup.hasClass(className.popupVisible));
+					return ($popup !== undefined && $popup.classList.contains(className.popupVisible));
 				},
 				dropdown: function() {
-					return $module.hasClass(className.dropdown);
+					return $module.classList.contains(className.dropdown);
 				},
 				hidden: function() {
 					return !module.is.visible();
@@ -10735,161 +9864,6 @@ var vs = (function(window, document, undefined){
 				else {
 					module.removePopup();
 				}
-			},
-
-			setting: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					settings[name] = value;
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -10898,7 +9872,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.popup.settings = {
+	ui.popup.settings = {
 		name           : 'Popup',
 
 		// module settings
@@ -11109,25 +10083,20 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.progress = function(element, settings){
+	ui.progress = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
-			namespace = settings.namespace,
 			selector = settings.selector,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			/*$bar            = $(this).find(selector.bar),
-			$progress       = $(this).find(selector.progress),
-			$label          = $(this).find(selector.label),*/
-			instance = element[moduleNamespace],
+			bar = element.querySelector(selector.bar),
+			progress = element.querySelectorAll(selector.progress),
+			label = element.querySelectorAll(selector.label),
 			animating = false,
 			transitionEnd,
 			module;
 
-		/*module = {
-
-			initialize: function() {
+		module = {
+			initialize: function(){
 				module.debug('Initializing progress bar', settings);
 
 				module.set.duration();
@@ -11135,102 +10104,79 @@ var vs = (function(window, document, undefined){
 
 				module.read.metadata();
 				module.read.settings();
-
-				module.instantiate();
 			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of progress', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
-			},
-			destroy: function() {
-				module.verbose('Destroying previous progress for', $module);
-				clearInterval(instance.interval);
-				module.remove.state();
-				$module.removeData(moduleNamespace);
-				instance = undefined;
-			},
-
-			reset: function() {
+			reset: function(){
 				module.remove.nextValue();
 				module.update.progress(0);
 			},
-
-			complete: function() {
-				if(module.percent === undefined || module.percent < 100) {
+			complete: function(){
+				if(module.percent === undefined || module.percent < 100){
 					module.remove.progressPoll();
 					module.set.percent(100);
 				}
 			},
-
 			read: {
-				metadata: function() {
-					var
-						data = {
-							percent : $module.data(metadata.percent),
-							total   : $module.data(metadata.total),
-							value   : $module.data(metadata.value)
-						}
-					;
-					if(data.percent) {
+				metadata: function(){
+					var data = {
+						percent: element.dataset[metadata.percent],
+						total: element.dataset[metadata.total],
+						value: element.dataset[metadata.value]
+					};
+
+					if(data.percent){
 						module.debug('Current percent value set from metadata', data.percent);
 						module.set.percent(data.percent);
 					}
-					if(data.total) {
+					if(data.total){
 						module.debug('Total value set from metadata', data.total);
 						module.set.total(data.total);
 					}
-					if(data.value) {
+					if(data.value){
 						module.debug('Current value set from metadata', data.value);
 						module.set.value(data.value);
 						module.set.progress(data.value);
 					}
 				},
-				settings: function() {
-					if(settings.total !== false) {
+				settings: function(){
+					if(settings.total !== false){
 						module.debug('Current total set in settings', settings.total);
 						module.set.total(settings.total);
 					}
-					if(settings.value !== false) {
+					if(settings.value !== false){
 						module.debug('Current value set in settings', settings.value);
 						module.set.value(settings.value);
 						module.set.progress(module.value);
 					}
-					if(settings.percent !== false) {
+					if(settings.percent !== false){
 						module.debug('Current percent set in settings', settings.percent);
 						module.set.percent(settings.percent);
 					}
 				}
 			},
-
 			bind: {
-				transitionEnd: function(callback) {
-					var
-						transitionEnd = module.get.transitionEnd()
-					;
-					$bar
-						.one(transitionEnd + eventNamespace, function(event) {
-							clearTimeout(module.failSafeTimer);
-							callback.call(this, event);
-						})
-					;
-					module.failSafeTimer = setTimeout(function() {
-						$bar.triggerHandler(transitionEnd);
+				transitionEnd: function(callback){
+					var transitionEnd = module.get.transitionEnd();
+
+					bar.addEventListener(transitionEnd, function(event){
+					    clearTimeout(module.failSafeTimer);
+						callback.call(this, event);
+					    event.target.removeEventListener(event.type, arguments.callee);
+					});
+
+					module.failSafeTimer = setTimeout(function(){
+						bar.dispatchEvent(transitionEnd);
 					}, settings.duration + settings.failSafeDelay);
+
 					module.verbose('Adding fail safe timer', module.timer);
 				}
 			},
-
-			increment: function(incrementValue) {
+			increment: function(incrementValue){
 				var
 					maxValue,
 					startValue,
 					newValue
 				;
-				if( module.has.total() ) {
+				if( module.has.total() ){
 					startValue     = module.get.value();
 					incrementValue = incrementValue || 1;
 					newValue       = startValue + incrementValue;
@@ -11246,13 +10192,13 @@ var vs = (function(window, document, undefined){
 				newValue = module.get.normalizedValue(newValue);
 				module.set.progress(newValue);
 			},
-			decrement: function(decrementValue) {
+			decrement: function(decrementValue){
 				var
 					total     = module.get.total(),
 					startValue,
 					newValue
 				;
-				if(total) {
+				if(total){
 					startValue     =  module.get.value();
 					decrementValue =  decrementValue || 1;
 					newValue       =  startValue - decrementValue;
@@ -11267,70 +10213,63 @@ var vs = (function(window, document, undefined){
 				newValue = module.get.normalizedValue(newValue);
 				module.set.progress(newValue);
 			},
-
 			has: {
-				progressPoll: function() {
+				progressPoll: function(){
 					return module.progressPoll;
 				},
-				total: function() {
+				total: function(){
 					return (module.get.total() !== false);
 				}
 			},
-
 			get: {
-				text: function(templateText) {
-					var
-						value   = module.value                || 0,
-						total   = module.total                || 0,
+				text: function(templateText){
+					var value = module.value || 0,
+						total = module.total || 0,
 						percent = (animating)
 							? module.get.displayPercent()
 							: module.percent || 0,
 						left = (module.total > 0)
 							? (total - value)
-							: (100 - percent)
-					;
+							: (100 - percent);
+					
 					templateText = templateText || '';
 					templateText = templateText
 						.replace('{value}', value)
 						.replace('{total}', total)
 						.replace('{left}', left)
-						.replace('{percent}', percent)
-					;
+						.replace('{percent}', percent);
+					
 					module.verbose('Adding variables to progress bar text', templateText);
 					return templateText;
 				},
-
-				normalizedValue: function(value) {
-					if(value < 0) {
+				normalizedValue: function(value){
+					if(value < 0){
 						module.debug('Value cannot decrement below 0');
 						return 0;
 					}
-					if(module.has.total()) {
-						if(value > module.total) {
+					if(module.has.total()){
+						if(value > module.total){
 							module.debug('Value cannot increment above total', module.total);
 							return module.total;
 						}
 					}
-					else if(value > 100 ) {
+					else if(value > 100 ){
 						module.debug('Value cannot increment above 100 percent');
 						return 100;
 					}
 					return value;
 				},
-
-				updateInterval: function() {
-					if(settings.updateInterval == 'auto') {
+				updateInterval: function(){
+					if(settings.updateInterval == 'auto'){
 						return settings.duration;
 					}
 					return settings.updateInterval;
 				},
-
-				randomValue: function() {
+				randomValue: function(){
 					module.debug('Generating random increment percentage');
 					return Math.floor((Math.random() * settings.random.max) + settings.random.min);
 				},
-
-				numericValue: function(value) {
+				numericValue: function(value){
 					return (typeof value === 'string')
 						? (value.replace(/[^\d.]/g, '') !== '')
 							? +(value.replace(/[^\d.]/g, ''))
@@ -11338,221 +10277,201 @@ var vs = (function(window, document, undefined){
 						: value
 					;
 				},
-
-				transitionEnd: function() {
-					var
-						element     = document.createElement('element'),
+				transitionEnd: function(){
+					var element = document.createElement('element'),
+						transition,
 						transitions = {
-							'transition'       :'transitionend',
-							'OTransition'      :'oTransitionEnd',
-							'MozTransition'    :'transitionend',
-							'WebkitTransition' :'webkitTransitionEnd'
-						},
-						transition
-					;
+							'transition': 'transitionend',
+							'OTransition': 'oTransitionEnd',
+							'MozTransition': 'transitionend',
+							'WebkitTransition': 'webkitTransitionEnd'
+						};
+						
 					for(transition in transitions){
 						if( element.style[transition] !== undefined ){
 							return transitions[transition];
 						}
 					}
 				},
-
-				// gets current displayed percentage (if animating values this is the intermediary value)
-				displayPercent: function() {
-					var
-						barWidth       = $bar.width(),
-						totalWidth     = $module.width(),
-						minDisplay     = parseInt($bar.css('min-width'), 10),
+				displayPercent: function(){
+					var barWidth = bar.width,
+						totalWidth = element.width,
+						minDisplay = parseInt(bar.style.minWidth, 10),
 						displayPercent = (barWidth > minDisplay)
 							? (barWidth / totalWidth * 100)
-							: module.percent
-					;
+							: module.percent;
+					
 					return (settings.precision > 0)
 						? Math.round(displayPercent * (10 * settings.precision)) / (10 * settings.precision)
-						: Math.round(displayPercent)
-					;
+						: Math.round(displayPercent);
 				},
-
-				percent: function() {
+				percent: function(){
 					return module.percent || 0;
 				},
-				value: function() {
+				value: function(){
 					return module.nextValue || module.value || 0;
 				},
-				total: function() {
+				total: function(){
 					return module.total || false;
 				}
 			},
-
 			create: {
-				progressPoll: function() {
-					module.progressPoll = setTimeout(function() {
+				progressPoll: function(){
+					module.progressPoll = setTimeout(function(){
 						module.update.toNextValue();
 						module.remove.progressPoll();
 					}, module.get.updateInterval());
 				},
 			},
-
 			is: {
-				complete: function() {
+				complete: function(){
 					return module.is.success() || module.is.warning() || module.is.error();
 				},
-				success: function() {
-					return $module.hasClass(className.success);
+				success: function(){
+					return element.classList.contains(className.success);
 				},
-				warning: function() {
-					return $module.hasClass(className.warning);
+				warning: function(){
+					return element.classList.contains(className.warning);
 				},
-				error: function() {
-					return $module.hasClass(className.error);
+				error: function(){
+					return element.classList.contains(className.error);
 				},
-				active: function() {
-					return $module.hasClass(className.active);
+				active: function(){
+					return element.classList.contains(className.active);
 				},
-				visible: function() {
-					return $module.is(':visible');
+				visible: function(){
+					return ui.isVisible(element);
 				}
 			},
-
 			remove: {
-				progressPoll: function() {
+				progressPoll: function(){
 					module.verbose('Removing progress poll timer');
-					if(module.progressPoll) {
+					if(module.progressPoll){
 						clearTimeout(module.progressPoll);
 						delete module.progressPoll;
 					}
 				},
-				nextValue: function() {
+				nextValue: function(){
 					module.verbose('Removing progress value stored for next update');
 					delete module.nextValue;
 				},
-				state: function() {
+				state: function(){
 					module.verbose('Removing stored state');
 					delete module.total;
 					delete module.percent;
 					delete module.value;
 				},
-				active: function() {
+				active: function(){
 					module.verbose('Removing active state');
-					$module.removeClass(className.active);
+					element.classList.remove(className.active);
 				},
-				success: function() {
+				success: function(){
 					module.verbose('Removing success state');
-					$module.removeClass(className.success);
+					element.classList.remove(className.success);
 				},
-				warning: function() {
+				warning: function(){
 					module.verbose('Removing warning state');
-					$module.removeClass(className.warning);
+					element.classList.remove(className.warning);
 				},
-				error: function() {
+				error: function(){
 					module.verbose('Removing error state');
-					$module.removeClass(className.error);
+					element.classList.remove(className.error);
 				}
 			},
-
 			set: {
-				barWidth: function(value) {
-					if(value > 100) {
+				barWidth: function(value){
+					if(value > 100){
 						module.error(error.tooHigh, value);
 					}
-					else if (value < 0) {
+					else if (value < 0){
 						module.error(error.tooLow, value);
 					}
 					else {
-						$bar
-							.css('width', value + '%')
-						;
-						$module
-							.attr('data-percent', parseInt(value, 10))
-						;
+						bar.style.width = value + '%';
+						element.setAttribute('data-percent', parseInt(value, 10));
 					}
 				},
-				duration: function(duration) {
+				duration: function(duration){
 					duration = duration || settings.duration;
 					duration = (typeof duration == 'number')
 						? duration + 'ms'
 						: duration
 					;
 					module.verbose('Setting progress bar transition duration', duration);
-					$bar
-						.css({
-							'transition-duration':  duration
-						})
-					;
+					bar.style.transitionDuration = duration;
 				},
-				percent: function(percent) {
+				percent: function(percent){
 					percent = (typeof percent == 'string')
 						? +(percent.replace('%', ''))
-						: percent
-					;
+						: percent;
+					
 					// round display percentage
 					percent = (settings.precision > 0)
 						? Math.round(percent * (10 * settings.precision)) / (10 * settings.precision)
-						: Math.round(percent)
-					;
+						: Math.round(percent);
+					
 					module.percent = percent;
-					if( !module.has.total() ) {
+
+					if( !module.has.total() ){
 						module.value = (settings.precision > 0)
 							? Math.round( (percent / 100) * module.total * (10 * settings.precision)) / (10 * settings.precision)
-							: Math.round( (percent / 100) * module.total * 10) / 10
-						;
-						if(settings.limitValues) {
+							: Math.round( (percent / 100) * module.total * 10) / 10;
+						
+						if(settings.limitValues){
 							module.value = (module.value > 100)
 								? 100
 								: (module.value < 0)
 									? 0
-									: module.value
-							;
+									: module.value;
 						}
 					}
+
 					module.set.barWidth(percent);
 					module.set.labelInterval();
 					module.set.labels();
 					settings.onChange.call(element, percent, module.value, module.total);
 				},
-				labelInterval: function() {
-					var
-						animationCallback = function() {
+				labelInterval: function(){
+					var animationCallback = function(){
 							module.verbose('Bar finished animating, removing continuous label updates');
 							clearInterval(module.interval);
 							animating = false;
 							module.set.labels();
-						}
-					;
+						};
+
 					clearInterval(module.interval);
 					module.bind.transitionEnd(animationCallback);
 					animating = true;
-					module.interval = setInterval(function() {
-						var
-							isInDOM = $.contains(document.documentElement, element)
-						;
-						if(!isInDOM) {
+					module.interval = setInterval(function(){
+						//var isInDOM = $.contains(document.documentElement, element)
+
+						//if(!isInDOM){
 							clearInterval(module.interval);
 							animating = false;
-						}
+						//}
 						module.set.labels();
 					}, settings.framerate);
 				},
-				labels: function() {
+				labels: function(){
 					module.verbose('Setting both bar progress and outer label text');
 					module.set.barLabel();
 					module.set.state();
 				},
-				label: function(text) {
+				label: function(text){
 					text = text || '';
-					if(text) {
+					if(text){
 						text = module.get.text(text);
 						module.verbose('Setting label to text', text);
-						$label.text(text);
+						label.textContent = text;
 					}
 				},
-				state: function(percent) {
+				state: function(percent){
 					percent = (percent !== undefined)
 						? percent
 						: module.percent
 					;
-					if(percent === 100) {
-						if(settings.autoSuccess && !(module.is.warning() || module.is.error() || module.is.success())) {
+					if(percent === 100){
+						if(settings.autoSuccess && !(module.is.warning() || module.is.error() || module.is.success())){
 							module.set.success();
 							module.debug('Automatically triggering success at 100%');
 						}
@@ -11562,7 +10481,7 @@ var vs = (function(window, document, undefined){
 							module.remove.progressPoll();
 						}
 					}
-					else if(percent > 0) {
+					else if(percent > 0){
 						module.verbose('Adjusting active progress bar label', percent);
 						module.set.active();
 					}
@@ -11571,99 +10490,98 @@ var vs = (function(window, document, undefined){
 						module.set.label(settings.text.active);
 					}
 				},
-				barLabel: function(text) {
-					if(text !== undefined) {
-						$progress.text( module.get.text(text) );
+				barLabel: function(text){
+					if(text !== undefined){
+						progress.textContent = module.get.text(text);
 					}
-					else if(settings.label == 'ratio' && module.total) {
+					else if(settings.label == 'ratio' && module.total){
 						module.verbose('Adding ratio to bar label');
-						$progress.text( module.get.text(settings.text.ratio) );
+						progress.textContent = module.get.text(settings.text.ratio);
 					}
-					else if(settings.label == 'percent') {
+					else if(settings.label == 'percent'){
 						module.verbose('Adding percentage to bar label');
-						$progress.text( module.get.text(settings.text.percent) );
+						progress.textContent = module.get.text(settings.text.percent);
 					}
 				},
-				active: function(text) {
+				active: function(text){
 					text = text || settings.text.active;
 					module.debug('Setting active state');
-					if(settings.showActivity && !module.is.active() ) {
-						$module.addClass(className.active);
+					if(settings.showActivity && !module.is.active() ){
+						element.classList.add(className.active);
 					}
 					module.remove.warning();
 					module.remove.error();
 					module.remove.success();
 					text = settings.onLabelUpdate('active', text, module.value, module.total);
-					if(text) {
+					if(text){
 						module.set.label(text);
 					}
-					module.bind.transitionEnd(function() {
+					module.bind.transitionEnd(function(){
 						settings.onActive.call(element, module.value, module.total);
 					});
 				},
-				success : function(text) {
+				success : function(text){
 					text = text || settings.text.success || settings.text.active;
 					module.debug('Setting success state');
-					$module.addClass(className.success);
+					element.classList.add(className.success);
 					module.remove.active();
 					module.remove.warning();
 					module.remove.error();
 					module.complete();
-					if(settings.text.success) {
+					if(settings.text.success){
 						text = settings.onLabelUpdate('success', text, module.value, module.total);
 						module.set.label(text);
-					}
-					else {
+					} else {
 						text = settings.onLabelUpdate('active', text, module.value, module.total);
 						module.set.label(text);
 					}
-					module.bind.transitionEnd(function() {
+					module.bind.transitionEnd(function(){
 						settings.onSuccess.call(element, module.total);
 					});
 				},
-				warning : function(text) {
+				warning : function(text){
 					text = text || settings.text.warning;
 					module.debug('Setting warning state');
-					$module.addClass(className.warning);
+					element.classList.add(className.warning);
 					module.remove.active();
 					module.remove.success();
 					module.remove.error();
 					module.complete();
 					text = settings.onLabelUpdate('warning', text, module.value, module.total);
-					if(text) {
+					if(text){
 						module.set.label(text);
 					}
-					module.bind.transitionEnd(function() {
+					module.bind.transitionEnd(function(){
 						settings.onWarning.call(element, module.value, module.total);
 					});
 				},
-				error : function(text) {
+				error : function(text){
 					text = text || settings.text.error;
 					module.debug('Setting error state');
-					$module.addClass(className.error);
+					element.classList.add(className.error);
 					module.remove.active();
 					module.remove.success();
 					module.remove.warning();
 					module.complete();
 					text = settings.onLabelUpdate('error', text, module.value, module.total);
-					if(text) {
+					if(text){
 						module.set.label(text);
 					}
-					module.bind.transitionEnd(function() {
+					module.bind.transitionEnd(function(){
 						settings.onError.call(element, module.value, module.total);
 					});
 				},
-				transitionEvent: function() {
+				transitionEvent: function(){
 					transitionEnd = module.get.transitionEnd();
 				},
-				total: function(totalValue) {
+				total: function(totalValue){
 					module.total = totalValue;
 				},
-				value: function(value) {
+				value: function(value){
 					module.value = value;
 				},
-				progress: function(value) {
-					if(!module.has.progressPoll()) {
+				progress: function(value){
+					if(!module.has.progressPoll()){
 						module.debug('First update in progress update interval, immediately updating', value);
 						module.update.progress(value);
 						module.create.progressPoll();
@@ -11673,32 +10591,31 @@ var vs = (function(window, document, undefined){
 						module.set.nextValue(value);
 					}
 				},
-				nextValue: function(value) {
+				nextValue: function(value){
 					module.nextValue = value;
 				}
 			},
-
 			update: {
-				toNextValue: function() {
+				toNextValue: function(){
 					var
 						nextValue = module.nextValue
 					;
-					if(nextValue) {
+					if(nextValue){
 						module.debug('Update interval complete using last updated value', nextValue);
 						module.update.progress(nextValue);
 						module.remove.nextValue();
 					}
 				},
-				progress: function(value) {
+				progress: function(value){
 					var
 						percentComplete
 					;
 					value = module.get.numericValue(value);
-					if(value === false) {
+					if(value === false){
 						module.error(error.nonNumeric, value);
 					}
 					value = module.get.normalizedValue(value);
-					if( module.has.total() ) {
+					if( module.has.total() ){
 						module.set.value(value);
 						percentComplete = (value / module.total) * 100;
 						module.debug('Calculating percent complete from total', percentComplete);
@@ -11710,255 +10627,73 @@ var vs = (function(window, document, undefined){
 						module.set.percent( percentComplete );
 					}
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
-		};*/
-
-		module = {};
+		};
 		
 		return module;
 	};
 
-	vs.progress.settings = {
-		name         : 'Progress',
-		namespace    : 'progress',
-
-		silent       : false,
-		debug        : false,
-		verbose      : false,
-		performance  : true,
-
-		random       : {
-			min : 2,
-			max : 5
-		},
-
-		duration       : 300,
-
-		updateInterval : 'auto',
-
-		autoSuccess    : true,
-		showActivity   : true,
-		limitValues    : true,
-
-		label          : 'percent',
-		precision      : 0,
-		framerate      : (1000 / 30), /// 30 fps
-
-		percent        : false,
-		total          : false,
-		value          : false,
-
-		// delay in ms for fail safe animation callback
-		failSafeDelay : 100,
-
-		onLabelUpdate : function(state, text, value, total){
+	ui.progress.settings = {
+		silent: false,
+		debug: false,
+		verbose: false,
+		performance: true,
+		duration: 300,
+		updateInterval: 'auto',
+		autoSuccess: true,
+		showActivity: true,
+		limitValues: true,
+		label: 'percent',
+		precision: 0,
+		framerate: (1000 / 30), /// 30 fps
+		percent: false,
+		total: false,
+		value: false,
+		failSafeDelay: 100,
+		onLabelUpdate: function(state, text, value, total){
 			return text;
 		},
-		onChange      : function(percent, value, total){},
-		onSuccess     : function(total){},
-		onActive      : function(value, total){},
-		onError       : function(value, total){},
-		onWarning     : function(value, total){},
-
-		error    : {
-			method     : 'The method you called is not defined.',
-			nonNumeric : 'Progress value is non numeric',
-			tooHigh    : 'Value specified is above 100%',
-			tooLow     : 'Value specified is below 0%'
-		},
-
+		onChange: function(percent, value, total){},
+		onSuccess: function(total){},
+		onActive: function(value, total){},
+		onError: function(value, total){},
+		onWarning: function(value, total){},
 		regExp: {
 			variable: /\{\$*[A-z0-9]+\}/g
 		},
-
+		random: {
+			min: 2,
+			max: 5
+		},
 		metadata: {
-			percent : 'percent',
-			total   : 'total',
-			value   : 'value'
+			percent: 'percent',
+			total: 'total',
+			value: 'value'
 		},
-
-		selector : {
-			bar      : '> .bar',
-			label    : '> .label',
-			progress : '.bar > .progress'
+		selector: {
+			bar: '.bar',
+			label: 'label',
+			progress: '.bar > .progress'
 		},
-
-		text : {
-			active  : false,
-			error   : false,
-			success : false,
-			warning : false,
-			percent : '{percent}%',
-			ratio   : '{value} of {total}'
+		className: {
+			active: 'active',
+			error: 'error',
+			success: 'success',
+			warning: 'warning'
 		},
-
-		className : {
-			active  : 'active',
-			error   : 'error',
-			success : 'success',
-			warning : 'warning'
+		error: {
+			method: 'The method you called is not defined.',
+			nonNumeric: 'Progress value is non numeric',
+			tooHigh: 'Value specified is above 100%',
+			tooLow: 'Value specified is below 0%'
+		},
+		text: {
+			active: false,
+			error: false,
+			success: false,
+			warning: false,
+			percent: '{percent}%',
+			ratio: '{value} of {total}'
 		}
 	};
 
@@ -11971,15 +10706,11 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.rating = function(element, settings){
-		var namespace = settings.namespace,
-			className = settings.className,
+	ui.rating = function(element, settings){
+		var className = settings.className,
 			metadata = settings.metadata,
 			selector = settings.selector,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module' + namespace[0].toUpperCase() + namespace.substr(1),
-			instance = element[moduleNamespace],
 			icons = [].slice.call(element.querySelectorAll(selector.icon)),
 			initialLoad,
 			module;
@@ -11988,8 +10719,6 @@ var vs = (function(window, document, undefined){
 			initialize: function(){
 				module.verbose('Initializing rating module', settings);
 				
-				console.log();
-
 				if(icons.length === 0){
 					module.setup.layout();
 				}
@@ -12004,17 +10733,6 @@ var vs = (function(window, document, undefined){
 				module.set.initialLoad();
 				module.set.rating( module.get.initialRating() );
 				module.remove.initialLoad();
-				module.instantiate();
-			},
-			instantiate: function(){
-				module.verbose('Instantiating module', settings);
-				instance = module;
-				element[moduleNamespace] = module;
-			},
-			destroy: function(){
-				module.verbose('Destroying previous instance', instance);
-				module.remove.events();
-				element[moduleNamespace] = undefined;
 			},
 			refresh: function(){
 				icons = [].slice.call(element.querySelectorAll(selector.icon));
@@ -12022,7 +10740,7 @@ var vs = (function(window, document, undefined){
 			setup: {
 				layout: function(){
 					var maxRating = module.get.maxRating(),
-						settings = vs.rating.settings,
+						settings = ui.rating.settings,
 						html = settings.templates.icon(maxRating);
 
 					module.debug('Generating icon html dynamically');
@@ -12032,11 +10750,11 @@ var vs = (function(window, document, undefined){
 			},
 			event: {
 				mouseenter: function(event){
-					if(!vs.checkTarget(event, selector.icon)){
+					if(!ui.checkTarget(event, selector.icon)){
 						return;
 					}
 
-					vs.nextAll(this, function(elem){
+					ui.nextAll(this, function(elem){
 						elem.classList.remove(className.selected);
 					});
 
@@ -12047,10 +10765,10 @@ var vs = (function(window, document, undefined){
 					addClass(element);
 					addClass(this);
 
-					vs.prevAll(this, addClass);
+					ui.prevAll(this, addClass);
 				},
 				mouseleave: function(event){
-					if(!vs.checkTarget(event, selector.icon)){
+					if(!ui.checkTarget(event, selector.icon)){
 						return;
 					}
 
@@ -12060,7 +10778,7 @@ var vs = (function(window, document, undefined){
 					}
 				},
 				click: function(event){
-					if(!vs.checkTarget(event, selector.icon)){
+					if(!ui.checkTarget(event, selector.icon)){
 						return;
 					}
 
@@ -12089,13 +10807,15 @@ var vs = (function(window, document, undefined){
 					element.onmouseout = module.event.mouseleave;
 				}
 			},
-			remove: {
+			unbind: {
 				events: function(){
 					module.verbose('Removing events');
 					element.onclick = undefined;
 					element.onmouseover = undefined;
 					element.onmouseout = undefined;
-				},
+				}
+			},
+			remove: {
 				initialLoad: function(){
 					initialLoad = false;
 				}
@@ -12107,7 +10827,7 @@ var vs = (function(window, document, undefined){
 			},
 			disable: function(){
 				module.debug('Setting rating to read-only mode');
-				module.remove.events();
+				module.unbind.events();
 				element.classList.add(className.disabled);
 			},
 			is: {
@@ -12156,7 +10876,7 @@ var vs = (function(window, document, undefined){
 					if(rating > 0){
 						module.verbose('Setting current rating to', rating);
 						activeIcon.classList.add(className.active);
-						vs.prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
+						ui.prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
 					}
 					if(!module.is.initialLoad()){
 						settings.onRate.call(element, rating);
@@ -12171,9 +10891,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.rating.settings = {
-		name: 'Rating',
-		namespace: 'rating',
+	ui.rating.settings = {
 		silent: false,
 		debug: false,
 		verbose: false,
@@ -12225,22 +10943,18 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.search = function(element, settings){
+	ui.search = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
 			regExp = settings.regExp,
 			fields = settings.fields,
 			selector = settings.selector,
 			error = settings.error,
-			namespace = settings.namespace,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = namespace + '-module',
 			/*$prompt          = $module.find(selector.prompt),
 			$searchButton    = $module.find(selector.searchButton),
 			$results         = $module.find(selector.results),
 			$result          = $module.find(selector.result),
 			$category        = $module.find(selector.category),*/
-			instance = element[moduleNamespace],
 			disabledBubbled = false,
 			resultsDismissed = false,
 			module;
@@ -12255,20 +10969,6 @@ var vs = (function(window, document, undefined){
 				module.set.type();
 				module.create.results();
 				module.instantiate();
-			},
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
-			},
-			destroy: function() {
-				module.verbose('Destroying instance');
-				$module
-					.off(eventNamespace)
-					.removeData(moduleNamespace)
-				;
 			},
 
 			refresh: function() {
@@ -12469,14 +11169,14 @@ var vs = (function(window, document, undefined){
 							: currentIndex - 1
 						;
 						$category
-							.removeClass(className.active)
+							.classList.remove(className.active)
 						;
 						$result
-							.removeClass(className.active)
+							.classList.remove(className.active)
 							.eq(newIndex)
-								.addClass(className.active)
+								.classList.add(className.active)
 								.closest($category)
-									.addClass(className.active)
+									.classList.add(className.active)
 						;
 						event.preventDefault();
 					}
@@ -12487,14 +11187,14 @@ var vs = (function(window, document, undefined){
 							: currentIndex + 1
 						;
 						$category
-							.removeClass(className.active)
+							.classList.remove(className.active)
 						;
 						$result
-							.removeClass(className.active)
+							.classList.remove(className.active)
 							.eq(newIndex)
-								.addClass(className.active)
+								.classList.add(className.active)
 								.closest($category)
-									.addClass(className.active)
+									.classList.add(className.active)
 						;
 						event.preventDefault();
 					}
@@ -12555,10 +11255,10 @@ var vs = (function(window, document, undefined){
 
 			is: {
 				animating: function() {
-					return $results.hasClass(className.animating);
+					return $results.classList.contains(className.animating);
 				},
 				hidden: function() {
-					return $results.hasClass(className.hidden);
+					return $results.classList.contains(className.hidden);
 				},
 				inMessage: function(event) {
 					if(!event.target) {
@@ -12644,16 +11344,16 @@ var vs = (function(window, document, undefined){
 			select: {
 				firstResult: function() {
 					module.verbose('Selecting first result');
-					$result.first().addClass(className.active);
+					$result.first().classList.add(className.active);
 				}
 			},
 
 			set: {
 				focus: function() {
-					$module.addClass(className.focus);
+					$module.classList.add(className.focus);
 				},
 				loading: function() {
-					$module.addClass(className.loading);
+					$module.classList.add(className.loading);
 				},
 				value: function(value) {
 					module.verbose('Setting search input value', value);
@@ -12664,23 +11364,23 @@ var vs = (function(window, document, undefined){
 				type: function(type) {
 					type = type || settings.type;
 					if(settings.type == 'category') {
-						$module.addClass(settings.type);
+						$module.classList.add(settings.type);
 					}
 				},
 				buttonPressed: function() {
-					$searchButton.addClass(className.pressed);
+					$searchButton.classList.add(className.pressed);
 				}
 			},
 
 			remove: {
 				loading: function() {
-					$module.removeClass(className.loading);
+					$module.classList.remove(className.loading);
 				},
 				focus: function() {
-					$module.removeClass(className.focus);
+					$module.classList.remove(className.focus);
 				},
 				buttonPressed: function() {
-					$searchButton.removeClass(className.pressed);
+					$searchButton.classList.remove(className.pressed);
 				}
 			},
 
@@ -12989,7 +11689,7 @@ var vs = (function(window, document, undefined){
 				results: function() {
 					if($results.length === 0) {
 						$results = $('<div />')
-							.addClass(className.results)
+							.classList.add(className.results)
 							.appendTo($module)
 						;
 					}
@@ -13208,164 +11908,6 @@ var vs = (function(window, document, undefined){
 				module.debug('Displaying message', text, type);
 				module.addResults( settings.templates.message(text, type) );
 				return settings.templates.message(text, type);
-			},
-
-			setting: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					settings[name] = value;
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if($allModules.length > 1) {
-						title += ' ' + '(' + $allModules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 		
@@ -13374,7 +11916,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.search.settings = {
+	ui.search.settings = {
 		name              : 'Search',
 		namespace         : 'search',
 
@@ -13673,19 +12215,15 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.shape = function(element, settings){
-		var namespace = settings.namespace,
-			selector = settings.selector,
+	ui.shape = function(element, settings){
+		var selector = settings.selector,
 			error = settings.error,
 			className = settings.className,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			//$sides        = $module.find(selector.sides),
-			//$side         = $module.find(selector.side),
+			sides = element.querySelectorAll(selector.sides),
+			side = element.querySelectorAll(selector.side),
 			nextIndex = false,
-			$activeSide,
-			$nextSide,
-			instance = element[moduleNamespace],
+			activeSide,
+			nextSide,
 			module;
 
 		/*module = {
@@ -13694,22 +12232,6 @@ var vs = (function(window, document, undefined){
 				module.verbose('Initializing module for', element);
 				module.set.defaultSide();
 				module.instantiate();
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, instance)
-				;
-			},
-
-			destroy: function() {
-				module.verbose('Destroying previous module for', element);
-				$module
-					.removeData(moduleNamespace)
-					.off(eventNamespace)
-				;
 			},
 
 			refresh: function() {
@@ -13741,7 +12263,7 @@ var vs = (function(window, document, undefined){
 				if(module.get.transitionEvent()) {
 					module.verbose('Starting CSS animation');
 					$module
-						.addClass(className.animating)
+						.classList.add(className.animating)
 					;
 					$sides
 						.css(propertyObject)
@@ -13750,10 +12272,10 @@ var vs = (function(window, document, undefined){
 					module.set.duration(settings.duration);
 					requestAnimationFrame(function() {
 						$module
-							.addClass(className.animating)
+							.classList.add(className.animating)
 						;
 						$activeSide
-							.addClass(className.hidden)
+							.classList.add(className.hidden)
 						;
 					});
 				}
@@ -13777,7 +12299,7 @@ var vs = (function(window, document, undefined){
 			reset: function() {
 				module.verbose('Animating states reset');
 				$module
-					.removeClass(className.animating)
+					.classList.remove(className.animating)
 					.attr('style', '')
 					.removeAttr('style')
 				;
@@ -13789,10 +12311,10 @@ var vs = (function(window, document, undefined){
 				$side
 					.attr('style', '')
 					.removeAttr('style')
-					.removeClass(className.hidden)
+					.classList.remove(className.hidden)
 				;
 				$nextSide
-					.removeClass(className.animating)
+					.classList.remove(className.animating)
 					.attr('style', '')
 					.removeAttr('style')
 				;
@@ -13803,7 +12325,7 @@ var vs = (function(window, document, undefined){
 					return ($side.filter('.' + className.active)[0] == $nextSide[0]);
 				},
 				animating: function() {
-					return $module.hasClass(className.animating);
+					return $module.classList.contains(className.animating);
 				}
 			},
 
@@ -13856,7 +12378,7 @@ var vs = (function(window, document, undefined){
 
 				stageSize: function() {
 					var
-						$clone      = $module.clone().addClass(className.loading),
+						$clone      = $module.clone().classList.add(className.loading),
 						$activeSide = $clone.find('.' + settings.className.active),
 						$nextSide   = (nextIndex)
 							? $clone.find(selector.side).eq(nextIndex)
@@ -13874,8 +12396,8 @@ var vs = (function(window, document, undefined){
 								? $module.height()
 								: settings.height
 					;
-					$activeSide.removeClass(className.active);
-					$nextSide.addClass(className.active);
+					$activeSide.classList.remove(className.active);
+					$nextSide.classList.add(className.active);
 					$clone.insertAfter($module);
 					$clone.remove();
 					if(settings.width != 'auto') {
@@ -13902,10 +12424,10 @@ var vs = (function(window, document, undefined){
 				active: function() {
 					module.verbose('Setting new side to active', $nextSide);
 					$side
-						.removeClass(className.active)
+						.classList.remove(className.active)
 					;
 					$nextSide
-						.addClass(className.active)
+						.classList.add(className.active)
 					;
 					settings.onChange.call($nextSide[0]);
 					module.set.defaultSide();
@@ -14149,7 +12671,7 @@ var vs = (function(window, document, undefined){
 						})
 					;
 					$nextSide
-						.addClass(className.animating)
+						.classList.add(className.animating)
 						.css({
 							'top'       : box.origin + 'px',
 							'transform' : 'rotateX(90deg) translateZ(' + box.depth.next + 'px)'
@@ -14179,7 +12701,7 @@ var vs = (function(window, document, undefined){
 						})
 					;
 					$nextSide
-						.addClass(className.animating)
+						.classList.add(className.animating)
 						.css({
 							'top'       : box.origin + 'px',
 							'transform' : 'rotateX(-90deg) translateZ(' + box.depth.next + 'px)'
@@ -14213,7 +12735,7 @@ var vs = (function(window, document, undefined){
 						})
 					;
 					$nextSide
-						.addClass(className.animating)
+						.classList.add(className.animating)
 						.css({
 							'left'      : box.origin + 'px',
 							'transform' : 'rotateY(-90deg) translateZ(' + box.depth.next + 'px)'
@@ -14247,7 +12769,7 @@ var vs = (function(window, document, undefined){
 						})
 					;
 					$nextSide
-						.addClass(className.animating)
+						.classList.add(className.animating)
 						.css({
 							'left'      : box.origin + 'px',
 							'transform' : 'rotateY(90deg) translateZ(' + box.depth.next + 'px)'
@@ -14276,176 +12798,13 @@ var vs = (function(window, document, undefined){
 						})
 					;
 					$nextSide
-						.addClass(className.animating)
+						.classList.add(className.animating)
 						.css({
 							'left'      : box.origin + 'px',
 							'transform' : 'rotateY(-180deg)'
 						})
 					;
 				}
-			},
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if($allModules.length > 1) {
-						title += ' ' + '(' + $allModules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -14454,62 +12813,32 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.shape.settings = {
-		// module info
-		name : 'Shape',
-
-		// hide all debug content
-		silent     : false,
-
-		// debug content outputted to console
-		debug      : false,
-
-		// verbose debug output
-		verbose    : false,
-
-		// fudge factor in pixels when swapping from 2d to 3d (can be useful to correct rounding errors)
-		jitter     : 0,
-
-		// performance data output
+	ui.shape.settings = {
+		silent: false,
+		debug: false,
+		verbose: false,
+		jitter: 0,
 		performance: true,
-
-		// event namespace
-		namespace  : 'shape',
-
-		// width during animation, can be set to 'auto', initial', 'next' or pixel amount
+		namespace: 'shape',
 		width: 'initial',
-
-		// height during animation, can be set to 'auto', 'initial', 'next' or pixel amount
 		height: 'initial',
-
-		// callback occurs on side change
-		beforeChange : function() {},
-		onChange     : function() {},
-
-		// allow animation to same side
 		allowRepeats: false,
-
-		// animation duration
-		duration   : false,
-
-		// possible errors
+		duration: false,
+		beforeChange: function() {},
+		onChange: function() {},
+		selector: {
+			sides: '.sides',
+			side: '.side'
+		},
 		error: {
-			side   : 'You tried to switch to a side that does not exist.',
-			method : 'The method you called is not defined'
+			side: 'You tried to switch to a side that does not exist.',
+			method: 'The method you called is not defined'
 		},
-
-		// classnames used
-		className   : {
-			animating : 'animating',
-			hidden    : 'hidden',
-			loading   : 'loading',
-			active    : 'active'
-		},
-
-		// selectors used
-		selector    : {
-			sides : '.sides',
-			side  : '.side'
+		className: {
+			animating: 'animating',
+			hidden: 'hidden',
+			loading: 'loading',
+			active: 'active'
 		}
 	};
 
@@ -14522,20 +12851,16 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.sidebar = function(element, settings){
+	ui.sidebar = function(element, settings){
 		var selector = settings.selector,
 			className = settings.className,
-			namespace = settings.namespace,
 			regExp = settings.regExp,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
 			/*$context        = $(settings.context),
 			$sidebars       = $module.children(selector.sidebar),
 			$fixed          = $context.children(selector.fixed),
 			$pusher         = $context.children(selector.pusher),
 			$style,*/
-			instance = element[moduleNamespace],
 			elementNamespace,
 			id,
 			currentScroll,
@@ -14566,13 +12891,6 @@ var vs = (function(window, document, undefined){
 				module.instantiate();
 			},
 
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
-			},
 
 			create: {
 				id: function() {
@@ -14985,7 +13303,7 @@ var vs = (function(window, document, undefined){
 					module.set.animating();
 					module.remove.visible();
 					if(settings.dimPage && !module.othersVisible()) {
-						$pusher.removeClass(className.dimmed);
+						$pusher.classList.remove(className.dimmed);
 					}
 				};
 				transitionEnd = function(event) {
@@ -15029,42 +13347,42 @@ var vs = (function(window, document, undefined){
 				// ios only (scroll on html not document). This prevent auto-resize canvas/scroll in ios
 				// (This is no longer necessary in latest iOS)
 				ios: function() {
-					$html.addClass(className.ios);
+					$html.classList.add(className.ios);
 				},
 
 				// container
 				pushed: function() {
-					$context.addClass(className.pushed);
+					$context.classList.add(className.pushed);
 				},
 				pushable: function() {
-					$context.addClass(className.pushable);
+					$context.classList.add(className.pushable);
 				},
 
 				// pusher
 				dimmed: function() {
-					$pusher.addClass(className.dimmed);
+					$pusher.classList.add(className.dimmed);
 				},
 
 				// sidebar
 				active: function() {
-					$module.addClass(className.active);
+					$module.classList.add(className.active);
 				},
 				animating: function() {
-					$module.addClass(className.animating);
+					$module.classList.add(className.animating);
 				},
 				transition: function(transition) {
 					transition = transition || module.get.transition();
-					$module.addClass(transition);
+					$module.classList.add(transition);
 				},
 				direction: function(direction) {
 					direction = direction || module.get.direction();
-					$module.addClass(className[direction]);
+					$module.classList.add(className[direction]);
 				},
 				visible: function() {
-					$module.addClass(className.visible);
+					$module.classList.add(className.visible);
 				},
 				overlay: function() {
-					$module.addClass(className.overlay);
+					$module.classList.add(className.overlay);
 				}
 			},
 			remove: {
@@ -15078,49 +13396,49 @@ var vs = (function(window, document, undefined){
 
 				// ios scroll on html not document
 				ios: function() {
-					$html.removeClass(className.ios);
+					$html.classList.remove(className.ios);
 				},
 
 				// context
 				pushed: function() {
-					$context.removeClass(className.pushed);
+					$context.classList.remove(className.pushed);
 				},
 				pushable: function() {
-					$context.removeClass(className.pushable);
+					$context.classList.remove(className.pushable);
 				},
 
 				// sidebar
 				active: function() {
-					$module.removeClass(className.active);
+					$module.classList.remove(className.active);
 				},
 				animating: function() {
-					$module.removeClass(className.animating);
+					$module.classList.remove(className.animating);
 				},
 				transition: function(transition) {
 					transition = transition || module.get.transition();
-					$module.removeClass(transition);
+					$module.classList.remove(transition);
 				},
 				direction: function(direction) {
 					direction = direction || module.get.direction();
-					$module.removeClass(className[direction]);
+					$module.classList.remove(className[direction]);
 				},
 				visible: function() {
-					$module.removeClass(className.visible);
+					$module.classList.remove(className.visible);
 				},
 				overlay: function() {
-					$module.removeClass(className.overlay);
+					$module.classList.remove(className.overlay);
 				}
 			},
 
 			get: {
 				direction: function() {
-					if($module.hasClass(className.top)) {
+					if($module.classList.contains(className.top)) {
 						return className.top;
 					}
-					else if($module.hasClass(className.right)) {
+					else if($module.classList.contains(className.right)) {
 						return className.right;
 					}
-					else if($module.hasClass(className.bottom)) {
+					else if($module.classList.contains(className.bottom)) {
 						return className.bottom;
 					}
 					return className.left;
@@ -15202,7 +13520,7 @@ var vs = (function(window, document, undefined){
 					return !module.is.visible();
 				},
 				visible: function() {
-					return $module.hasClass(className.visible);
+					return $module.classList.contains(className.visible);
 				},
 				// alias
 				open: function() {
@@ -15212,10 +13530,10 @@ var vs = (function(window, document, undefined){
 					return module.is.hidden();
 				},
 				vertical: function() {
-					return $module.hasClass(className.top);
+					return $module.classList.contains(className.top);
 				},
 				animating: function() {
-					return $context.hasClass(className.animating);
+					return $context.classList.contains(className.animating);
 				},
 				rtl: function () {
 					if(module.cache.rtl === undefined) {
@@ -15223,168 +13541,6 @@ var vs = (function(window, document, undefined){
 					}
 					return module.cache.rtl;
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -15393,7 +13549,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.sidebar.settings = {
+	ui.sidebar.settings = {
 		name              : 'Sidebar',
 		namespace         : 'sidebar',
 
@@ -15482,15 +13638,13 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.sticky = function(element, settings){
+	ui.sticky = function(element, settings){
 		var className = settings.className,
 			namespace = settings.namespace,
 			error = settings.error,
-			eventNamespace = '.' + namespace,
-			moduleNamespace = 'module-' + namespace,
-			/*$scroll = $(settings.scrollContext),
-			$container,
-			$context,*/
+			scroll = element.querySelectorAll(settings.scrollContext),
+			container,
+			context,
 			instance = element[moduleNamespace],
 			requestAnimationFrame = window.requestAnimationFrame
 				|| window.mozRequestAnimationFrame
@@ -15517,14 +13671,6 @@ var vs = (function(window, document, undefined){
 					module.observeChanges();
 				}
 				module.instantiate();
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
 			},
 
 			destroy: function() {
@@ -15672,7 +13818,7 @@ var vs = (function(window, document, undefined){
 						$element = $('<div/>'),
 						element = $element[0]
 					;
-					$element.addClass(className.supported);
+					$element.classList.add(className.supported);
 					return($element.css('position').match('sticky'));
 				}
 			},
@@ -15881,10 +14027,10 @@ var vs = (function(window, document, undefined){
 					return ($scroll[0] == window);
 				},
 				top: function() {
-					return $module.hasClass(className.top);
+					return $module.classList.contains(className.top);
 				},
 				bottom: function() {
-					return $module.hasClass(className.bottom);
+					return $module.classList.contains(className.bottom);
 				},
 				initialPosition: function() {
 					return (!module.is.fixed() && !module.is.bound());
@@ -15893,10 +14039,10 @@ var vs = (function(window, document, undefined){
 					return (!$module.is(':visible'));
 				},
 				bound: function() {
-					return $module.hasClass(className.bound);
+					return $module.classList.contains(className.bound);
 				},
 				fixed: function() {
-					return $module.hasClass(className.fixed);
+					return $module.classList.contains(className.fixed);
 				}
 			},
 
@@ -16018,10 +14164,10 @@ var vs = (function(window, document, undefined){
 						top          : '',
 						marginBottom : ''
 					})
-					.removeClass(className.fixed)
-					.removeClass(className.bottom)
-					.addClass(className.bound)
-					.addClass(className.top)
+					.classList.remove(className.fixed)
+					.classList.remove(className.bottom)
+					.classList.add(className.bound)
+					.classList.add(className.top)
 				;
 				settings.onTop.call(element);
 				settings.onUnstick.call(element);
@@ -16034,10 +14180,10 @@ var vs = (function(window, document, undefined){
 						left         : '',
 						top          : ''
 					})
-					.removeClass(className.fixed)
-					.removeClass(className.top)
-					.addClass(className.bound)
-					.addClass(className.bottom)
+					.classList.remove(className.fixed)
+					.classList.remove(className.top)
+					.classList.add(className.bound)
+					.classList.add(className.bottom)
 				;
 				settings.onBottom.call(element);
 				settings.onUnstick.call(element);
@@ -16063,10 +14209,10 @@ var vs = (function(window, document, undefined){
 						bottom       : '',
 						marginBottom : ''
 					})
-					.removeClass(className.bound)
-					.removeClass(className.bottom)
-					.addClass(className.fixed)
-					.addClass(className.top)
+					.classList.remove(className.bound)
+					.classList.remove(className.bottom)
+					.classList.add(className.fixed)
+					.classList.add(className.top)
 				;
 				settings.onStick.call(element);
 			},
@@ -16084,10 +14230,10 @@ var vs = (function(window, document, undefined){
 						bottom       : '',
 						marginBottom : ''
 					})
-					.removeClass(className.bound)
-					.removeClass(className.top)
-					.addClass(className.fixed)
-					.addClass(className.bottom)
+					.classList.remove(className.bound)
+					.classList.remove(className.top)
+					.classList.add(className.fixed)
+					.classList.add(className.bottom)
 				;
 				settings.onStick.call(element);
 			},
@@ -16097,9 +14243,9 @@ var vs = (function(window, document, undefined){
 					module.debug('Removing container bound position on element');
 					module.remove.offset();
 					$module
-						.removeClass(className.bound)
-						.removeClass(className.top)
-						.removeClass(className.bottom)
+						.classList.remove(className.bound)
+						.classList.remove(className.top)
+						.classList.remove(className.bottom)
 					;
 				}
 			},
@@ -16110,9 +14256,9 @@ var vs = (function(window, document, undefined){
 					module.remove.minimumSize();
 					module.remove.offset();
 					$module
-						.removeClass(className.fixed)
-						.removeClass(className.top)
-						.removeClass(className.bottom)
+						.classList.remove(className.fixed)
+						.classList.remove(className.top)
+						.classList.remove(className.bottom)
 					;
 					settings.onUnstick.call(element);
 				}
@@ -16139,161 +14285,6 @@ var vs = (function(window, document, undefined){
 						height: ''
 					})
 				;
-			},
-
-			setting: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					settings[name] = value;
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 0);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 
@@ -16302,7 +14293,7 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.sticky.settings = {
+	ui.sticky.settings = {
 		name           : 'Sticky',
 		namespace      : 'sticky',
 
@@ -16379,19 +14370,16 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.tab = function(element, settings){
+	ui.tab = function(element, settings){
 		var className = settings.className,
 			metadata = settings.metadata,
 			selector = settings.selector,
 			error = settings.error,
-			eventNamespace  = '.' + settings.namespace,
-			moduleNamespace = 'module-' + settings.namespace,
-			//$context,
-			//$tabs,
+			context,
+			$tabs,
 			cache = {},
 			firstLoad = true,
 			recursionDepth = 0,
-			instance = element[moduleNamespace],
 			activeTabPath,
 			parameterArray,
 			module,
@@ -16417,22 +14405,6 @@ var vs = (function(window, document, undefined){
 				}
 
 				module.instantiate();
-			},
-
-			instantiate: function () {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, module)
-				;
-			},
-
-			destroy: function() {
-				module.debug('Destroying tabs', $module);
-				$module
-					.removeData(moduleNamespace)
-					.off(eventNamespace)
-				;
 			},
 
 			bind: {
@@ -16612,14 +14584,14 @@ var vs = (function(window, document, undefined){
 				loading: function(tabPath) {
 					var
 						$tab      = module.get.tabElement(tabPath),
-						isLoading = $tab.hasClass(className.loading)
+						isLoading = $tab.classList.contains(className.loading)
 					;
 					if(!isLoading) {
 						module.verbose('Setting loading state for', $tab);
 						$tab
-							.addClass(className.loading)
+							.classList.add(className.loading)
 							.siblings($tabs)
-								.removeClass(className.active + ' ' + className.loading)
+								.classList.remove(className.active + ' ' + className.loading)
 						;
 						if($tab.length > 0) {
 							settings.onRequest.call($tab[0], tabPath);
@@ -16709,7 +14681,7 @@ var vs = (function(window, document, undefined){
 						// if anchor exists use parent tab
 						if($anchor && $anchor.length > 0 && currentPath) {
 							module.debug('Anchor link used, opening parent tab', $tab, $anchor);
-							if( !$tab.hasClass(className.active) ) {
+							if( !$tab.classList.contains(className.active) ) {
 								setTimeout(function() {
 									module.scrollTo($anchor);
 								}, 0);
@@ -16870,15 +14842,15 @@ var vs = (function(window, document, undefined){
 						$deactiveTabs = (settings.deactivate == 'siblings')
 							? $tab.siblings($tabs)
 							: $tabs.not($tab),
-						isActive      = $tab.hasClass(className.active)
+						isActive      = $tab.classList.contains(className.active)
 					;
 					module.verbose('Showing tab content for', $tab);
 					if(!isActive) {
 						$tab
-							.addClass(className.active)
+							.classList.add(className.active)
 						;
 						$deactiveTabs
-							.removeClass(className.active + ' ' + className.loading)
+							.classList.remove(className.active + ' ' + className.loading)
 						;
 						if($tab.length > 0) {
 							settings.onVisible.call($tab[0], tabPath);
@@ -16891,15 +14863,15 @@ var vs = (function(window, document, undefined){
 						$deactiveNavigation = (settings.deactivate == 'siblings')
 							? $navigation.siblings($allModules)
 							: $allModules.not($navigation),
-						isActive    = $navigation.hasClass(className.active)
+						isActive    = $navigation.classList.contains(className.active)
 					;
 					module.verbose('Activating tab navigation for', $navigation, tabPath);
 					if(!isActive) {
 						$navigation
-							.addClass(className.active)
+							.classList.add(className.active)
 						;
 						$deactiveNavigation
-							.removeClass(className.active + ' ' + className.loading)
+							.classList.remove(className.active + ' ' + className.loading)
 						;
 					}
 				}
@@ -16912,12 +14884,12 @@ var vs = (function(window, document, undefined){
 				},
 				navigation: function() {
 					$allModules
-						.removeClass(className.active)
+						.classList.remove(className.active)
 					;
 				},
 				tabs: function() {
 					$tabs
-						.removeClass(className.active + ' ' + className.loading)
+						.classList.remove(className.active + ' ' + className.loading)
 					;
 				}
 			},
@@ -17014,168 +14986,6 @@ var vs = (function(window, document, undefined){
 						: false
 					;
 				}
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							module.error(error.method, query);
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return found;
 			}
 		};*/
 		
@@ -17189,7 +14999,7 @@ var vs = (function(window, document, undefined){
 	//	$(window).tab.apply(this, arguments);
 	//};
 
-	vs.tab.settings = {
+	ui.tab.settings = {
 		name            : 'Tab',
 		namespace       : 'tab',
 
@@ -17265,17 +15075,12 @@ var vs = (function(window, document, undefined){
 	 *
 	 */
 
-	vs.transition = function(element, settings){
-		var settings,
-			instance,
-			error,
+	ui.transition = function(element, settings){
+		var error,
 			className,
 			metadata,
 			animationEnd,
 			animationName,
-			namespace,
-			moduleNamespace,
-			eventNamespace,
 			module;
 
 		/*module = {
@@ -17313,14 +15118,6 @@ var vs = (function(window, document, undefined){
 					}
 					module.instantiate();
 				}
-			},
-
-			instantiate: function() {
-				module.verbose('Storing instance of module', module);
-				instance = module;
-				$module
-					.data(moduleNamespace, instance)
-				;
 			},
 
 			destroy: function() {
@@ -17573,33 +15370,33 @@ var vs = (function(window, document, undefined){
 				looping: function() {
 					module.debug('Transition set to loop');
 					$module
-						.addClass(className.looping)
+						.classList.add(className.looping)
 					;
 				},
 				hidden: function() {
 					$module
-						.addClass(className.transition)
-						.addClass(className.hidden)
+						.classList.add(className.transition)
+						.classList.add(className.hidden)
 					;
 				},
 				inward: function() {
 					module.debug('Setting direction to inward');
 					$module
-						.removeClass(className.outward)
-						.addClass(className.inward)
+						.classList.remove(className.outward)
+						.classList.add(className.inward)
 					;
 				},
 				outward: function() {
 					module.debug('Setting direction to outward');
 					$module
-						.removeClass(className.inward)
-						.addClass(className.outward)
+						.classList.remove(className.inward)
+						.classList.add(className.outward)
 					;
 				},
 				visible: function() {
 					$module
-						.addClass(className.transition)
-						.addClass(className.visible)
+						.classList.add(className.transition)
+						.classList.add(className.visible)
 					;
 				}
 			},
@@ -17609,7 +15406,7 @@ var vs = (function(window, document, undefined){
 					animationClass = animationClass || module.get.animationClass();
 					module.debug('Starting tween', animationClass);
 					$module
-						.addClass(animationClass)
+						.classList.add(animationClass)
 						.one(animationEnd + '.complete' + eventNamespace, module.complete)
 					;
 					if(settings.useFailSafe) {
@@ -17633,7 +15430,7 @@ var vs = (function(window, document, undefined){
 					}
 				},
 				transitionExists: function(animation, exists) {
-					vs.transition.exists[animation] = exists;
+					ui.transition.exists[animation] = exists;
 					module.verbose('Saving existence of transition', animation, exists);
 				}
 			},
@@ -17645,7 +15442,7 @@ var vs = (function(window, document, undefined){
 					;
 					if(animation) {
 						$module
-							.removeClass(animation)
+							.classList.remove(animation)
 						;
 						module.verbose('Removing animation class', module.cache);
 					}
@@ -17667,7 +15464,7 @@ var vs = (function(window, document, undefined){
 
 			remove: {
 				animating: function() {
-					$module.removeClass(className.animating);
+					$module.classList.remove(className.animating);
 				},
 				animationCallbacks: function() {
 					module.remove.queueCallback();
@@ -17684,8 +15481,8 @@ var vs = (function(window, document, undefined){
 				},
 				direction: function() {
 					$module
-						.removeClass(className.inward)
-						.removeClass(className.outward)
+						.classList.remove(className.inward)
+						.classList.remove(className.outward)
 					;
 				},
 				duration: function() {
@@ -17700,24 +15497,24 @@ var vs = (function(window, document, undefined){
 					}
 				},
 				hidden: function() {
-					$module.removeClass(className.hidden);
+					$module.classList.remove(className.hidden);
 				},
 				visible: function() {
-					$module.removeClass(className.visible);
+					$module.classList.remove(className.visible);
 				},
 				looping: function() {
 					module.debug('Transitions are no longer looping');
 					if( module.is.looping() ) {
 						module.reset();
 						$module
-							.removeClass(className.looping)
+							.classList.remove(className.looping)
 						;
 					}
 				},
 				transition: function() {
 					$module
-						.removeClass(className.visible)
-						.removeClass(className.hidden)
+						.classList.remove(className.visible)
+						.classList.remove(className.hidden)
 					;
 				}
 			},
@@ -17725,11 +15522,11 @@ var vs = (function(window, document, undefined){
 				settings: function(animation, duration, onComplete) {
 					// single settings object
 					if(typeof animation == 'object') {
-						return $.extend(true, {}, vs.transition.settings, animation);
+						return $.extend(true, {}, ui.transition.settings, animation);
 					}
 					// all arguments provided
 					else if(typeof onComplete == 'function') {
-						return $.extend({}, vs.transition.settings, {
+						return $.extend({}, ui.transition.settings, {
 							animation  : animation,
 							onComplete : onComplete,
 							duration   : duration
@@ -17737,27 +15534,27 @@ var vs = (function(window, document, undefined){
 					}
 					// only duration provided
 					else if(typeof duration == 'string' || typeof duration == 'number') {
-						return $.extend({}, vs.transition.settings, {
+						return $.extend({}, ui.transition.settings, {
 							animation : animation,
 							duration  : duration
 						});
 					}
 					// duration is actually settings object
 					else if(typeof duration == 'object') {
-						return $.extend({}, vs.transition.settings, duration, {
+						return $.extend({}, ui.transition.settings, duration, {
 							animation : animation
 						});
 					}
 					// duration is actually callback
 					else if(typeof duration == 'function') {
-						return $.extend({}, vs.transition.settings, {
+						return $.extend({}, ui.transition.settings, {
 							animation  : animation,
 							onComplete : duration
 						});
 					}
 					// only animation provided
 					else {
-						return $.extend({}, vs.transition.settings, {
+						return $.extend({}, ui.transition.settings, {
 							animation : animation
 						});
 					}
@@ -17847,7 +15644,7 @@ var vs = (function(window, document, undefined){
 					return style.replace(/display.*?;/, '');
 				},
 				transitionExists: function(animation) {
-					return vs.transition.exists[animation];
+					return ui.transition.exists[animation];
 				},
 				animationStartEvent: function() {
 					var
@@ -17906,25 +15703,25 @@ var vs = (function(window, document, undefined){
 						elementClass = $module.attr('class');
 						tagName      = $module.prop('tagName');
 
-						$clone = $('<' + tagName + ' />').addClass( elementClass ).insertAfter($module);
+						$clone = $('<' + tagName + ' />').classList.add( elementClass ).insertAfter($module);
 						currentAnimation = $clone
-							.addClass(animation)
-							.removeClass(className.inward)
-							.removeClass(className.outward)
-							.addClass(className.animating)
-							.addClass(className.transition)
+							.classList.add(animation)
+							.classList.remove(className.inward)
+							.classList.remove(className.outward)
+							.classList.add(className.animating)
+							.classList.add(className.transition)
 							.css('animationName')
 						;
 						inAnimation = $clone
-							.addClass(className.inward)
+							.classList.add(className.inward)
 							.css('animationName')
 						;
 						if(!displayType) {
 							displayType = $clone
 								.attr('class', elementClass)
 								.removeAttr('style')
-								.removeClass(className.hidden)
-								.removeClass(className.visible)
+								.classList.remove(className.hidden)
+								.classList.remove(className.visible)
 								.show()
 								.css('display')
 							;
@@ -17960,16 +15757,16 @@ var vs = (function(window, document, undefined){
 
 			is: {
 				animating: function() {
-					return $module.hasClass(className.animating);
+					return $module.classList.contains(className.animating);
 				},
 				inward: function() {
-					return $module.hasClass(className.inward);
+					return $module.classList.contains(className.inward);
 				},
 				outward: function() {
-					return $module.hasClass(className.outward);
+					return $module.classList.contains(className.outward);
 				},
 				looping: function() {
-					return $module.hasClass(className.looping);
+					return $module.classList.contains(className.looping);
 				},
 				occurring: function(animation) {
 					animation = animation || settings.animation;
@@ -18041,181 +15838,12 @@ var vs = (function(window, document, undefined){
 
 			enable: function() {
 				module.verbose('Starting animation');
-				$module.removeClass(className.disabled);
+				$module.classList.remove(className.disabled);
 			},
 
 			disable: function() {
 				module.debug('Stopping animation');
-				$module.addClass(className.disabled);
-			},
-
-			setting: function(name, value) {
-				module.debug('Changing setting', name, value);
-				if( $.isPlainObject(name) ) {
-					$.extend(true, settings, name);
-				}
-				else if(value !== undefined) {
-					if($.isPlainObject(settings[name])) {
-						$.extend(true, settings[name], value);
-					}
-					else {
-						settings[name] = value;
-					}
-				}
-				else {
-					return settings[name];
-				}
-			},
-			internal: function(name, value) {
-				if( $.isPlainObject(name) ) {
-					$.extend(true, module, name);
-				}
-				else if(value !== undefined) {
-					module[name] = value;
-				}
-				else {
-					return module[name];
-				}
-			},
-			debug: function() {
-				if(!settings.silent && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.debug.apply(console, arguments);
-					}
-				}
-			},
-			verbose: function() {
-				if(!settings.silent && settings.verbose && settings.debug) {
-					if(settings.performance) {
-						module.performance.log(arguments);
-					}
-					else {
-						module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-						module.verbose.apply(console, arguments);
-					}
-				}
-			},
-			error: function() {
-				if(!settings.silent) {
-					module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-					module.error.apply(console, arguments);
-				}
-			},
-			performance: {
-				log: function(message) {
-					var
-						currentTime,
-						executionTime,
-						previousTime
-					;
-					if(settings.performance) {
-						currentTime   = new Date().getTime();
-						previousTime  = time || currentTime;
-						executionTime = currentTime - previousTime;
-						time          = currentTime;
-						performance.push({
-							'Name'           : message[0],
-							'Arguments'      : [].slice.call(message, 1) || '',
-							'Element'        : element,
-							'Execution Time' : executionTime
-						});
-					}
-					clearTimeout(module.performance.timer);
-					module.performance.timer = setTimeout(module.performance.display, 500);
-				},
-				display: function() {
-					var
-						title = settings.name + ':',
-						totalTime = 0
-					;
-					time = false;
-					clearTimeout(module.performance.timer);
-					$.each(performance, function(index, data) {
-						totalTime += data['Execution Time'];
-					});
-					title += ' ' + totalTime + 'ms';
-					if(moduleSelector) {
-						title += ' \'' + moduleSelector + '\'';
-					}
-					if($allModules.length > 1) {
-						title += ' ' + '(' + $allModules.length + ')';
-					}
-					if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-						console.groupCollapsed(title);
-						if(console.table) {
-							console.table(performance);
-						}
-						else {
-							$.each(performance, function(index, data) {
-								console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-							});
-						}
-						console.groupEnd();
-					}
-					performance = [];
-				}
-			},
-			// modified for transition to return invoke success
-			invoke: function(query, passedArguments, context) {
-				var
-					object = instance,
-					maxDepth,
-					found,
-					response
-				;
-				passedArguments = passedArguments || queryArguments;
-				context         = element         || context;
-				if(typeof query == 'string' && object !== undefined) {
-					query    = query.split(/[\. ]/);
-					maxDepth = query.length - 1;
-					$.each(query, function(depth, value) {
-						var camelCaseValue = (depth != maxDepth)
-							? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-							: query
-						;
-						if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-							object = object[camelCaseValue];
-						}
-						else if( object[camelCaseValue] !== undefined ) {
-							found = object[camelCaseValue];
-							return false;
-						}
-						else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-							object = object[value];
-						}
-						else if( object[value] !== undefined ) {
-							found = object[value];
-							return false;
-						}
-						else {
-							return false;
-						}
-					});
-				}
-				if ( $.isFunction( found ) ) {
-					response = found.apply(context, passedArguments);
-				}
-				else if(found !== undefined) {
-					response = found;
-				}
-
-				if($.isArray(returnedValue)) {
-					returnedValue.push(response);
-				}
-				else if(returnedValue !== undefined) {
-					returnedValue = [returnedValue, response];
-				}
-				else if(response !== undefined) {
-					returnedValue = response;
-				}
-				return (found !== undefined)
-					? found
-					: false
-				;
+				$module.classList.add(className.disabled);
 			}
 		};*/
 
@@ -18224,9 +15852,9 @@ var vs = (function(window, document, undefined){
 		return module;
 	};
 
-	vs.transition.exists = {};
+	ui.transition.exists = {};
 
-	vs.transition.settings = {
+	ui.transition.settings = {
 
 		// module info
 		name          : 'Transition',
@@ -20752,5 +18380,5 @@ var vs = (function(window, document, undefined){
 	  }
 	};*/
 
-	return vs;
+	window.ui = ui;
 })(window, document);

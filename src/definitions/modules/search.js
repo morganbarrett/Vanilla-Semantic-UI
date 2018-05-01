@@ -7,22 +7,18 @@
  *
  */
 
-vs.search = function(element, settings){
+ui.search = function(element, settings){
 	var className = settings.className,
 		metadata = settings.metadata,
 		regExp = settings.regExp,
 		fields = settings.fields,
 		selector = settings.selector,
 		error = settings.error,
-		namespace = settings.namespace,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = namespace + '-module',
 		/*$prompt          = $module.find(selector.prompt),
 		$searchButton    = $module.find(selector.searchButton),
 		$results         = $module.find(selector.results),
 		$result          = $module.find(selector.result),
 		$category        = $module.find(selector.category),*/
-		instance = element[moduleNamespace],
 		disabledBubbled = false,
 		resultsDismissed = false,
 		module;
@@ -37,20 +33,6 @@ vs.search = function(element, settings){
 			module.set.type();
 			module.create.results();
 			module.instantiate();
-		},
-		instantiate: function() {
-			module.verbose('Storing instance of module', module);
-			instance = module;
-			$module
-				.data(moduleNamespace, module)
-			;
-		},
-		destroy: function() {
-			module.verbose('Destroying instance');
-			$module
-				.off(eventNamespace)
-				.removeData(moduleNamespace)
-			;
 		},
 
 		refresh: function() {
@@ -251,14 +233,14 @@ vs.search = function(element, settings){
 						: currentIndex - 1
 					;
 					$category
-						.removeClass(className.active)
+						.classList.remove(className.active)
 					;
 					$result
-						.removeClass(className.active)
+						.classList.remove(className.active)
 						.eq(newIndex)
-							.addClass(className.active)
+							.classList.add(className.active)
 							.closest($category)
-								.addClass(className.active)
+								.classList.add(className.active)
 					;
 					event.preventDefault();
 				}
@@ -269,14 +251,14 @@ vs.search = function(element, settings){
 						: currentIndex + 1
 					;
 					$category
-						.removeClass(className.active)
+						.classList.remove(className.active)
 					;
 					$result
-						.removeClass(className.active)
+						.classList.remove(className.active)
 						.eq(newIndex)
-							.addClass(className.active)
+							.classList.add(className.active)
 							.closest($category)
-								.addClass(className.active)
+								.classList.add(className.active)
 					;
 					event.preventDefault();
 				}
@@ -337,10 +319,10 @@ vs.search = function(element, settings){
 
 		is: {
 			animating: function() {
-				return $results.hasClass(className.animating);
+				return $results.classList.contains(className.animating);
 			},
 			hidden: function() {
-				return $results.hasClass(className.hidden);
+				return $results.classList.contains(className.hidden);
 			},
 			inMessage: function(event) {
 				if(!event.target) {
@@ -426,16 +408,16 @@ vs.search = function(element, settings){
 		select: {
 			firstResult: function() {
 				module.verbose('Selecting first result');
-				$result.first().addClass(className.active);
+				$result.first().classList.add(className.active);
 			}
 		},
 
 		set: {
 			focus: function() {
-				$module.addClass(className.focus);
+				$module.classList.add(className.focus);
 			},
 			loading: function() {
-				$module.addClass(className.loading);
+				$module.classList.add(className.loading);
 			},
 			value: function(value) {
 				module.verbose('Setting search input value', value);
@@ -446,23 +428,23 @@ vs.search = function(element, settings){
 			type: function(type) {
 				type = type || settings.type;
 				if(settings.type == 'category') {
-					$module.addClass(settings.type);
+					$module.classList.add(settings.type);
 				}
 			},
 			buttonPressed: function() {
-				$searchButton.addClass(className.pressed);
+				$searchButton.classList.add(className.pressed);
 			}
 		},
 
 		remove: {
 			loading: function() {
-				$module.removeClass(className.loading);
+				$module.classList.remove(className.loading);
 			},
 			focus: function() {
-				$module.removeClass(className.focus);
+				$module.classList.remove(className.focus);
 			},
 			buttonPressed: function() {
-				$searchButton.removeClass(className.pressed);
+				$searchButton.classList.remove(className.pressed);
 			}
 		},
 
@@ -771,7 +753,7 @@ vs.search = function(element, settings){
 			results: function() {
 				if($results.length === 0) {
 					$results = $('<div />')
-						.addClass(className.results)
+						.classList.add(className.results)
 						.appendTo($module)
 					;
 				}
@@ -990,164 +972,6 @@ vs.search = function(element, settings){
 			module.debug('Displaying message', text, type);
 			module.addResults( settings.templates.message(text, type) );
 			return settings.templates.message(text, type);
-		},
-
-		setting: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				settings[name] = value;
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if($allModules.length > 1) {
-					title += ' ' + '(' + $allModules.length + ')';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						return false;
-					}
-				});
-			}
-			if( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 	
@@ -1156,7 +980,7 @@ vs.search = function(element, settings){
 	return module;
 };
 
-vs.search.settings = {
+ui.search.settings = {
 	name              : 'Search',
 	namespace         : 'search',
 

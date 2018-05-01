@@ -7,15 +7,11 @@
  *
  */
 
-vs.rating = function(element, settings){
-	var namespace = settings.namespace,
-		className = settings.className,
+ui.rating = function(element, settings){
+	var className = settings.className,
 		metadata = settings.metadata,
 		selector = settings.selector,
 		error = settings.error,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module' + namespace[0].toUpperCase() + namespace.substr(1),
-		instance = element[moduleNamespace],
 		icons = [].slice.call(element.querySelectorAll(selector.icon)),
 		initialLoad,
 		module;
@@ -24,8 +20,6 @@ vs.rating = function(element, settings){
 		initialize: function(){
 			module.verbose('Initializing rating module', settings);
 			
-			console.log();
-
 			if(icons.length === 0){
 				module.setup.layout();
 			}
@@ -40,17 +34,6 @@ vs.rating = function(element, settings){
 			module.set.initialLoad();
 			module.set.rating( module.get.initialRating() );
 			module.remove.initialLoad();
-			module.instantiate();
-		},
-		instantiate: function(){
-			module.verbose('Instantiating module', settings);
-			instance = module;
-			element[moduleNamespace] = module;
-		},
-		destroy: function(){
-			module.verbose('Destroying previous instance', instance);
-			module.remove.events();
-			element[moduleNamespace] = undefined;
 		},
 		refresh: function(){
 			icons = [].slice.call(element.querySelectorAll(selector.icon));
@@ -58,7 +41,7 @@ vs.rating = function(element, settings){
 		setup: {
 			layout: function(){
 				var maxRating = module.get.maxRating(),
-					settings = vs.rating.settings,
+					settings = ui.rating.settings,
 					html = settings.templates.icon(maxRating);
 
 				module.debug('Generating icon html dynamically');
@@ -68,11 +51,11 @@ vs.rating = function(element, settings){
 		},
 		event: {
 			mouseenter: function(event){
-				if(!vs.checkTarget(event, selector.icon)){
+				if(!ui.checkTarget(event, selector.icon)){
 					return;
 				}
 
-				vs.nextAll(this, function(elem){
+				ui.nextAll(this, function(elem){
 					elem.classList.remove(className.selected);
 				});
 
@@ -83,10 +66,10 @@ vs.rating = function(element, settings){
 				addClass(element);
 				addClass(this);
 
-				vs.prevAll(this, addClass);
+				ui.prevAll(this, addClass);
 			},
 			mouseleave: function(event){
-				if(!vs.checkTarget(event, selector.icon)){
+				if(!ui.checkTarget(event, selector.icon)){
 					return;
 				}
 
@@ -96,7 +79,7 @@ vs.rating = function(element, settings){
 				}
 			},
 			click: function(event){
-				if(!vs.checkTarget(event, selector.icon)){
+				if(!ui.checkTarget(event, selector.icon)){
 					return;
 				}
 
@@ -125,13 +108,15 @@ vs.rating = function(element, settings){
 				element.onmouseout = module.event.mouseleave;
 			}
 		},
-		remove: {
+		unbind: {
 			events: function(){
 				module.verbose('Removing events');
 				element.onclick = undefined;
 				element.onmouseover = undefined;
 				element.onmouseout = undefined;
-			},
+			}
+		},
+		remove: {
 			initialLoad: function(){
 				initialLoad = false;
 			}
@@ -143,7 +128,7 @@ vs.rating = function(element, settings){
 		},
 		disable: function(){
 			module.debug('Setting rating to read-only mode');
-			module.remove.events();
+			module.unbind.events();
 			element.classList.add(className.disabled);
 		},
 		is: {
@@ -192,7 +177,7 @@ vs.rating = function(element, settings){
 				if(rating > 0){
 					module.verbose('Setting current rating to', rating);
 					activeIcon.classList.add(className.active);
-					vs.prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
+					ui.prevAll(activeIcon, function(elem){elem.classList.add(className.active);});
 				}
 				if(!module.is.initialLoad()){
 					settings.onRate.call(element, rating);
@@ -207,9 +192,7 @@ vs.rating = function(element, settings){
 	return module;
 };
 
-vs.rating.settings = {
-	name: 'Rating',
-	namespace: 'rating',
+ui.rating.settings = {
 	silent: false,
 	debug: false,
 	verbose: false,

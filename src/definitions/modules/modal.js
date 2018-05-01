@@ -7,21 +7,17 @@
  *
  */
 
-vs.modal = function(element, settings){
+ui.modal = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
-		namespace = settings.namespace,
 		error = settings.error,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
-		/*$context        = $(settings.context),
-		$close          = $module.find(selector.close),
-		$allModals,
-		$otherModals,
-		$focusedElement,
-		$dimmable,
-		$dimmer,*/
-		instance = element[moduleNamespace],
+		context = element.querySelectorAll(settings.context),
+		close = element.querySelectorAll(selector.close),
+		allModals,
+		otherModals,
+		focusedElement,
+		dimmable,
+		dimmer,
 		ignoreRepeatedEvents = false,
 		elementEventNamespace,
 		id,
@@ -42,14 +38,6 @@ vs.modal = function(element, settings){
 				module.observeChanges();
 			}
 			module.instantiate();
-		},
-
-		instantiate: function() {
-			module.verbose('Storing instance of modal');
-			instance = module;
-			$module
-				.data(moduleNamespace, instance)
-			;
 		},
 
 		create: {
@@ -85,18 +73,6 @@ vs.modal = function(element, settings){
 				elementEventNamespace = '.' + id;
 				module.verbose('Creating unique id for element', id);
 			}
-		},
-
-		destroy: function() {
-			module.verbose('Destroying previous modal');
-			$module
-				.removeData(moduleNamespace)
-				.off(eventNamespace)
-			;
-			$window.off(elementEventNamespace);
-			$dimmer.off(elementEventNamespace);
-			$close.off(eventNamespace);
-			$context.dimmer('destroy');
 		},
 
 		observeChanges: function() {
@@ -460,7 +436,7 @@ vs.modal = function(element, settings){
 
 		remove: {
 			active: function() {
-				$module.removeClass(className.active);
+				$module.classList.remove(className.active);
 			},
 			clickaway: function() {
 				$dimmer
@@ -486,13 +462,13 @@ vs.modal = function(element, settings){
 				;
 			},
 			scrolling: function() {
-				$dimmable.removeClass(className.scrolling);
-				$module.removeClass(className.scrolling);
+				$dimmable.classList.remove(className.scrolling);
+				$module.classList.remove(className.scrolling);
 			}
 		},
 
 		cacheSizes: function() {
-			$module.addClass(className.loading);
+			$module.classList.add(className.loading);
 			var
 				scrollHeight = $module.prop('scrollHeight'),
 				modalHeight  = $module.outerHeight()
@@ -508,7 +484,7 @@ vs.modal = function(element, settings){
 				};
 				module.cache.topOffset = -(module.cache.height / 2);
 			}
-			$module.removeClass(className.loading);
+			$module.classList.remove(className.loading);
 			module.debug('Caching modal and container sizes', module.cache);
 		},
 
@@ -532,7 +508,7 @@ vs.modal = function(element, settings){
 
 		is: {
 			active: function() {
-				return $module.hasClass(className.active);
+				return $module.classList.contains(className.active);
 			},
 			animating: function() {
 				return $module.transition('is supported')
@@ -541,7 +517,7 @@ vs.modal = function(element, settings){
 				;
 			},
 			scrolling: function() {
-				return $dimmable.hasClass(className.scrolling);
+				return $dimmable.classList.contains(className.scrolling);
 			},
 			modernBrowser: function() {
 				// appName for IE11 reports 'Netscape' can no longer use
@@ -593,16 +569,16 @@ vs.modal = function(element, settings){
 						? dimmerSettings.variation + ' inverted'
 						: 'inverted'
 					;
-					$dimmer.addClass(className.inverted);
+					$dimmer.classList.add(className.inverted);
 				}
 				else {
-					$dimmer.removeClass(className.inverted);
+					$dimmer.classList.remove(className.inverted);
 				}
 				if(settings.blurring) {
-					$dimmable.addClass(className.blurring);
+					$dimmable.classList.add(className.blurring);
 				}
 				else {
-					$dimmable.removeClass(className.blurring);
+					$dimmable.classList.remove(className.blurring);
 				}
 				$context.dimmer('setting', dimmerSettings);
 			},
@@ -618,11 +594,11 @@ vs.modal = function(element, settings){
 				}
 			},
 			active: function() {
-				$module.addClass(className.active);
+				$module.classList.add(className.active);
 			},
 			scrolling: function() {
-				$dimmable.addClass(className.scrolling);
-				$module.addClass(className.scrolling);
+				$dimmable.classList.add(className.scrolling);
+				$module.classList.add(className.scrolling);
 			},
 			type: function() {
 				if(module.can.fit()) {
@@ -637,169 +613,8 @@ vs.modal = function(element, settings){
 				}
 			},
 			undetached: function() {
-				$dimmable.addClass(className.undetached);
+				$dimmable.classList.add(className.undetached);
 			}
-		},
-
-		setting: function(name, value) {
-			module.debug('Changing setting', name, value);
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				if($.isPlainObject(settings[name])) {
-					$.extend(true, settings[name], value);
-				}
-				else {
-					settings[name] = value;
-				}
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						return false;
-					}
-				});
-			}
-			if ( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 
@@ -808,7 +623,7 @@ vs.modal = function(element, settings){
 	return module;
 };
 
-vs.modal.settings = {
+ui.modal.settings = {
 	name           : 'Modal',
 	namespace      : 'modal',
 

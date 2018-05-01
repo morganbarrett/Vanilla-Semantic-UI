@@ -18,9 +18,7 @@ var ui = function(elements){
 	}
 
 	for(var c in ui){
-		if( ui[c].initialize == undefined ||
-			ui[c].settings == undefined
-		){
+		if(ui[c].settings == undefined){
 			continue;
 		}
 
@@ -138,7 +136,7 @@ function makeModule(name, comp, element, settings){
 	};
 	
 	module.verbose('Instantiating module', settings);
-	module.initialize();
+	if(module.initialize) module.initialize();
 
 	return module;
 };

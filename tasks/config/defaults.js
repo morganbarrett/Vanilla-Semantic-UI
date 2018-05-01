@@ -43,7 +43,7 @@ module.exports = {
   // components to include in package
   components: [    
     // globals
-    "vs",
+    "core",
     "utils",
     'reset',
     'site',

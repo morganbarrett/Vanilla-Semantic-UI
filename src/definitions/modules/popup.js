@@ -7,14 +7,11 @@
  *
  */
 
-vs.popup = function(element, settings){
+ui.popup = function(element, settings){
 	var selector = settings.selector,
 		className = settings.className,
 		error = settings.error,
 		metadata = settings.metadata,
-		namespace = settings.namespace,
-		eventNamespace = '.' + settings.namespace,
-		moduleNamespace = 'module-' + namespace,
 		/*$context           = $(settings.context),
 		$scrollContext     = $(settings.scrollContext),
 		$boundary          = $(settings.boundary),
@@ -26,7 +23,6 @@ vs.popup = function(element, settings){
 		searchDepth = 0,
 		triedPositions = false,
 		openedWithTouch = false,
-		instance = element[moduleNamespace],
 		documentObserver,
 		elementNamespace,
 		id,
@@ -46,14 +42,6 @@ vs.popup = function(element, settings){
 				module.observeChanges();
 			}
 			module.instantiate();
-		},
-
-		instantiate: function() {
-			module.verbose('Storing instance', module);
-			instance = module;
-			$module
-				.data(moduleNamespace, instance)
-			;
 		},
 
 		observeChanges: function() {
@@ -78,9 +66,9 @@ vs.popup = function(element, settings){
 				}
 			}
 			if(settings.popup) {
-				$popup.addClass(className.loading);
+				$popup.classList.add(className.loading);
 				$offsetParent = module.get.offsetParent();
-				$popup.removeClass(className.loading);
+				$popup.classList.remove(className.loading);
 				if(settings.movePopup && module.has.popup() && module.get.offsetParent($popup)[0] !== $offsetParent[0]) {
 					module.debug('Moving popup to the same offset parent as target');
 					$popup
@@ -207,7 +195,7 @@ vs.popup = function(element, settings){
 					});
 				}
 				$popup = $('<div/>')
-					.addClass(className.popup)
+					.classList.add(className.popup)
 					.data(metadata.activator, $module)
 					.html(html)
 				;
@@ -844,9 +832,9 @@ vs.popup = function(element, settings){
 				// tentatively place on stage
 				$popup
 					.css(positioning)
-					.removeClass(className.position)
-					.addClass(position)
-					.addClass(className.loading)
+					.classList.remove(className.position)
+					.classList.add(position)
+					.classList.add(className.loading)
 				;
 
 				popupOffset = module.get.popupOffset();
@@ -899,28 +887,28 @@ vs.popup = function(element, settings){
 				variation = variation || module.get.variation();
 				if(variation && module.has.popup() ) {
 					module.verbose('Adding variation to popup', variation);
-					$popup.addClass(variation);
+					$popup.classList.add(variation);
 				}
 			},
 
 			visible: function() {
-				$module.addClass(className.visible);
+				$module.classList.add(className.visible);
 			}
 		},
 
 		remove: {
 			loading: function() {
-				$popup.removeClass(className.loading);
+				$popup.classList.remove(className.loading);
 			},
 			variation: function(variation) {
 				variation = variation || module.get.variation();
 				if(variation) {
 					module.verbose('Removing variation', variation);
-					$popup.removeClass(variation);
+					$popup.classList.remove(variation);
 				}
 			},
 			visible: function() {
-				$module.removeClass(className.visible);
+				$module.classList.remove(className.visible);
 			},
 			attempts: function() {
 				module.verbose('Resetting all searched positions');
@@ -1053,22 +1041,22 @@ vs.popup = function(element, settings){
 				return module.supports.svg() && (element instanceof SVGGraphicsElement);
 			},
 			basic: function() {
-				return $module.hasClass(className.basic);
+				return $module.classList.contains(className.basic);
 			},
 			active: function() {
-				return $module.hasClass(className.active);
+				return $module.classList.contains(className.active);
 			},
 			animating: function() {
-				return ($popup !== undefined && $popup.hasClass(className.animating) );
+				return ($popup !== undefined && $popup.classList.contains(className.animating) );
 			},
 			fluid: function() {
-				return ($popup !== undefined && $popup.hasClass(className.fluid));
+				return ($popup !== undefined && $popup.classList.contains(className.fluid));
 			},
 			visible: function() {
-				return ($popup !== undefined && $popup.hasClass(className.popupVisible));
+				return ($popup !== undefined && $popup.classList.contains(className.popupVisible));
 			},
 			dropdown: function() {
-				return $module.hasClass(className.dropdown);
+				return $module.classList.contains(className.dropdown);
 			},
 			hidden: function() {
 				return !module.is.visible();
@@ -1090,161 +1078,6 @@ vs.popup = function(element, settings){
 			else {
 				module.removePopup();
 			}
-		},
-
-		setting: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, settings, name);
-			}
-			else if(value !== undefined) {
-				settings[name] = value;
-			}
-			else {
-				return settings[name];
-			}
-		},
-		internal: function(name, value) {
-			if( $.isPlainObject(name) ) {
-				$.extend(true, module, name);
-			}
-			else if(value !== undefined) {
-				module[name] = value;
-			}
-			else {
-				return module[name];
-			}
-		},
-		debug: function() {
-			if(!settings.silent && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.debug = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.debug.apply(console, arguments);
-				}
-			}
-		},
-		verbose: function() {
-			if(!settings.silent && settings.verbose && settings.debug) {
-				if(settings.performance) {
-					module.performance.log(arguments);
-				}
-				else {
-					module.verbose = Function.prototype.bind.call(console.info, console, settings.name + ':');
-					module.verbose.apply(console, arguments);
-				}
-			}
-		},
-		error: function() {
-			if(!settings.silent) {
-				module.error = Function.prototype.bind.call(console.error, console, settings.name + ':');
-				module.error.apply(console, arguments);
-			}
-		},
-		performance: {
-			log: function(message) {
-				var
-					currentTime,
-					executionTime,
-					previousTime
-				;
-				if(settings.performance) {
-					currentTime   = new Date().getTime();
-					previousTime  = time || currentTime;
-					executionTime = currentTime - previousTime;
-					time          = currentTime;
-					performance.push({
-						'Name'           : message[0],
-						'Arguments'      : [].slice.call(message, 1) || '',
-						'Element'        : element,
-						'Execution Time' : executionTime
-					});
-				}
-				clearTimeout(module.performance.timer);
-				module.performance.timer = setTimeout(module.performance.display, 500);
-			},
-			display: function() {
-				var
-					title = settings.name + ':',
-					totalTime = 0
-				;
-				time = false;
-				clearTimeout(module.performance.timer);
-				$.each(performance, function(index, data) {
-					totalTime += data['Execution Time'];
-				});
-				title += ' ' + totalTime + 'ms';
-				if(moduleSelector) {
-					title += ' \'' + moduleSelector + '\'';
-				}
-				if( (console.group !== undefined || console.table !== undefined) && performance.length > 0) {
-					console.groupCollapsed(title);
-					if(console.table) {
-						console.table(performance);
-					}
-					else {
-						$.each(performance, function(index, data) {
-							console.log(data['Name'] + ': ' + data['Execution Time']+'ms');
-						});
-					}
-					console.groupEnd();
-				}
-				performance = [];
-			}
-		},
-		invoke: function(query, passedArguments, context) {
-			var
-				object = instance,
-				maxDepth,
-				found,
-				response
-			;
-			passedArguments = passedArguments || queryArguments;
-			context         = element         || context;
-			if(typeof query == 'string' && object !== undefined) {
-				query    = query.split(/[\. ]/);
-				maxDepth = query.length - 1;
-				$.each(query, function(depth, value) {
-					var camelCaseValue = (depth != maxDepth)
-						? value + query[depth + 1].charAt(0).toUpperCase() + query[depth + 1].slice(1)
-						: query
-					;
-					if( $.isPlainObject( object[camelCaseValue] ) && (depth != maxDepth) ) {
-						object = object[camelCaseValue];
-					}
-					else if( object[camelCaseValue] !== undefined ) {
-						found = object[camelCaseValue];
-						return false;
-					}
-					else if( $.isPlainObject( object[value] ) && (depth != maxDepth) ) {
-						object = object[value];
-					}
-					else if( object[value] !== undefined ) {
-						found = object[value];
-						return false;
-					}
-					else {
-						return false;
-					}
-				});
-			}
-			if ( $.isFunction( found ) ) {
-				response = found.apply(context, passedArguments);
-			}
-			else if(found !== undefined) {
-				response = found;
-			}
-			if($.isArray(returnedValue)) {
-				returnedValue.push(response);
-			}
-			else if(returnedValue !== undefined) {
-				returnedValue = [returnedValue, response];
-			}
-			else if(response !== undefined) {
-				returnedValue = response;
-			}
-			return found;
 		}
 	};*/
 
@@ -1253,7 +1086,7 @@ vs.popup = function(element, settings){
 	return module;
 };
 
-vs.popup.settings = {
+ui.popup.settings = {
 	name           : 'Popup',
 
 	// module settings

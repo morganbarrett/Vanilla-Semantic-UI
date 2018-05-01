@@ -7,16 +7,12 @@
  *
  */
 
-vs.dimmer = function(element, settings){
+ui.dimmer = function(element, settings){
 	var selector = settings.selector,
-		namespace = settings.namespace,
 		className = settings.className,
 		error = settings.error,
-		eventNamespace = '.' + namespace,
-		moduleNamespace = 'module-' + namespace,
 		clickEvent = ('ontouchstart' in document.documentElement)
 			? 'touchstart' : 'onclick',
-		instance = element[moduleNamespace],
 		dimmer,
 		dimmable,
 		module;
@@ -49,20 +45,6 @@ vs.dimmer = function(element, settings){
 
 			module.bind.events();
 			module.set.dimmable();
-			module.instantiate();
-		},
-		instantiate: function(){
-			module.verbose('Storing instance of module', module);
-			instance = module;
-			element[moduleNamespace] = instance;
-		},
-		destroy: function(){
-			module.verbose('Destroying previous module', dimmer);
-			module.unbind.events();
-			module.remove.variation();
-			dimmable[clickEvent] = undefined;
-			dimmable.onmouseover = undefined;
-			dimmable.onmouseout = undefined;
 		},
 		bind: {
 			events: function(){
@@ -74,7 +56,6 @@ vs.dimmer = function(element, settings){
 					}
 
 					dimmable.onmouseout = function(event){
-						console.log(event.target.parentElement == dimmable, event.target.parentElement, dimmable)
 						if(event.target.parentElement == dimmable){
 							module.hide();
 						}
@@ -178,12 +159,12 @@ vs.dimmer = function(element, settings){
 					callback = function(){};
 				}
 
-				if(settings.useCSS && vs.transition !== undefined && vs.transition(dimmer, 'is supported')){
+				if(settings.useCSS && ui.transition !== undefined && ui.transition(dimmer, 'is supported')){
 					if(settings.opacity !== 'auto'){
 						module.set.opacity();
 					}
 
-					vs.transition(dimmer, {
+					ui.transition(dimmer, {
 						displayType : 'flex',
 						animation   : settings.transition + ' in',
 						queue       : false,
@@ -209,7 +190,7 @@ vs.dimmer = function(element, settings){
 					dimmer.style.width = "100%";
 					dimmer.style.height = "100%";
 
-					vs.fadeIn(dimmer, {
+					ui.fadeIn(dimmer, {
 						to: settings.opacity,
 						display: "flex",
 						duration: module.get.duration(),
@@ -226,9 +207,9 @@ vs.dimmer = function(element, settings){
 					callback = function(){};
 				}
 
-				if(settings.useCSS && vs.transition !== undefined && vs.transition(dimmer, 'is supported')){
+				if(settings.useCSS && ui.transition !== undefined && ui.transition(dimmer, 'is supported')){
 					module.verbose('Hiding dimmer with css');
-					vs.transition(dimmer, {
+					ui.transition(dimmer, {
 						displayType : 'flex',
 						animation   : settings.transition + ' out',
 						queue       : false,
@@ -246,7 +227,7 @@ vs.dimmer = function(element, settings){
 					module.verbose('Hiding dimmer with javascript');
 					module.remove.dimmed();
 					
-					vs.fadeOut(dimmer, {
+					ui.fadeOut(dimmer, {
 						duration: module.get.duration(),
 						ondone: function(){
 							module.remove.active();
@@ -393,9 +374,7 @@ vs.dimmer = function(element, settings){
 	return module;
 };
 
-vs.dimmer.settings = {
-	name: 'Dimmer',
-	namespace: 'dimmer',
+ui.dimmer.settings = {
 	silent: false,
 	debug: false,
 	verbose: false,
