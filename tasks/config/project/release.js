@@ -48,7 +48,7 @@ module.exports = {
   repository : 'https://github.com/morganbarrett/Vanilla-Semantic-UI/',
 
   banner: ''
-    + ' /*' + '\n'
+    + '/*!' + '\n'
     + ' * # <%= title %> - <%= version %>' + '\n'
     + ' * <%= repository %>' + '\n'
     + ' *' + '\n'

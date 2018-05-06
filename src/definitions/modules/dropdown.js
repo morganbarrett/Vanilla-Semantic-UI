@@ -18,15 +18,15 @@ ui.dropdown = function(element, settings){
 		error = settings.error,
 		templates = settings.templates,
 		/*$context        = $(settings.context),
-		$text           = $module.find(selector.text),
-		$search         = $module.find(selector.search),
-		$sizer          = $module.find(selector.sizer),
-		$input          = $module.find(selector.input),
-		$icon           = $module.find(selector.icon),
-		$combo = ($module.prev().find(selector.text).length > 0)
-			? $module.prev().find(selector.text)
-			: $module.prev(),
-		$menu           = $module.children(selector.menu),
+		$text           = element.find(selector.text),
+		$search         = element.find(selector.search),
+		$sizer          = element.find(selector.sizer),
+		$input          = element.find(selector.input),
+		$icon           = element.find(selector.icon),
+		$combo = (element.prev().find(selector.text).length > 0)
+			? element.prev().find(selector.text)
+			: element.prev(),
+		$menu           = element.children(selector.menu),
 		$item           = $menu.find(selector.item),*/
 		activated = false,
 		itemActivated = false,
@@ -71,9 +71,9 @@ ui.dropdown = function(element, settings){
 		},
 
 		destroy: function() {
-			module.verbose('Destroying previous dropdown', $module);
+			module.verbose('Destroying previous dropdown', element);
 			module.remove.tabbable();
-			$module
+			element
 				.off(eventNamespace)
 				.removeData(moduleNamespace)
 			;
@@ -112,7 +112,7 @@ ui.dropdown = function(element, settings){
 		observe: {
 			select: function() {
 				if(module.has.input()) {
-					selectObserver.observe($module[0], {
+					selectObserver.observe(element[0], {
 						childList : true,
 						subtree   : true
 					});
@@ -186,7 +186,7 @@ ui.dropdown = function(element, settings){
 			menu: function() {
 				$menu = $('<div />')
 					.classList.add(className.menu)
-					.appendTo($module)
+					.appendTo(element)
 				;
 			},
 			sizer: function() {
@@ -253,12 +253,12 @@ ui.dropdown = function(element, settings){
 					}
 				;
 				module.verbose('First request, initializing API');
-				$module
+				element
 					.api(apiSettings)
 				;
 			},
 			layout: function() {
-				if( $module.is('select') ) {
+				if( element.is('select') ) {
 					module.setup.select();
 					module.setup.returnedObject();
 				}
@@ -285,22 +285,22 @@ ui.dropdown = function(element, settings){
 					selectValues  = module.get.selectValues()
 				;
 				module.debug('Dropdown initialized on a select', selectValues);
-				if( $module.is('select') ) {
-					$input = $module;
+				if( element.is('select') ) {
+					$input = element;
 				}
 				// see if select is placed correctly already
 				if($input.parent(selector.dropdown).length > 0) {
 					module.debug('UI dropdown already exists. Creating dropdown menu only');
-					$module = $input.closest(selector.dropdown);
+					element = $input.closest(selector.dropdown);
 					if( !module.has.menu() ) {
 						module.create.menu();
 					}
-					$menu = $module.children(selector.menu);
+					$menu = element.children(selector.menu);
 					module.setup.menu(selectValues);
 				}
 				else {
 					module.debug('Creating entire dropdown from select');
-					$module = $('<div />')
+					element = $('<div />')
 						.attr('class', $input.attr('class') )
 						.classList.add(className.selection)
 						.classList.add(className.dropdown)
@@ -316,12 +316,12 @@ ui.dropdown = function(element, settings){
 					}
 					if ($input.prop('disabled')) {
 						module.debug('Disabling dropdown');
-						$module.classList.add(className.disabled);
+						element.classList.add(className.disabled);
 					}
 					$input
 						.removeAttr('class')
 						.detach()
-						.prependTo($module)
+						.prependTo(element)
 					;
 				}
 				module.refresh();
@@ -333,9 +333,9 @@ ui.dropdown = function(element, settings){
 			reference: function() {
 				module.debug('Dropdown behavior was called on select, replacing with closest dropdown');
 				// replace module reference
-				$module  = $module.parent(selector.dropdown);
-				instance = $module.data(moduleNamespace);
-				element  = $module.get(0);
+				element  = element.parent(selector.dropdown);
+				instance = element.data(moduleNamespace);
+				element  = element.get(0);
 				module.refresh();
 				module.setup.returnedObject();
 			},
@@ -345,7 +345,7 @@ ui.dropdown = function(element, settings){
 					$lastModules  = $allModules.slice(elementIndex + 1)
 				;
 				// adjust all modules to use correct reference
-				$allModules = $firstModules.add($module).add($lastModules);
+				$allModules = $firstModules.add(element).add($lastModules);
 			}
 		},
 
@@ -360,15 +360,15 @@ ui.dropdown = function(element, settings){
 
 		refreshSelectors: function() {
 			module.verbose('Refreshing selector cache');
-			$text   = $module.find(selector.text);
-			$search = $module.find(selector.search);
-			$input  = $module.find(selector.input);
-			$icon   = $module.find(selector.icon);
-			$combo  = ($module.prev().find(selector.text).length > 0)
-				? $module.prev().find(selector.text)
-				: $module.prev()
+			$text   = element.find(selector.text);
+			$search = element.find(selector.search);
+			$input  = element.find(selector.input);
+			$icon   = element.find(selector.icon);
+			$combo  = (element.prev().find(selector.text).length > 0)
+				? element.prev().find(selector.text)
+				: element.prev()
 			;
-			$menu    = $module.children(selector.menu);
+			$menu    = element.children(selector.menu);
 			$item    = $menu.find(selector.item);
 		},
 
@@ -386,7 +386,7 @@ ui.dropdown = function(element, settings){
 				.removeData(metadata.text)
 				.removeData(metadata.value)
 			;
-			$module
+			element
 				.removeData(metadata.defaultText)
 				.removeData(metadata.defaultValue)
 				.removeData(metadata.placeholderText)
@@ -454,7 +454,7 @@ ui.dropdown = function(element, settings){
 		hideOthers: function() {
 			module.verbose('Finding other dropdowns to hide');
 			$allModules
-				.not($module)
+				.not(element)
 					.has(selector.menu + '.' + className.visible)
 						.dropdown('hide')
 			;
@@ -490,7 +490,7 @@ ui.dropdown = function(element, settings){
 					// do nothing special yet
 				}
 				else if( module.is.single() ) {
-					$module
+					element
 						.on('touchstart' + eventNamespace, module.event.test.toggle)
 					;
 				}
@@ -500,11 +500,11 @@ ui.dropdown = function(element, settings){
 			},
 			keyboardEvents: function() {
 				module.verbose('Binding keyboard events');
-				$module
+				element
 					.on('keydown' + eventNamespace, module.event.keydown)
 				;
 				if( module.has.search() ) {
-					$module
+					element
 						.on(module.get.inputEvent() + eventNamespace, selector.search, module.event.input)
 					;
 				}
@@ -516,20 +516,20 @@ ui.dropdown = function(element, settings){
 			},
 			inputEvents: function() {
 				module.verbose('Binding input change events');
-				$module
+				element
 					.on('change' + eventNamespace, selector.input, module.event.change)
 				;
 			},
 			mouseEvents: function() {
 				module.verbose('Binding mouse events');
 				if(module.is.multiple()) {
-					$module
+					element
 						.on('click'   + eventNamespace, selector.label,  module.event.label.click)
 						.on('click'   + eventNamespace, selector.remove, module.event.remove.click)
 					;
 				}
 				if( module.is.searchSelection() ) {
-					$module
+					element
 						.on('mousedown' + eventNamespace, module.event.mousedown)
 						.on('mouseup'   + eventNamespace, module.event.mouseup)
 						.on('mousedown' + eventNamespace, selector.menu,   module.event.menu.mousedown)
@@ -541,41 +541,41 @@ ui.dropdown = function(element, settings){
 						.on('click'     + eventNamespace, selector.text,   module.event.text.focus)
 					;
 					if(module.is.multiple()) {
-						$module
+						element
 							.on('click' + eventNamespace, module.event.click)
 						;
 					}
 				}
 				else {
 					if(settings.on == 'click') {
-						$module
+						element
 							.on('click' + eventNamespace, selector.icon, module.event.icon.click)
 							.on('click' + eventNamespace, module.event.test.toggle)
 						;
 					}
 					else if(settings.on == 'hover') {
-						$module
+						element
 							.on('mouseenter' + eventNamespace, module.delay.show)
 							.on('mouseleave' + eventNamespace, module.delay.hide)
 						;
 					}
 					else {
-						$module
+						element
 							.on(settings.on + eventNamespace, module.toggle)
 						;
 					}
-					$module
+					element
 						.on('mousedown' + eventNamespace, module.event.mousedown)
 						.on('mouseup'   + eventNamespace, module.event.mouseup)
 						.on('focus'     + eventNamespace, module.event.focus)
 					;
 					if(module.has.menuSearch() ) {
-						$module
+						element
 							.on('blur' + eventNamespace, selector.search, module.event.search.blur)
 						;
 					}
 					else {
-						$module
+						element
 							.on('blur' + eventNamespace, module.event.blur)
 						;
 					}
@@ -706,11 +706,11 @@ ui.dropdown = function(element, settings){
 					}
 				}
 			;
-			if( !$module.api('get request') ) {
+			if( !element.api('get request') ) {
 				module.setup.api();
 			}
 			apiSettings = $.extend(true, {}, apiSettings, settings.apiSettings);
-			$module
+			element
 				.api('setting', apiSettings)
 				.api('query')
 			;
@@ -825,9 +825,9 @@ ui.dropdown = function(element, settings){
 		focusSearch: function(skipHandler) {
 			if( module.has.search() && !module.is.focusedOnSearch() ) {
 				if(skipHandler) {
-					$module.off('focus' + eventNamespace, selector.search);
+					element.off('focus' + eventNamespace, selector.search);
 					$search.focus();
-					$module.on('focus'  + eventNamespace, selector.search, module.event.search.focus);
+					element.on('focus'  + eventNamespace, selector.search, module.event.search.focus);
 				}
 				else {
 					$search.focus();
@@ -920,7 +920,7 @@ ui.dropdown = function(element, settings){
 					$target = $(event.target)
 				;
 				// focus search
-				if($target.is($module)) {
+				if($target.is(element)) {
 					if(!module.is.focusedOnSearch()) {
 						module.focusSearch();
 					}
@@ -974,7 +974,7 @@ ui.dropdown = function(element, settings){
 				click: function(event) {
 					var
 						$label        = $(this),
-						$labels       = $module.find(selector.label),
+						$labels       = element.find(selector.label),
 						$activeLabels = $labels.filter('.' + className.active),
 						$nextActive   = $label.nextAll('.' + className.active),
 						$prevActive   = $label.prevAll('.' + className.active),
@@ -1171,7 +1171,7 @@ ui.dropdown = function(element, settings){
 					;
 					if(isShortcutKey) {
 						var
-							$label            = $module.find(selector.label),
+							$label            = element.find(selector.label),
 							$activeLabel      = $label.filter('.' + className.active),
 							activeValue       = $activeLabel.data(metadata.value),
 							labelIndex        = $label.index($activeLabel),
@@ -1495,7 +1495,7 @@ ui.dropdown = function(element, settings){
 				var
 					$target    = $(event.target),
 					inDocument = ($target.closest(document.documentElement).length > 0),
-					inModule   = ($target.closest($module).length > 0)
+					inModule   = ($target.closest(element).length > 0)
 				;
 				callback = $.isFunction(callback)
 					? callback
@@ -1516,7 +1516,7 @@ ui.dropdown = function(element, settings){
 					$target      = $(event.target),
 					$label       = $target.closest(selector.siblingLabel),
 					inVisibleDOM = document.body.contains(event.target),
-					notOnLabel   = ($module.find($label).length === 0),
+					notOnLabel   = (element.find($label).length === 0),
 					notInMenu    = ($target.closest($menu).length === 0)
 				;
 				callback = $.isFunction(callback)
@@ -1592,16 +1592,16 @@ ui.dropdown = function(element, settings){
 				return id;
 			},
 			defaultText: function() {
-				return $module.data(metadata.defaultText);
+				return element.data(metadata.defaultText);
 			},
 			defaultValue: function() {
-				return $module.data(metadata.defaultValue);
+				return element.data(metadata.defaultValue);
 			},
 			placeholderText: function() {
 				if(settings.placeholder != 'auto' && typeof settings.placeholder == 'string') {
 					return settings.placeholder;
 				}
-				return $module.data(metadata.placeholderText) || '';
+				return element.data(metadata.placeholderText) || '';
 			},
 			text: function() {
 				return $text.text();
@@ -1682,7 +1682,7 @@ ui.dropdown = function(element, settings){
 				var
 					value = ($input.length > 0)
 						? $input.val()
-						: $module.data(metadata.value),
+						: element.data(metadata.value),
 					isEmptyMultiselect = ($.isArray(value) && value.length === 1 && value[0] === '')
 				;
 				// prevents placeholder element from being selected when multiple
@@ -1780,7 +1780,7 @@ ui.dropdown = function(element, settings){
 					select = {}
 				;
 				select.values = [];
-				$module
+				element
 					.find('option')
 						.each(function() {
 							var
@@ -2057,14 +2057,14 @@ ui.dropdown = function(element, settings){
 					value = module.get.value()
 				;
 				module.verbose('Saving default value as', value);
-				$module.data(metadata.defaultValue, value);
+				element.data(metadata.defaultValue, value);
 			},
 			defaultText: function() {
 				var
 					text = module.get.text()
 				;
 				module.verbose('Saving default text as', text);
-				$module.data(metadata.defaultText, text);
+				element.data(metadata.defaultText, text);
 			},
 			placeholderText: function() {
 				var
@@ -2073,7 +2073,7 @@ ui.dropdown = function(element, settings){
 				if(settings.placeholder !== false && $text.classList.contains(className.placeholder)) {
 					text = module.get.text();
 					module.verbose('Saving placeholder text as', text);
-					$module.data(metadata.placeholderText, text);
+					element.data(metadata.placeholderText, text);
 				}
 			},
 			remoteData: function(name, value) {
@@ -2177,10 +2177,10 @@ ui.dropdown = function(element, settings){
 				}
 			},
 			empty: function() {
-				$module.classList.add(className.empty);
+				element.classList.add(className.empty);
 			},
 			loading: function() {
-				$module.classList.add(className.loading);
+				element.classList.add(className.loading);
 			},
 			placeholderText: function(text) {
 				text = text || module.get.placeholderText();
@@ -2201,8 +2201,8 @@ ui.dropdown = function(element, settings){
 				}
 				else {
 					module.debug('Added tabindex to dropdown');
-					if( $module.attr('tabindex') === undefined) {
-						$module
+					if( element.attr('tabindex') === undefined) {
+						element
 							.attr('tabindex', 0)
 						;
 						$menu
@@ -2368,7 +2368,7 @@ ui.dropdown = function(element, settings){
 				}
 			},
 			upward: function($currentMenu) {
-				var $element = $currentMenu || $module;
+				var $element = $currentMenu || element;
 				$element.classList.add(className.upward);
 			},
 			leftward: function($currentMenu) {
@@ -2413,7 +2413,7 @@ ui.dropdown = function(element, settings){
 				else {
 					module.verbose('Storing value in metadata', escapedValue, $input);
 					if(escapedValue !== currentValue) {
-						$module.data(metadata.value, stringValue);
+						element.data(metadata.value, stringValue);
 					}
 				}
 				if(settings.fireOnInit === false && module.is.initialLoad()) {
@@ -2424,15 +2424,15 @@ ui.dropdown = function(element, settings){
 				}
 			},
 			active: function() {
-				$module
+				element
 					.classList.add(className.active)
 				;
 			},
 			multiple: function() {
-				$module.classList.add(className.multiple);
+				element.classList.add(className.multiple);
 			},
 			visible: function() {
-				$module.classList.add(className.visible);
+				element.classList.add(className.visible);
 			},
 			exactly: function(value, $selectedItem) {
 				module.debug('Setting selected to exact values');
@@ -2714,22 +2714,22 @@ ui.dropdown = function(element, settings){
 
 		remove: {
 			active: function() {
-				$module.classList.remove(className.active);
+				element.classList.remove(className.active);
 			},
 			activeLabel: function() {
-				$module.find(selector.label).classList.remove(className.active);
+				element.find(selector.label).classList.remove(className.active);
 			},
 			empty: function() {
-				$module.classList.remove(className.empty);
+				element.classList.remove(className.empty);
 			},
 			loading: function() {
-				$module.classList.remove(className.loading);
+				element.classList.remove(className.loading);
 			},
 			initialLoad: function() {
 				initialLoad = false;
 			},
 			upward: function($currentMenu) {
-				var $element = $currentMenu || $module;
+				var $element = $currentMenu || element;
 				$element.classList.remove(className.upward);
 			},
 			leftward: function($currentMenu) {
@@ -2737,7 +2737,7 @@ ui.dropdown = function(element, settings){
 				$element.classList.remove(className.leftward);
 			},
 			visible: function() {
-				$module.classList.remove(className.visible);
+				element.classList.remove(className.visible);
 			},
 			activeItem: function() {
 				$item.classList.remove(className.active);
@@ -2875,19 +2875,19 @@ ui.dropdown = function(element, settings){
 			},
 			label: function(value, shouldAnimate) {
 				var
-					$labels       = $module.find(selector.label),
+					$labels       = element.find(selector.label),
 					$removedLabel = $labels.filter('[data-' + metadata.value + '="' + module.escape.string(value) +'"]')
 				;
 				module.verbose('Removing label', $removedLabel);
 				$removedLabel.remove();
 			},
 			activeLabels: function($activeLabels) {
-				$activeLabels = $activeLabels || $module.find(selector.label).filter('.' + className.active);
+				$activeLabels = $activeLabels || element.find(selector.label).filter('.' + className.active);
 				module.verbose('Removing active label selections', $activeLabels);
 				module.remove.labels($activeLabels);
 			},
 			labels: function($labels) {
-				$labels = $labels || $module.find(selector.label);
+				$labels = $labels || element.find(selector.label);
 				module.verbose('Removing labels', $labels);
 				$labels
 					.each(function(){
@@ -2927,7 +2927,7 @@ ui.dropdown = function(element, settings){
 				}
 				else {
 					module.debug('Simple selection dropdown initialized');
-					$module
+					element
 						.removeAttr('tabindex')
 					;
 					$menu
@@ -2988,7 +2988,7 @@ ui.dropdown = function(element, settings){
 			label: function(value) {
 				var
 					escapedValue = module.escape.value(value),
-					$labels      = $module.find(selector.label)
+					$labels      = element.find(selector.label)
 				;
 				if(settings.ignoreCase) {
 					escapedValue = escapedValue.toLowerCase();
@@ -3048,7 +3048,7 @@ ui.dropdown = function(element, settings){
 
 		is: {
 			active: function() {
-				return $module.classList.contains(className.active);
+				return element.classList.contains(className.active);
 			},
 			animatingInward: function() {
 				return $menu.transition('is inward');
@@ -3057,13 +3057,13 @@ ui.dropdown = function(element, settings){
 				return $menu.transition('is outward');
 			},
 			bubbledLabelClick: function(event) {
-				return $(event.target).is('select, input') && $module.closest('label').length > 0;
+				return $(event.target).is('select, input') && element.closest('label').length > 0;
 			},
 			bubbledIconClick: function(event) {
 				return $(event.target).closest($icon).length > 0;
 			},
 			alreadySetup: function() {
-				return ($module.is('select') && $module.parent(selector.dropdown).data(moduleNamespace) !== undefined && $module.prev().length === 0);
+				return (element.is('select') && element.parent(selector.dropdown).data(moduleNamespace) !== undefined && element.prev().length === 0);
 			},
 			animating: function($subMenu) {
 				return ($subMenu)
@@ -3076,10 +3076,10 @@ ui.dropdown = function(element, settings){
 				return $selectedMenu.classList.contains(className.leftward);
 			},
 			disabled: function() {
-				return $module.classList.contains(className.disabled);
+				return element.classList.contains(className.disabled);
 			},
 			focused: function() {
-				return (document.activeElement === $module[0]);
+				return (document.activeElement === element[0]);
 			},
 			focusedOnSearch: function() {
 				return (document.activeElement === $search[0]);
@@ -3106,7 +3106,7 @@ ui.dropdown = function(element, settings){
 				return found;
 			},
 			multiple: function() {
-				return $module.classList.contains(className.multiple);
+				return element.classList.contains(className.multiple);
 			},
 			remote: function() {
 				return settings.apiSettings && module.can.useAPI();
@@ -3127,19 +3127,19 @@ ui.dropdown = function(element, settings){
 				return selectChanged;
 			},
 			search: function() {
-				return $module.classList.contains(className.search);
+				return element.classList.contains(className.search);
 			},
 			searchSelection: function() {
 				return ( module.has.search() && $search.parent(selector.dropdown).length === 1 );
 			},
 			selection: function() {
-				return $module.classList.contains(className.selection);
+				return element.classList.contains(className.selection);
 			},
 			userValue: function(value) {
 				return ($.inArray(value, module.get.userValues()) !== -1);
 			},
 			upward: function($menu) {
-				var $element = $menu || $module;
+				var $element = $menu || element;
 				return $element.classList.contains(className.upward);
 			},
 			visible: function($subMenu) {
@@ -3301,7 +3301,7 @@ ui.dropdown = function(element, settings){
 						$currentMenu.transition('show');
 						callback.call(element);
 					}
-					else if($.fn.transition !== undefined && $module.transition('is supported')) {
+					else if($.fn.transition !== undefined && element.transition('is supported')) {
 						$currentMenu
 							.transition({
 								animation  : transition + ' in',
@@ -3349,7 +3349,7 @@ ui.dropdown = function(element, settings){
 						$currentMenu.transition('hide');
 						callback.call(element);
 					}
-					else if($.fn.transition !== undefined && $module.transition('is supported')) {
+					else if($.fn.transition !== undefined && element.transition('is supported')) {
 						$currentMenu
 							.transition({
 								animation  : transition + ' out',

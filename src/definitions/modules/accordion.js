@@ -237,7 +237,7 @@ ui.accordion = function(element, settings){
 					.stop(true, true)
 				;
 				if(settings.animateChildren){
-					if($.fn.transition !== undefined && $module.transition('is supported')){
+					if($.fn.transition !== undefined && element.transition('is supported')){
 						$openContents
 							.children()
 								.transition({

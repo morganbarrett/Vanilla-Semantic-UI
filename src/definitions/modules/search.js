@@ -14,11 +14,11 @@ ui.search = function(element, settings){
 		fields = settings.fields,
 		selector = settings.selector,
 		error = settings.error,
-		/*$prompt          = $module.find(selector.prompt),
-		$searchButton    = $module.find(selector.searchButton),
-		$results         = $module.find(selector.results),
-		$result          = $module.find(selector.result),
-		$category        = $module.find(selector.category),*/
+		/*$prompt          = element.find(selector.prompt),
+		$searchButton    = element.find(selector.searchButton),
+		$results         = element.find(selector.results),
+		$result          = element.find(selector.result),
+		$category        = element.find(selector.category),*/
 		disabledBubbled = false,
 		resultsDismissed = false,
 		module;
@@ -37,30 +37,30 @@ ui.search = function(element, settings){
 
 		refresh: function() {
 			module.debug('Refreshing selector cache');
-			$prompt         = $module.find(selector.prompt);
-			$searchButton   = $module.find(selector.searchButton);
-			$category       = $module.find(selector.category);
-			$results        = $module.find(selector.results);
-			$result         = $module.find(selector.result);
+			$prompt         = element.find(selector.prompt);
+			$searchButton   = element.find(selector.searchButton);
+			$category       = element.find(selector.category);
+			$results        = element.find(selector.results);
+			$result         = element.find(selector.result);
 		},
 
 		refreshResults: function() {
-			$results = $module.find(selector.results);
-			$result  = $module.find(selector.result);
+			$results = element.find(selector.results);
+			$result  = element.find(selector.result);
 		},
 
 		bind: {
 			events: function() {
 				module.verbose('Binding events to search');
 				if(settings.automatic) {
-					$module
+					element
 						.on(module.get.inputEvent() + eventNamespace, selector.prompt, module.event.input)
 					;
 					$prompt
 						.attr('autocomplete', 'off')
 					;
 				}
-				$module
+				element
 					// prompt
 					.on('focus'     + eventNamespace, selector.prompt, module.event.focus)
 					.on('blur'      + eventNamespace, selector.prompt, module.event.blur)
@@ -124,7 +124,7 @@ ui.search = function(element, settings){
 				resultsDismissed = false;
 				if(module.resultsClicked) {
 					module.debug('Determining if user action caused search to close');
-					$module
+					element
 						.one('click.close' + eventNamespace, selector.results, function(event) {
 							if(module.is.inMessage(event) || disabledBubbled) {
 								$prompt.focus();
@@ -194,8 +194,8 @@ ui.search = function(element, settings){
 		handleKeyboard: function(event) {
 			var
 				// force selector refresh
-				$result         = $module.find(selector.result),
-				$category       = $module.find(selector.category),
+				$result         = element.find(selector.result),
+				$category       = element.find(selector.category),
 				$activeResult   = $result.filter('.' + className.active),
 				currentIndex    = $result.index( $activeResult ),
 				resultSize      = $result.length,
@@ -301,7 +301,7 @@ ui.search = function(element, settings){
 				;
 				$.extend(true, apiSettings, settings.apiSettings);
 				module.verbose('Setting up API request', apiSettings);
-				$module.api(apiSettings);
+				element.api(apiSettings);
 			}
 		},
 
@@ -313,7 +313,7 @@ ui.search = function(element, settings){
 				return module.is.focused() && !module.is.visible() && !module.is.empty();
 			},
 			transition: function() {
-				return settings.transition && $.fn.transition !== undefined && $module.transition('is supported');
+				return settings.transition && $.fn.transition !== undefined && element.transition('is supported');
 			}
 		},
 
@@ -368,7 +368,7 @@ ui.search = function(element, settings){
 			},
 			results: function() {
 				var
-					results = $module.data(metadata.results)
+					results = element.data(metadata.results)
 				;
 				return results;
 			},
@@ -414,10 +414,10 @@ ui.search = function(element, settings){
 
 		set: {
 			focus: function() {
-				$module.classList.add(className.focus);
+				element.classList.add(className.focus);
 			},
 			loading: function() {
-				$module.classList.add(className.loading);
+				element.classList.add(className.loading);
 			},
 			value: function(value) {
 				module.verbose('Setting search input value', value);
@@ -428,7 +428,7 @@ ui.search = function(element, settings){
 			type: function(type) {
 				type = type || settings.type;
 				if(settings.type == 'category') {
-					$module.classList.add(settings.type);
+					element.classList.add(settings.type);
 				}
 			},
 			buttonPressed: function() {
@@ -438,10 +438,10 @@ ui.search = function(element, settings){
 
 		remove: {
 			loading: function() {
-				$module.classList.remove(className.loading);
+				element.classList.remove(className.loading);
 			},
 			focus: function() {
-				$module.classList.remove(className.focus);
+				element.classList.remove(className.focus);
 			},
 			buttonPressed: function() {
 				$searchButton.classList.remove(className.pressed);
@@ -519,11 +519,11 @@ ui.search = function(element, settings){
 					? callback
 					: function(){}
 				;
-				if($module.api('is loading')) {
-					$module.api('abort');
+				if(element.api('is loading')) {
+					element.api('abort');
 				}
 				module.setup.api(searchTerm, callback);
-				$module
+				element
 					.api('query')
 				;
 			},
@@ -651,7 +651,7 @@ ui.search = function(element, settings){
 		cancel: {
 			query: function() {
 				if( module.can.useAPI() ) {
-					$module.api('abort');
+					element.api('abort');
 				}
 			}
 		},
@@ -678,16 +678,16 @@ ui.search = function(element, settings){
 		clear: {
 			cache: function(value) {
 				var
-					cache = $module.data(metadata.cache)
+					cache = element.data(metadata.cache)
 				;
 				if(!value) {
 					module.debug('Clearing cache', value);
-					$module.removeData(metadata.cache);
+					element.removeData(metadata.cache);
 				}
 				else if(value && cache && cache[value]) {
 					module.debug('Removing value from cache', value);
 					delete cache[value];
-					$module.data(metadata.cache, cache);
+					element.data(metadata.cache, cache);
 				}
 			}
 		},
@@ -695,7 +695,7 @@ ui.search = function(element, settings){
 		read: {
 			cache: function(name) {
 				var
-					cache = $module.data(metadata.cache)
+					cache = element.data(metadata.cache)
 				;
 				if(settings.cache) {
 					module.verbose('Checking cache for generated html for query', name);
@@ -754,7 +754,7 @@ ui.search = function(element, settings){
 				if($results.length === 0) {
 					$results = $('<div />')
 						.classList.add(className.results)
-						.appendTo($module)
+						.appendTo(element)
 					;
 				}
 			}
@@ -823,21 +823,21 @@ ui.search = function(element, settings){
 		save: {
 			results: function(results) {
 				module.verbose('Saving current search results to metadata', results);
-				$module.data(metadata.results, results);
+				element.data(metadata.results, results);
 			}
 		},
 
 		write: {
 			cache: function(name, value) {
 				var
-					cache = ($module.data(metadata.cache) !== undefined)
-						? $module.data(metadata.cache)
+					cache = (element.data(metadata.cache) !== undefined)
+						? element.data(metadata.cache)
 						: {}
 				;
 				if(settings.cache) {
 					module.verbose('Writing generated html to cache', name, value);
 					cache[name] = value;
-					$module
+					element
 						.data(metadata.cache, cache)
 					;
 				}

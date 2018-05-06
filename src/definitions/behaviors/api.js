@@ -1,7 +1,6 @@
 /*!
- * # Semantic UI - API
- * http://github.com/semantic-org/semantic-ui/
- *
+ * # Vanilla Semantic UI - API
+ * https://github.com/morganbarrett/Vanilla-Semantic-UI/
  *
  * Released under the MIT license
  * http://opensource.org/licenses/MIT

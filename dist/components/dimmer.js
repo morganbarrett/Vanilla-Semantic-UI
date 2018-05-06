@@ -382,7 +382,7 @@ ui.dimmer.settings = {
 	dimmerName: false,
 	variation: false,
 	closable: 'auto',
-	useCSS: false,
+	useCSS: true,
 	transition: 'fade',
 	on: false,
 	opacity: 'auto',

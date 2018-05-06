@@ -13,7 +13,7 @@ ui.sidebar = function(element, settings){
 		regExp = settings.regExp,
 		error = settings.error,
 		/*$context        = $(settings.context),
-		$sidebars       = $module.children(selector.sidebar),
+		$sidebars       = element.children(selector.sidebar),
 		$fixed          = $context.children(selector.fixed),
 		$pusher         = $context.children(selector.pusher),
 		$style,*/
@@ -57,8 +57,8 @@ ui.sidebar = function(element, settings){
 		},
 
 		destroy: function() {
-			module.verbose('Destroying previous module for', $module);
-			$module
+			module.verbose('Destroying previous module for', element);
+			element
 				.off(eventNamespace)
 				.removeData(moduleNamespace)
 			;
@@ -125,7 +125,7 @@ ui.sidebar = function(element, settings){
 				$document
 					.on('touchmove' + elementNamespace, module.event.touch)
 				;
-				$module
+				element
 					.on('scroll' + eventNamespace, module.event.containScroll)
 				;
 			}
@@ -139,15 +139,15 @@ ui.sidebar = function(element, settings){
 				module.verbose('Removing scroll lock from page');
 				$document.off(elementNamespace);
 				$window.off(elementNamespace);
-				$module.off('scroll' + eventNamespace);
+				element.off('scroll' + eventNamespace);
 			}
 		},
 
 		add: {
 			inlineCSS: function() {
 				var
-					width     = module.cache.width  || $module.outerWidth(),
-					height    = module.cache.height || $module.outerHeight(),
+					width     = module.cache.width  || element.outerWidth(),
+					height    = module.cache.height || element.outerHeight(),
 					isRTL     = module.is.rtl(),
 					direction = module.get.direction(),
 					distance  = {
@@ -249,9 +249,9 @@ ui.sidebar = function(element, settings){
 		setup: {
 			cache: function() {
 				module.cache = {
-					width  : $module.outerWidth(),
-					height : $module.outerHeight(),
-					rtl    : ($module.css('direction') == 'rtl')
+					width  : element.outerWidth(),
+					height : element.outerHeight(),
+					rtl    : (element.css('direction') == 'rtl')
 				};
 			},
 			layout: function() {
@@ -267,10 +267,10 @@ ui.sidebar = function(element, settings){
 					;
 					module.refresh();
 				}
-				if($module.nextAll(selector.pusher).length === 0 || $module.nextAll(selector.pusher)[0] !== $pusher[0]) {
+				if(element.nextAll(selector.pusher).length === 0 || element.nextAll(selector.pusher)[0] !== $pusher[0]) {
 					module.debug('Moved sidebar to correct parent element');
 					module.error(error.movedSidebar, element);
-					$module.detach().prependTo($context);
+					element.detach().prependTo($context);
 					module.refresh();
 				}
 				module.clear.cache();
@@ -356,10 +356,10 @@ ui.sidebar = function(element, settings){
 		},
 
 		othersAnimating: function() {
-			return ($sidebars.not($module).filter('.' + className.animating).length > 0);
+			return ($sidebars.not(element).filter('.' + className.animating).length > 0);
 		},
 		othersVisible: function() {
-			return ($sidebars.not($module).filter('.' + className.visible).length > 0);
+			return ($sidebars.not(element).filter('.' + className.visible).length > 0);
 		},
 		othersActive: function() {
 			return(module.othersVisible() || module.othersAnimating());
@@ -367,7 +367,7 @@ ui.sidebar = function(element, settings){
 
 		hideOthers: function(callback) {
 			var
-				$otherSidebars = $sidebars.not($module).filter('.' + className.visible),
+				$otherSidebars = $sidebars.not(element).filter('.' + className.visible),
 				sidebarCount   = $otherSidebars.length,
 				callbackCount  = 0
 			;
@@ -396,7 +396,7 @@ ui.sidebar = function(element, settings){
 			var
 				transition = module.get.transition(),
 				$transition = (transition === 'overlay' || module.othersActive())
-					? $module
+					? element
 					: $pusher,
 				animate,
 				dim,
@@ -440,7 +440,7 @@ ui.sidebar = function(element, settings){
 			var
 				transition = module.get.transition(),
 				$transition = (transition == 'overlay' || module.othersActive())
-					? $module
+					? element
 					: $pusher,
 				animate,
 				transitionEnd
@@ -482,7 +482,7 @@ ui.sidebar = function(element, settings){
 		scrollToTop: function() {
 			module.verbose('Scrolling to top of page to avoid animation issues');
 			currentScroll = $(window).scrollTop();
-			$module.scrollTop(0);
+			element.scrollTop(0);
 			window.scrollTo(0, 0);
 		},
 
@@ -521,24 +521,24 @@ ui.sidebar = function(element, settings){
 
 			// sidebar
 			active: function() {
-				$module.classList.add(className.active);
+				element.classList.add(className.active);
 			},
 			animating: function() {
-				$module.classList.add(className.animating);
+				element.classList.add(className.animating);
 			},
 			transition: function(transition) {
 				transition = transition || module.get.transition();
-				$module.classList.add(transition);
+				element.classList.add(transition);
 			},
 			direction: function(direction) {
 				direction = direction || module.get.direction();
-				$module.classList.add(className[direction]);
+				element.classList.add(className[direction]);
 			},
 			visible: function() {
-				$module.classList.add(className.visible);
+				element.classList.add(className.visible);
 			},
 			overlay: function() {
-				$module.classList.add(className.overlay);
+				element.classList.add(className.overlay);
 			}
 		},
 		remove: {
@@ -565,36 +565,36 @@ ui.sidebar = function(element, settings){
 
 			// sidebar
 			active: function() {
-				$module.classList.remove(className.active);
+				element.classList.remove(className.active);
 			},
 			animating: function() {
-				$module.classList.remove(className.animating);
+				element.classList.remove(className.animating);
 			},
 			transition: function(transition) {
 				transition = transition || module.get.transition();
-				$module.classList.remove(transition);
+				element.classList.remove(transition);
 			},
 			direction: function(direction) {
 				direction = direction || module.get.direction();
-				$module.classList.remove(className[direction]);
+				element.classList.remove(className[direction]);
 			},
 			visible: function() {
-				$module.classList.remove(className.visible);
+				element.classList.remove(className.visible);
 			},
 			overlay: function() {
-				$module.classList.remove(className.overlay);
+				element.classList.remove(className.overlay);
 			}
 		},
 
 		get: {
 			direction: function() {
-				if($module.classList.contains(className.top)) {
+				if(element.classList.contains(className.top)) {
 					return className.top;
 				}
-				else if($module.classList.contains(className.right)) {
+				else if(element.classList.contains(className.right)) {
 					return className.right;
 				}
-				else if($module.classList.contains(className.bottom)) {
+				else if(element.classList.contains(className.bottom)) {
 					return className.bottom;
 				}
 				return className.left;
@@ -676,7 +676,7 @@ ui.sidebar = function(element, settings){
 				return !module.is.visible();
 			},
 			visible: function() {
-				return $module.classList.contains(className.visible);
+				return element.classList.contains(className.visible);
 			},
 			// alias
 			open: function() {
@@ -686,14 +686,14 @@ ui.sidebar = function(element, settings){
 				return module.is.hidden();
 			},
 			vertical: function() {
-				return $module.classList.contains(className.top);
+				return element.classList.contains(className.top);
 			},
 			animating: function() {
 				return $context.classList.contains(className.animating);
 			},
 			rtl: function () {
 				if(module.cache.rtl === undefined) {
-					module.cache.rtl = ($module.css('direction') == 'rtl');
+					module.cache.rtl = (element.css('direction') == 'rtl');
 				}
 				return module.cache.rtl;
 			}

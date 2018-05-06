@@ -1,4 +1,4 @@
- /*
+/*!
  * # Vanilla Semantic UI - 0.0.1
  * https://github.com/morganbarrett/Vanilla-Semantic-UI/
  *
@@ -305,9 +305,8 @@
 	}
 
 	/*!
-	 * # Semantic UI - Site
-	 * http://github.com/semantic-org/semantic-ui/
-	 *
+	 * # Vanilla Semantic UI 0.0.1 - Site
+	 * https://github.com/morganbarrett/Vanilla-Semantic-UI/
 	 *
 	 * Released under the MIT license
 	 * http://opensource.org/licenses/MIT
@@ -788,9 +787,8 @@
 	});*/
 
 	/*!
-	 * # Semantic UI - Form Validation
-	 * http://github.com/semantic-org/semantic-ui/
-	 *
+	 * # Vanilla Semantic UI 0.0.1 - Form Validation
+	 * https://github.com/morganbarrett/Vanilla-Semantic-UI/
 	 *
 	 * Released under the MIT license
 	 * http://opensource.org/licenses/MIT
@@ -3724,7 +3722,7 @@
 		dimmerName: false,
 		variation: false,
 		closable: 'auto',
-		useCSS: false,
+		useCSS: true,
 		transition: 'fade',
 		on: false,
 		opacity: 'auto',
@@ -7866,9 +7864,8 @@
 			observer,
 			module;
 		
-		/*module  = {
-
-			initialize: function() {
+		module  = {
+			initialize: function(){
 				module.verbose('Initializing dimmer', $context);
 
 				module.create.id();
@@ -7876,14 +7873,12 @@
 				module.refreshModals();
 
 				module.bind.events();
-				if(settings.observeChanges) {
+				if(settings.observeChanges){
 					module.observeChanges();
 				}
-				module.instantiate();
 			},
-
 			create: {
-				dimmer: function() {
+				dimmer: function(){
 					var
 						defaultSettings = {
 							debug      : settings.debug,
@@ -7893,33 +7888,32 @@
 							,
 							dimmerName : 'modals'
 						},
-						dimmerSettings = $.extend(true, defaultSettings, settings.dimmerSettings)
+						dimmerSettings = ui.extend(true, defaultSettings, settings.dimmerSettings)
 					;
-					if($.fn.dimmer === undefined) {
+					if(ui.dimmer === undefined){
 						module.error(error.dimmer);
 						return;
 					}
 					module.debug('Creating dimmer');
-					$dimmable = $context.dimmer(dimmerSettings);
-					if(settings.detachable) {
+					dimmable = ui(context).dimmer(dimmerSettings);
+					if(settings.detachable){
 						module.verbose('Modal is detachable, moving content into dimmer');
-						$dimmable.dimmer('add content', $module);
+						ui(dimmable).dimmer('add content', element);
 					}
 					else {
 						module.set.undetached();
 					}
-					$dimmer = $dimmable.dimmer('get dimmer');
+					dimmer = ui(dimmable).dimmer('get dimmer');
 				},
-				id: function() {
+				id: function(){
 					id = (Math.random().toString(16) + '000000000').substr(2,8);
 					elementEventNamespace = '.' + id;
 					module.verbose('Creating unique id for element', id);
 				}
 			},
-
-			observeChanges: function() {
-				if('MutationObserver' in window) {
-					observer = new MutationObserver(function(mutations) {
+			observeChanges: function(){
+				if('MutationObserver' in window){
+					observer = new MutationObserver(function(mutations){
 						module.debug('DOM tree modified, refreshing');
 						module.refresh();
 					});
@@ -7930,20 +7924,17 @@
 					module.debug('Setting up mutation observer', observer);
 				}
 			},
-
-			refresh: function() {
+			refresh: function(){
 				module.remove.scrolling();
 				module.cacheSizes();
 				module.set.screenHeight();
 				module.set.type();
 			},
-
-			refreshModals: function() {
-				$otherModals = $module.siblings(selector.modal);
-				$allModals   = $otherModals.add($module);
+			refreshModals: function(){
+				$otherModals = element.siblings(selector.modal);
+				$allModals   = $otherModals.add(element);
 			},
-
-			attachEvents: function(selector, event) {
+			attachEvents: function(selector, event){
 				var
 					$toggle = $(selector)
 				;
@@ -7951,7 +7942,7 @@
 					? module[event]
 					: module.toggle
 				;
-				if($toggle.length > 0) {
+				if($toggle.length > 0){
 					module.debug('Attaching modal events to element', selector, event);
 					$toggle
 						.off(eventNamespace)
@@ -7962,11 +7953,10 @@
 					module.error(error.notFound, selector);
 				}
 			},
-
 			bind: {
-				events: function() {
+				events: function(){
 					module.verbose('Attaching events');
-					$module
+					element
 						.on('click' + eventNamespace, selector.close, module.event.close)
 						.on('click' + eventNamespace, selector.approve, module.event.approve)
 						.on('click' + eventNamespace, selector.deny, module.event.deny)
@@ -7976,39 +7966,37 @@
 					;
 				}
 			},
-
 			get: {
-				id: function() {
+				id: function(){
 					return (Math.random().toString(16) + '000000000').substr(2,8);
 				}
 			},
-
 			event: {
-				approve: function() {
-					if(ignoreRepeatedEvents || settings.onApprove.call(element, $(this)) === false) {
+				approve: function(){
+					if(ignoreRepeatedEvents || settings.onApprove.call(element, $(this)) === false){
 						module.verbose('Approve callback returned false cancelling hide');
 						return;
 					}
 					ignoreRepeatedEvents = true;
-					module.hide(function() {
+					module.hide(function(){
 						ignoreRepeatedEvents = false;
 					});
 				},
-				deny: function() {
-					if(ignoreRepeatedEvents || settings.onDeny.call(element, $(this)) === false) {
+				deny: function(){
+					if(ignoreRepeatedEvents || settings.onDeny.call(element, $(this)) === false){
 						module.verbose('Deny callback returned false cancelling hide');
 						return;
 					}
 					ignoreRepeatedEvents = true;
-					module.hide(function() {
+					module.hide(function(){
 						ignoreRepeatedEvents = false;
 					});
 				},
-				close: function() {
+				close: function(){
 					module.hide();
 				},
-				click: function(event) {
-					if(!settings.closable) {
+				click: function(event){
+					if(!settings.closable){
 						module.verbose('Dimmer clicked but closable setting is disabled');
 						return;
 					}
@@ -8017,10 +8005,10 @@
 						isInModal = ($target.closest(selector.modal).length > 0),
 						isInDOM   = $.contains(document.documentElement, event.target)
 					;
-					if(!isInModal && isInDOM && module.is.active()) {
+					if(!isInModal && isInDOM && module.is.active()){
 						module.debug('Dimmer clicked, hiding all modals');
 						module.remove.clickaway();
-						if(settings.allowMultiple) {
+						if(settings.allowMultiple){
 							module.hide();
 						}
 						else {
@@ -8028,17 +8016,17 @@
 						}
 					}
 				},
-				debounce: function(method, delay) {
+				debounce: function(method, delay){
 					clearTimeout(module.timer);
 					module.timer = setTimeout(method, delay);
 				},
-				keyboard: function(event) {
+				keyboard: function(event){
 					var
 						keyCode   = event.which,
 						escapeKey = 27
 					;
-					if(keyCode == escapeKey) {
-						if(settings.closable) {
+					if(keyCode == escapeKey){
+						if(settings.closable){
 							module.debug('Escape key pressed hiding modal');
 							module.hide();
 						}
@@ -8048,24 +8036,22 @@
 						event.preventDefault();
 					}
 				},
-				resize: function() {
-					if( $dimmable.dimmer('is active') && ( module.is.animating() || module.is.active() ) ) {
+				resize: function(){
+					if( ui(dimmable).dimmer('is active') && ( module.is.animating() || module.is.active() ) ){
 						requestAnimationFrame(module.refresh);
 					}
 				}
 			},
-
-			toggle: function() {
-				if( module.is.active() || module.is.animating() ) {
+			toggle: function(){
+				if( module.is.active() || module.is.animating() ){
 					module.hide();
 				}
 				else {
 					module.show();
 				}
 			},
-
-			show: function(callback) {
-				callback = $.isFunction(callback)
+			show: function(callback){
+				callback = typeof callback == "function"
 					? callback
 					: function(){}
 				;
@@ -8073,22 +8059,20 @@
 				module.set.dimmerSettings();
 				module.showModal(callback);
 			},
-
-			hide: function(callback) {
-				callback = $.isFunction(callback)
+			hide: function(callback){
+				callback = typeof callback == "function"
 					? callback
 					: function(){}
 				;
 				module.refreshModals();
 				module.hideModal(callback);
 			},
-
-			showModal: function(callback) {
-				callback = $.isFunction(callback)
+			showModal: function(callback){
+				callback = typeof callback == "function"
 					? callback
 					: function(){}
 				;
-				if( module.is.animating() || !module.is.active() ) {
+				if( module.is.animating() || !module.is.active() ){
 
 					module.showDimmer();
 					module.cacheSizes();
@@ -8096,31 +8080,31 @@
 					module.set.type();
 					module.set.clickaway();
 
-					if( !settings.allowMultiple && module.others.active() ) {
+					if( !settings.allowMultiple && module.others.active() ){
 						module.hideOthers(module.showModal);
 					}
 					else {
-						if(settings.allowMultiple && settings.detachable) {
-							$module.detach().appendTo($dimmer);
+						if(settings.allowMultiple && settings.detachable){
+							element.detach().appendTo($dimmer);
 						}
 						settings.onShow.call(element);
-						if(settings.transition && $.fn.transition !== undefined && $module.transition('is supported')) {
+						if(settings.transition && $.fn.transition !== undefined && element.transition('is supported')){
 							module.debug('Showing modal with css animations');
-							$module
+							element
 								.transition({
 									debug       : settings.debug,
 									animation   : settings.transition + ' in',
 									queue       : settings.queue,
 									duration    : settings.duration,
 									useFailSafe : true,
-									onComplete : function() {
+									onComplete : function(){
 										settings.onVisible.apply(element);
-										if(settings.keyboardShortcuts) {
+										if(settings.keyboardShortcuts){
 											module.add.keyboardShortcuts();
 										}
 										module.save.focus();
 										module.set.active();
-										if(settings.autofocus) {
+										if(settings.autofocus){
 											module.set.autofocus();
 										}
 										callback();
@@ -8137,37 +8121,36 @@
 					module.debug('Modal is already visible');
 				}
 			},
-
-			hideModal: function(callback, keepDimmed) {
-				callback = $.isFunction(callback)
+			hideModal: function(callback, keepDimmed){
+				callback = typeof callback == "function"
 					? callback
 					: function(){}
 				;
 				module.debug('Hiding modal');
-				if(settings.onHide.call(element, $(this)) === false) {
+				if(settings.onHide.call(element, $(this)) === false){
 					module.verbose('Hide callback returned false cancelling hide');
 					return;
 				}
 
-				if( module.is.animating() || module.is.active() ) {
-					if(settings.transition && $.fn.transition !== undefined && $module.transition('is supported')) {
+				if( module.is.animating() || module.is.active() ){
+					if(settings.transition && $.fn.transition !== undefined && element.transition('is supported')){
 						module.remove.active();
-						$module
+						element
 							.transition({
 								debug       : settings.debug,
 								animation   : settings.transition + ' out',
 								queue       : settings.queue,
 								duration    : settings.duration,
 								useFailSafe : true,
-								onStart     : function() {
-									if(!module.others.active() && !keepDimmed) {
+								onStart     : function(){
+									if(!module.others.active() && !keepDimmed){
 										module.hideDimmer();
 									}
-									if(settings.keyboardShortcuts) {
+									if(settings.keyboardShortcuts){
 										module.remove.keyboardShortcuts();
 									}
 								},
-								onComplete : function() {
+								onComplete : function(){
 									settings.onHidden.call(element);
 									module.restore.focus();
 									callback();
@@ -8180,9 +8163,8 @@
 					}
 				}
 			},
-
-			showDimmer: function() {
-				if($dimmable.dimmer('is animating') || !$dimmable.dimmer('is active') ) {
+			showDimmer: function(){
+				if(ui(dimmable).dimmer('is animating') || !ui(dimmable).dimmer('is active') ){
 					module.debug('Showing dimmer');
 					$dimmable.dimmer('show');
 				}
@@ -8190,10 +8172,9 @@
 					module.debug('Dimmer already visible');
 				}
 			},
-
-			hideDimmer: function() {
-				if( $dimmable.dimmer('is animating') || ($dimmable.dimmer('is active')) ) {
-					$dimmable.dimmer('hide', function() {
+			hideDimmer: function(){
+				if( ui(dimmable).dimmer('is animating') || (ui(dimmable).dimmer('is active')) ){
+					ui(dimmable).dimmer('hide', function(){
 						module.remove.clickaway();
 						module.remove.screenHeight();
 					});
@@ -8203,8 +8184,7 @@
 					return;
 				}
 			},
-
-			hideAll: function(callback) {
+			hideAll: function(callback){
 				var
 					$visibleModals = $allModals.filter('.' + className.active + ', .' + className.animating)
 				;
@@ -8212,7 +8192,7 @@
 					? callback
 					: function(){}
 				;
-				if( $visibleModals.length > 0 ) {
+				if( $visibleModals.length > 0 ){
 					module.debug('Hiding all visible modals');
 					module.hideDimmer();
 					$visibleModals
@@ -8220,8 +8200,7 @@
 					;
 				}
 			},
-
-			hideOthers: function(callback) {
+			hideOthers: function(callback){
 				var
 					$visibleModals = $otherModals.filter('.' + className.active + ', .' + className.animating)
 				;
@@ -8229,93 +8208,86 @@
 					? callback
 					: function(){}
 				;
-				if( $visibleModals.length > 0 ) {
+				if( $visibleModals.length > 0 ){
 					module.debug('Hiding other modals', $otherModals);
 					$visibleModals
 						.modal('hide modal', callback, true)
 					;
 				}
 			},
-
 			others: {
-				active: function() {
+				active: function(){
 					return ($otherModals.filter('.' + className.active).length > 0);
 				},
-				animating: function() {
+				animating: function(){
 					return ($otherModals.filter('.' + className.animating).length > 0);
 				}
 			},
-
-
 			add: {
-				keyboardShortcuts: function() {
+				keyboardShortcuts: function(){
 					module.verbose('Adding keyboard shortcuts');
 					$document
 						.on('keyup' + eventNamespace, module.event.keyboard)
 					;
 				}
 			},
-
 			save: {
-				focus: function() {
+				focus: function(){
 					var
 						$activeElement = $(document.activeElement),
-						inCurrentModal = $activeElement.closest($module).length > 0
+						inCurrentModal = $activeElement.closest(element).length > 0
 					;
-					if(!inCurrentModal) {
+					if(!inCurrentModal){
 						$focusedElement = $(document.activeElement).blur();
 					}
 				}
 			},
-
 			restore: {
-				focus: function() {
-					if($focusedElement && $focusedElement.length > 0) {
+				focus: function(){
+					if($focusedElement && $focusedElement.length > 0){
 						$focusedElement.focus();
 					}
 				}
 			},
-
 			remove: {
-				active: function() {
-					$module.classList.remove(className.active);
+				active: function(){
+					element.classList.remove(className.active);
 				},
-				clickaway: function() {
+				clickaway: function(){
 					$dimmer
 						.off('click' + elementEventNamespace)
 					;
 				},
-				bodyStyle: function() {
-					if($body.attr('style') === '') {
+				bodyStyle: function(){
+					if($body.attr('style') === ''){
 						module.verbose('Removing style attribute');
 						$body.removeAttr('style');
 					}
 				},
-				screenHeight: function() {
+				screenHeight: function(){
 					module.debug('Removing page height');
 					$body
 						.css('height', '')
 					;
 				},
-				keyboardShortcuts: function() {
+				keyboardShortcuts: function(){
 					module.verbose('Removing keyboard shortcuts');
 					$document
 						.off('keyup' + eventNamespace)
 					;
 				},
-				scrolling: function() {
-					$dimmable.classList.remove(className.scrolling);
-					$module.classList.remove(className.scrolling);
+				scrolling: function(){
+					dimmable.classList.remove(className.scrolling);
+					element.classList.remove(className.scrolling);
 				}
 			},
-
-			cacheSizes: function() {
-				$module.classList.add(className.loading);
+			cacheSizes: function(){
+				element.classList.add(className.loading);
 				var
-					scrollHeight = $module.prop('scrollHeight'),
-					modalHeight  = $module.outerHeight()
+					scrollHeight = element.prop('scrollHeight'),
+					modalHeight  = element.outerHeight()
 				;
-				if(module.cache === undefined || modalHeight !== 0) {
+				if(module.cache === undefined || modalHeight !== 0){
 					module.cache = {
 						pageHeight    : $(document).outerHeight(),
 						height        : modalHeight + settings.offset,
@@ -8326,12 +8298,11 @@
 					};
 					module.cache.topOffset = -(module.cache.height / 2);
 				}
-				$module.classList.remove(className.loading);
+				element.classList.remove(className.loading);
 				module.debug('Caching modal and container sizes', module.cache);
 			},
-
 			can: {
-				fit: function() {
+				fit: function(){
 					var
 						contextHeight  = module.cache.contextHeight,
 						verticalCenter = module.cache.contextHeight / 2,
@@ -8347,49 +8318,48 @@
 					;
 				}
 			},
-
 			is: {
-				active: function() {
-					return $module.classList.contains(className.active);
+				active: function(){
+					return element.classList.contains(className.active);
 				},
-				animating: function() {
-					return $module.transition('is supported')
-						? $module.transition('is animating')
-						: $module.is(':visible')
+				animating: function(){
+					return element.transition('is supported')
+						? element.transition('is animating')
+						: element.is(':visible')
 					;
 				},
-				scrolling: function() {
-					return $dimmable.classList.contains(className.scrolling);
+				scrolling: function(){
+					return dimmable.classList.contains(className.scrolling);
 				},
-				modernBrowser: function() {
+				modernBrowser: function(){
 					// appName for IE11 reports 'Netscape' can no longer use
 					return !(window.ActiveXObject || "ActiveXObject" in window);
 				}
 			},
-
 			set: {
-				autofocus: function() {
+				autofocus: function(){
 					var
-						$inputs    = $module.find('[tabindex], :input').filter(':visible'),
+						$inputs    = element.find('[tabindex], :input').filter(':visible'),
 						$autofocus = $inputs.filter('[autofocus]'),
 						$input     = ($autofocus.length > 0)
 							? $autofocus.first()
 							: $inputs.first()
 					;
-					if($input.length > 0) {
+					if($input.length > 0){
 						$input.focus();
 					}
 				},
-				clickaway: function() {
+				clickaway: function(){
 					$dimmer
 						.on('click' + elementEventNamespace, module.event.click)
 					;
 				},
-				dimmerSettings: function() {
-					if($.fn.dimmer === undefined) {
+				dimmerSettings: function(){
+					if(ui.dimmer === undefined){
 						module.error(error.dimmer);
 						return;
 					}
+
 					var
 						defaultSettings = {
 							debug      : settings.debug,
@@ -8404,28 +8374,28 @@
 								hide     : settings.duration
 							}
 						},
-						dimmerSettings = $.extend(true, defaultSettings, settings.dimmerSettings)
+						dimmerSettings = ui.extend(true, defaultSettings, settings.dimmerSettings)
 					;
-					if(settings.inverted) {
+					if(settings.inverted){
 						dimmerSettings.variation = (dimmerSettings.variation !== undefined)
 							? dimmerSettings.variation + ' inverted'
 							: 'inverted'
 						;
-						$dimmer.classList.add(className.inverted);
+						dimmer.classList.add(className.inverted);
 					}
 					else {
-						$dimmer.classList.remove(className.inverted);
+						dimmer.classList.remove(className.inverted);
 					}
-					if(settings.blurring) {
-						$dimmable.classList.add(className.blurring);
+					if(settings.blurring){
+						dimmable.classList.add(className.blurring);
 					}
 					else {
-						$dimmable.classList.remove(className.blurring);
+						dimmable.classList.remove(className.blurring);
 					}
-					$context.dimmer('setting', dimmerSettings);
+					ui(context).dimmer('setting', dimmerSettings);
 				},
-				screenHeight: function() {
-					if( module.can.fit() ) {
+				screenHeight: function(){
+					if( module.can.fit() ){
 						$body.css('height', '');
 					}
 					else {
@@ -8435,17 +8405,17 @@
 						;
 					}
 				},
-				active: function() {
-					$module.classList.add(className.active);
+				active: function(){
+					element.classList.add(className.active);
 				},
-				scrolling: function() {
+				scrolling: function(){
 					$dimmable.classList.add(className.scrolling);
-					$module.classList.add(className.scrolling);
+					element.classList.add(className.scrolling);
 				},
-				type: function() {
-					if(module.can.fit()) {
+				type: function(){
+					if(module.can.fit()){
 						module.verbose('Modal fits on screen');
-						if(!module.others.active() && !module.others.animating()) {
+						if(!module.others.active() && !module.others.animating()){
 							module.remove.scrolling();
 						}
 					}
@@ -8454,13 +8424,11 @@
 						module.set.scrolling();
 					}
 				},
-				undetached: function() {
-					$dimmable.classList.add(className.undetached);
+				undetached: function(){
+					dimmable.classList.add(className.undetached);
 				}
 			}
-		};*/
-
-		module = {};
+		};
 		
 		return module;
 	};
@@ -12226,41 +12194,36 @@
 			nextSide,
 			module;
 
-		/*module = {
-
-			initialize: function() {
+		module = {
+			initialize: function(){
 				module.verbose('Initializing module for', element);
 				module.set.defaultSide();
-				module.instantiate();
 			},
-
-			refresh: function() {
+			refresh: function(){
 				module.verbose('Refreshing selector cache for', element);
 				$module = $(element);
 				$sides  = $(this).find(selector.shape);
 				$side   = $(this).find(selector.side);
 			},
-
-			repaint: function() {
+			repaint: function(){
 				module.verbose('Forcing repaint event');
 				var
 					shape          = $sides[0] || document.createElement('div'),
 					fakeAssignment = shape.offsetWidth
 				;
 			},
-
-			animate: function(propertyObject, callback) {
+			animate: function(propertyObject, callback){
 				module.verbose('Animating box with properties', propertyObject);
-				callback = callback || function(event) {
+				callback = callback || function(event){
 					module.verbose('Executing animation callback');
-					if(event !== undefined) {
+					if(event !== undefined){
 						event.stopPropagation();
 					}
 					module.reset();
 					module.set.active();
 				};
 				settings.beforeChange.call($nextSide[0]);
-				if(module.get.transitionEvent()) {
+				if(module.get.transitionEvent()){
 					module.verbose('Starting CSS animation');
 					$module
 						.classList.add(className.animating)
@@ -12270,7 +12233,7 @@
 						.one(module.get.transitionEvent(), callback)
 					;
 					module.set.duration(settings.duration);
-					requestAnimationFrame(function() {
+					requestAnimationFrame(function(){
 						$module
 							.classList.add(className.animating)
 						;
@@ -12283,11 +12246,10 @@
 					callback();
 				}
 			},
-
-			queue: function(method) {
+			queue: function(method){
 				module.debug('Queueing animation of', method);
 				$sides
-					.one(module.get.transitionEvent(), function() {
+					.one(module.get.transitionEvent(), function(){
 						module.debug('Executing queued animation');
 						setTimeout(function(){
 							$module.shape(method);
@@ -12296,7 +12258,7 @@
 				;
 			},
 
-			reset: function() {
+			reset: function(){
 				module.verbose('Animating states reset');
 				$module
 					.classList.remove(className.animating)
@@ -12321,17 +12283,17 @@
 			},
 
 			is: {
-				complete: function() {
+				complete: function(){
 					return ($side.filter('.' + className.active)[0] == $nextSide[0]);
 				},
-				animating: function() {
+				animating: function(){
 					return $module.classList.contains(className.animating);
 				}
 			},
 
 			set: {
 
-				defaultSide: function() {
+				defaultSide: function(){
 					$activeSide = $module.find('.' + settings.className.active);
 					$nextSide   = ( $activeSide.next(selector.side).length > 0 )
 						? $activeSide.next(selector.side)
@@ -12342,14 +12304,14 @@
 					module.verbose('Next side set to', $nextSide);
 				},
 
-				duration: function(duration) {
+				duration: function(duration){
 					duration = duration || settings.duration;
 					duration = (typeof duration == 'number')
 						? duration + 'ms'
 						: duration
 					;
 					module.verbose('Setting animation duration', duration);
-					if(settings.duration || settings.duration === 0) {
+					if(settings.duration || settings.duration === 0){
 						$sides.add($side)
 							.css({
 								'-webkit-transition-duration': duration,
@@ -12362,7 +12324,7 @@
 					}
 				},
 
-				currentStageSize: function() {
+				currentStageSize: function(){
 					var
 						$activeSide = $module.find('.' + settings.className.active),
 						width       = $activeSide.outerWidth(true),
@@ -12376,7 +12338,7 @@
 					;
 				},
 
-				stageSize: function() {
+				stageSize: function(){
 					var
 						$clone      = $module.clone().classList.add(className.loading),
 						$activeSide = $clone.find('.' + settings.className.active),
@@ -12400,28 +12362,28 @@
 					$nextSide.classList.add(className.active);
 					$clone.insertAfter($module);
 					$clone.remove();
-					if(settings.width != 'auto') {
+					if(settings.width != 'auto'){
 						$module.css('width', newWidth + settings.jitter);
 						module.verbose('Specifying width during animation', newWidth);
 					}
-					if(settings.height != 'auto') {
+					if(settings.height != 'auto'){
 						$module.css('height', newHeight + settings.jitter);
 						module.verbose('Specifying height during animation', newHeight);
 					}
 				},
 
-				nextSide: function(selector) {
+				nextSide: function(selector){
 					nextIndex = selector;
 					$nextSide = $side.filter(selector);
 					nextIndex = $side.index($nextSide);
-					if($nextSide.length === 0) {
+					if($nextSide.length === 0){
 						module.set.defaultSide();
 						module.error(error.side);
 					}
 					module.verbose('Next side manually set to', $nextSide);
 				},
 
-				active: function() {
+				active: function(){
 					module.verbose('Setting new side to active', $nextSide);
 					$side
 						.classList.remove(className.active)
@@ -12433,15 +12395,13 @@
 					module.set.defaultSide();
 				}
 			},
-
 			flip: {
-
-				up: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				up: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping up', $nextSide);
 						var
 							transform = module.get.transform.up()
@@ -12454,13 +12414,12 @@
 						module.queue('flip up');
 					}
 				},
-
-				down: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				down: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping down', $nextSide);
 						var
 							transform = module.get.transform.down()
@@ -12473,13 +12432,12 @@
 						module.queue('flip down');
 					}
 				},
-
-				left: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				left: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping left', $nextSide);
 						var
 							transform = module.get.transform.left()
@@ -12492,13 +12450,12 @@
 						module.queue('flip left');
 					}
 				},
-
-				right: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				right: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping right', $nextSide);
 						var
 							transform = module.get.transform.right()
@@ -12511,13 +12468,12 @@
 						module.queue('flip right');
 					}
 				},
-
-				over: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				over: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping over', $nextSide);
 						module.set.stageSize();
 						module.stage.behind();
@@ -12527,13 +12483,12 @@
 						module.queue('flip over');
 					}
 				},
-
-				back: function() {
-					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+				back: function(){
+					if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 						module.debug('Side already visible', $nextSide);
 						return;
 					}
-					if( !module.is.animating()) {
+					if( !module.is.animating()){
 						module.debug('Flipping back', $nextSide);
 						module.set.stageSize();
 						module.stage.behind();
@@ -12543,13 +12498,10 @@
 						module.queue('flip back');
 					}
 				}
-
 			},
-
 			get: {
-
 				transform: {
-					up: function() {
+					up: function(){
 						var
 							translate = {
 								y: -(($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -12561,7 +12513,7 @@
 						};
 					},
 
-					down: function() {
+					down: function(){
 						var
 							translate = {
 								y: -(($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -12573,7 +12525,7 @@
 						};
 					},
 
-					left: function() {
+					left: function(){
 						var
 							translate = {
 								x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2),
@@ -12585,7 +12537,7 @@
 						};
 					},
 
-					right: function() {
+					right: function(){
 						var
 							translate = {
 								x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2),
@@ -12597,7 +12549,7 @@
 						};
 					},
 
-					over: function() {
+					over: function(){
 						var
 							translate = {
 								x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2)
@@ -12608,7 +12560,7 @@
 						};
 					},
 
-					back: function() {
+					back: function(){
 						var
 							translate = {
 								x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2)
@@ -12620,7 +12572,7 @@
 					}
 				},
 
-				transitionEvent: function() {
+				transitionEvent: function(){
 					var
 						element     = document.createElement('element'),
 						transitions = {
@@ -12638,7 +12590,7 @@
 					}
 				},
 
-				nextSide: function() {
+				nextSide: function(){
 					return ( $activeSide.next(selector.side).length > 0 )
 						? $activeSide.next(selector.side)
 						: $module.find(selector.side).first()
@@ -12649,7 +12601,7 @@
 
 			stage: {
 
-				above: function() {
+				above: function(){
 					var
 						box = {
 							origin : (($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -12679,7 +12631,7 @@
 					;
 				},
 
-				below: function() {
+				below: function(){
 					var
 						box = {
 							origin : (($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -12709,7 +12661,7 @@
 					;
 				},
 
-				left: function() {
+				left: function(){
 					var
 						height = {
 							active : $activeSide.outerWidth(true),
@@ -12743,7 +12695,7 @@
 					;
 				},
 
-				right: function() {
+				right: function(){
 					var
 						height = {
 							active : $activeSide.outerWidth(true),
@@ -12777,7 +12729,7 @@
 					;
 				},
 
-				behind: function() {
+				behind: function(){
 					var
 						height = {
 							active : $activeSide.outerWidth(true),
@@ -12806,9 +12758,7 @@
 					;
 				}
 			}
-		};*/
-
-		module = {};
+		};
 		
 		return module;
 	};
@@ -12824,8 +12774,8 @@
 		height: 'initial',
 		allowRepeats: false,
 		duration: false,
-		beforeChange: function() {},
-		onChange: function() {},
+		beforeChange: function(){},
+		onChange: function(){},
 		selector: {
 			sides: '.sides',
 			side: '.side'
@@ -13650,50 +13600,45 @@
 				|| window.mozRequestAnimationFrame
 				|| window.webkitRequestAnimationFrame
 				|| window.msRequestAnimationFrame
-				|| function(callback) { setTimeout(callback, 0); },
+				|| function(callback){ setTimeout(callback, 0); },
 			documentObserver,
 			observer,
 			module;
 		
-		/*module = {
-
-			initialize: function() {
-
+		module = {
+			initialize: function(){
 				module.determineContainer();
 				module.determineContext();
-				module.verbose('Initializing sticky', settings, $container);
+				module.verbose('Initializing sticky', settings, container);
 
 				module.save.positions();
 				module.checkErrors();
 				module.bind.events();
 
-				if(settings.observeChanges) {
+				if(settings.observeChanges){
 					module.observeChanges();
 				}
-				module.instantiate();
 			},
-
-			destroy: function() {
+			destroy: function(){
 				module.verbose('Destroying previous instance');
 				module.reset();
-				if(documentObserver) {
+				if(documentObserver){
 					documentObserver.disconnect();
 				}
-				if(observer) {
+				if(observer){
 					observer.disconnect();
 				}
-				$window
-					.off('load' + eventNamespace, module.event.load)
-					.off('resize' + eventNamespace, module.event.resize)
-				;
-				$scroll
-					.off('scrollchange' + eventNamespace, module.event.scrollchange)
-				;
-				$module.removeData(moduleNamespace);
+				//$window
+				//	.off('load' + eventNamespace, module.event.load)
+				//	.off('resize' + eventNamespace, module.event.resize)
+				
+				//$scroll
+				//	.off('scrollchange' + eventNamespace, module.event.scrollchange)
+				
+				//$module.removeData(moduleNamespace);
 			},
-
-			observeChanges: function() {
-				if('MutationObserver' in window) {
+			observeChanges: function(){
+				if('MutationObserver' in window){
 					documentObserver = new MutationObserver(module.event.documentChanged);
 					observer         = new MutationObserver(module.event.changed);
 					documentObserver.observe(document, {
@@ -13711,42 +13656,38 @@
 					module.debug('Setting up mutation observer', observer);
 				}
 			},
-
-			determineContainer: function() {
-				if(settings.container) {
-					$container = $(settings.container);
+			determineContainer: function(){
+				if(settings.container){
+					container = document.querySelector(settings.container);
 				}
 				else {
-					$container = $module.offsetParent();
+					container = element.offsetParent;
 				}
 			},
-
-			determineContext: function() {
-				if(settings.context) {
-					$context = $(settings.context);
+			determineContext: function(){
+				if(settings.context){
+					context = document.querySelectorAll(settings.context);
 				}
 				else {
-					$context = $container;
+					context = container;
 				}
-				if($context.length === 0) {
-					module.error(error.invalidContext, settings.context, $module);
+				if(context.length === 0){
+					module.error(error.invalidContext, settings.context, module);
 					return;
 				}
 			},
-
-			checkErrors: function() {
-				if( module.is.hidden() ) {
-					module.error(error.visible, $module);
+			checkErrors: function(){
+				if( module.is.hidden() ){
+					module.error(error.visible, module);
 				}
-				if(module.cache.element.height > module.cache.context.height) {
+				if(module.cache.element.height > module.cache.context.height){
 					module.reset();
-					module.error(error.elementSize, $module);
+					module.error(error.elementSize, module);
 					return;
 				}
 			},
-
 			bind: {
-				events: function() {
+				events: function(){
 					$window
 						.on('load' + eventNamespace, module.event.load)
 						.on('resize' + eventNamespace, module.event.resize)
@@ -13759,20 +13700,19 @@
 					;
 				}
 			},
-
 			event: {
-				changed: function(mutations) {
+				changed: function(mutations){
 					clearTimeout(module.timer);
-					module.timer = setTimeout(function() {
+					module.timer = setTimeout(function(){
 						module.verbose('DOM tree modified, updating sticky menu', mutations);
 						module.refresh();
 					}, 100);
 				},
-				documentChanged: function(mutations) {
-					[].forEach.call(mutations, function(mutation) {
-						if(mutation.removedNodes) {
-							[].forEach.call(mutation.removedNodes, function(node) {
-								if(node == element || $(node).find(element).length > 0) {
+				documentChanged: function(mutations){
+					[].forEach.call(mutations, function(mutation){
+						if(mutation.removedNodes){
+							[].forEach.call(mutation.removedNodes, function(node){
+								if(node == element || $(node).find(element).length > 0){
 									module.debug('Element removed from DOM, tearing down events');
 									module.destroy();
 								}
@@ -13780,40 +13720,38 @@
 						}
 					});
 				},
-				load: function() {
+				load: function(){
 					module.verbose('Page contents finished loading');
 					requestAnimationFrame(module.refresh);
 				},
-				resize: function() {
+				resize: function(){
 					module.verbose('Window resized');
 					requestAnimationFrame(module.refresh);
 				},
-				scroll: function() {
-					requestAnimationFrame(function() {
+				scroll: function(){
+					requestAnimationFrame(function(){
 						$scroll.triggerHandler('scrollchange' + eventNamespace, $scroll.scrollTop() );
 					});
 				},
-				scrollchange: function(event, scrollPosition) {
+				scrollchange: function(event, scrollPosition){
 					module.stick(scrollPosition);
 					settings.onScroll.call(element);
 				}
 			},
-
-			refresh: function(hardRefresh) {
+			refresh: function(hardRefresh){
 				module.reset();
-				if(!settings.context) {
+				if(!settings.context){
 					module.determineContext();
 				}
-				if(hardRefresh) {
+				if(hardRefresh){
 					module.determineContainer();
 				}
 				module.save.positions();
 				module.stick();
 				settings.onReposition.call(element);
 			},
-
 			supports: {
-				sticky: function() {
+				sticky: function(){
 					var
 						$element = $('<div/>'),
 						element = $element[0]
@@ -13822,15 +13760,14 @@
 					return($element.css('position').match('sticky'));
 				}
 			},
-
 			save: {
-				lastScroll: function(scroll) {
+				lastScroll: function(scroll){
 					module.lastScroll = scroll;
 				},
-				elementScroll: function(scroll) {
+				elementScroll: function(scroll){
 					module.elementScroll = scroll;
 				},
-				positions: function() {
+				positions: function(){
 					var
 						scrollContext = {
 							height : $scroll.height()
@@ -13852,7 +13789,7 @@
 							height: $container.outerHeight()
 						}
 					;
-					if( !module.is.standardScroll() ) {
+					if( !module.is.standardScroll() ){
 						module.debug('Non-standard scroll. Removing scroll offset from element offset');
 
 						scrollContext.top  = $scroll.scrollTop();
@@ -13889,32 +13826,31 @@
 					module.debug('Caching element positions', module.cache);
 				}
 			},
-
 			get: {
-				direction: function(scroll) {
+				direction: function(scroll){
 					var
 						direction = 'down'
 					;
 					scroll = scroll || $scroll.scrollTop();
-					if(module.lastScroll !== undefined) {
-						if(module.lastScroll < scroll) {
+					if(module.lastScroll !== undefined){
+						if(module.lastScroll < scroll){
 							direction = 'down';
 						}
-						else if(module.lastScroll > scroll) {
+						else if(module.lastScroll > scroll){
 							direction = 'up';
 						}
 					}
 					return direction;
 				},
-				scrollChange: function(scroll) {
+				scrollChange: function(scroll){
 					scroll = scroll || $scroll.scrollTop();
 					return (module.lastScroll)
 						? (scroll - module.lastScroll)
 						: 0
 					;
 				},
-				currentElementScroll: function() {
-					if(module.elementScroll) {
+				currentElementScroll: function(){
+					if(module.elementScroll){
 						return module.elementScroll;
 					}
 					return ( module.is.top() )
@@ -13923,7 +13859,7 @@
 					;
 				},
 
-				elementScroll: function(scroll) {
+				elementScroll: function(scroll){
 					scroll = scroll || $scroll.scrollTop();
 					var
 						element        = module.cache.element,
@@ -13933,10 +13869,10 @@
 						elementScroll  = module.get.currentElementScroll(),
 						possibleScroll = (elementScroll + delta)
 					;
-					if(module.cache.fits || possibleScroll < 0) {
+					if(module.cache.fits || possibleScroll < 0){
 						elementScroll = 0;
 					}
-					else if(possibleScroll > maxScroll ) {
+					else if(possibleScroll > maxScroll ){
 						elementScroll = maxScroll;
 					}
 					else {
@@ -13947,40 +13883,40 @@
 			},
 
 			remove: {
-				lastScroll: function() {
+				lastScroll: function(){
 					delete module.lastScroll;
 				},
-				elementScroll: function(scroll) {
+				elementScroll: function(scroll){
 					delete module.elementScroll;
 				},
-				minimumSize: function() {
+				minimumSize: function(){
 					$container
 						.css('min-height', '')
 					;
 				},
-				offset: function() {
+				offset: function(){
 					$module.css('margin-top', '');
 				}
 			},
 
 			set: {
-				offset: function() {
+				offset: function(){
 					module.verbose('Setting offset on element', settings.offset);
 					$module
 						.css('margin-top', settings.offset)
 					;
 				},
-				containerSize: function() {
+				containerSize: function(){
 					var
 						tagName = $container.get(0).tagName
 					;
-					if(tagName === 'HTML' || tagName == 'body') {
+					if(tagName === 'HTML' || tagName == 'body'){
 						// this can trigger for too many reasons
 						//module.error(error.container, tagName, $module);
 						module.determineContainer();
 					}
 					else {
-						if( Math.abs($container.outerHeight() - module.cache.context.height) > settings.jitter) {
+						if( Math.abs($container.outerHeight() - module.cache.context.height) > settings.jitter){
 							module.debug('Context has padding, specifying exact height for container', module.cache.context.height);
 							$container.css({
 								height: module.cache.context.height
@@ -13988,7 +13924,7 @@
 						}
 					}
 				},
-				minimumSize: function() {
+				minimumSize: function(){
 					var
 						element   = module.cache.element
 					;
@@ -13996,57 +13932,55 @@
 						.css('min-height', element.height)
 					;
 				},
-				scroll: function(scroll) {
+				scroll: function(scroll){
 					module.debug('Setting scroll on element', scroll);
-					if(module.elementScroll == scroll) {
+					if(module.elementScroll == scroll){
 						return;
 					}
-					if( module.is.top() ) {
+					if( module.is.top() ){
 						$module
 							.css('bottom', '')
 							.css('top', -scroll)
 						;
 					}
-					if( module.is.bottom() ) {
+					if( module.is.bottom() ){
 						$module
 							.css('top', '')
 							.css('bottom', scroll)
 						;
 					}
 				},
-				size: function() {
-					if(module.cache.element.height !== 0 && module.cache.element.width !== 0) {
+				size: function(){
+					if(module.cache.element.height !== 0 && module.cache.element.width !== 0){
 						element.style.setProperty('width',  module.cache.element.width  + 'px', 'important');
 						element.style.setProperty('height', module.cache.element.height + 'px', 'important');
 					}
 				}
 			},
-
 			is: {
-				standardScroll: function() {
-					return ($scroll[0] == window);
+				standardScroll: function(){
+					return (scroll[0] == window);
 				},
-				top: function() {
-					return $module.classList.contains(className.top);
+				top: function(){
+					return element.classList.contains(className.top);
 				},
-				bottom: function() {
-					return $module.classList.contains(className.bottom);
+				bottom: function(){
+					return element.classList.contains(className.bottom);
 				},
-				initialPosition: function() {
+				initialPosition: function(){
 					return (!module.is.fixed() && !module.is.bound());
 				},
-				hidden: function() {
-					return (!$module.is(':visible'));
+				hidden: function(){
+					return (!ui.isVisible(element));
 				},
-				bound: function() {
-					return $module.classList.contains(className.bound);
+				bound: function(){
+					return element.classList.contains(className.bound);
 				},
-				fixed: function() {
-					return $module.classList.contains(className.fixed);
+				fixed: function(){
+					return element.classList.contains(className.fixed);
 				}
 			},
-
-			stick: function(scroll) {
+			stick: function(scroll){
 				var
 					cachedPosition = scroll || $scroll.scrollTop(),
 					cache          = module.cache,
@@ -14071,15 +14005,15 @@
 					doesntFit      = !fits,
 					elementVisible = (element.height !== 0)
 				;
-				if(elementVisible && !sameHeight) {
+				if(elementVisible && !sameHeight){
 
-					if( module.is.initialPosition() ) {
-						if(scroll.top >= context.bottom) {
+					if( module.is.initialPosition() ){
+						if(scroll.top >= context.bottom){
 							module.debug('Initial element position is bottom of container');
 							module.bindBottom();
 						}
-						else if(scroll.top > element.top) {
-							if( (element.height + scroll.top - elementScroll) >= context.bottom ) {
+						else if(scroll.top > element.top){
+							if( (element.height + scroll.top - elementScroll) >= context.bottom ){
 								module.debug('Initial element position is bottom of container');
 								module.bindBottom();
 							}
@@ -14090,20 +14024,20 @@
 						}
 
 					}
-					else if( module.is.fixed() ) {
+					else if( module.is.fixed() ){
 
 						// currently fixed top
-						if( module.is.top() ) {
-							if( scroll.top <= element.top ) {
+						if( module.is.top() ){
+							if( scroll.top <= element.top ){
 								module.debug('Fixed element reached top of container');
 								module.setInitialPosition();
 							}
-							else if( (element.height + scroll.top - elementScroll) >= context.bottom ) {
+							else if( (element.height + scroll.top - elementScroll) >= context.bottom ){
 								module.debug('Fixed element reached bottom of container');
 								module.bindBottom();
 							}
 							// scroll element if larger than screen
-							else if(doesntFit) {
+							else if(doesntFit){
 								module.set.scroll(elementScroll);
 								module.save.lastScroll(scroll.top);
 								module.save.elementScroll(elementScroll);
@@ -14111,20 +14045,20 @@
 						}
 
 						// currently fixed bottom
-						else if(module.is.bottom() ) {
+						else if(module.is.bottom() ){
 
 							// top edge
-							if( (scroll.bottom - element.height) <= element.top) {
+							if( (scroll.bottom - element.height) <= element.top){
 								module.debug('Bottom fixed rail has reached top of container');
 								module.setInitialPosition();
 							}
 							// bottom edge
-							else if(scroll.bottom >= context.bottom) {
+							else if(scroll.bottom >= context.bottom){
 								module.debug('Bottom fixed rail has reached bottom of container');
 								module.bindBottom();
 							}
 							// scroll element if larger than screen
-							else if(doesntFit) {
+							else if(doesntFit){
 								module.set.scroll(elementScroll);
 								module.save.lastScroll(scroll.top);
 								module.save.elementScroll(elementScroll);
@@ -14132,20 +14066,20 @@
 
 						}
 					}
-					else if( module.is.bottom() ) {
-						if( scroll.top <= element.top ) {
+					else if( module.is.bottom() ){
+						if( scroll.top <= element.top ){
 							module.debug('Jumped from bottom fixed to top fixed, most likely used home/end button');
 							module.setInitialPosition();
 						}
 						else {
-							if(settings.pushing) {
-								if(module.is.bound() && scroll.bottom <= context.bottom ) {
+							if(settings.pushing){
+								if(module.is.bound() && scroll.bottom <= context.bottom ){
 									module.debug('Fixing bottom attached element to bottom of browser.');
 									module.fixBottom();
 								}
 							}
 							else {
-								if(module.is.bound() && (scroll.top <= context.bottom - element.height) ) {
+								if(module.is.bound() && (scroll.top <= context.bottom - element.height) ){
 									module.debug('Fixing bottom attached element to top of browser.');
 									module.fixTop();
 								}
@@ -14154,8 +14088,7 @@
 					}
 				}
 			},
-
-			bindTop: function() {
+			bindTop: function(){
 				module.debug('Binding element to top of parent container');
 				module.remove.offset();
 				$module
@@ -14172,7 +14105,7 @@
 				settings.onTop.call(element);
 				settings.onUnstick.call(element);
 			},
-			bindBottom: function() {
+			bindBottom: function(){
 				module.debug('Binding element to bottom of parent container');
 				module.remove.offset();
 				$module
@@ -14188,17 +14121,14 @@
 				settings.onBottom.call(element);
 				settings.onUnstick.call(element);
 			},
-
-			setInitialPosition: function() {
+			setInitialPosition: function(){
 				module.debug('Returning to initial position');
 				module.unfix();
 				module.unbind();
 			},
-
-
-			fixTop: function() {
+			fixTop: function(){
 				module.debug('Fixing element to top of page');
-				if(settings.setSize) {
+				if(settings.setSize){
 					module.set.size();
 				}
 				module.set.minimumSize();
@@ -14217,9 +14147,9 @@
 				settings.onStick.call(element);
 			},
 
-			fixBottom: function() {
+			fixBottom: function(){
 				module.debug('Sticking element to bottom of page');
-				if(settings.setSize) {
+				if(settings.setSize){
 					module.set.size();
 				}
 				module.set.minimumSize();
@@ -14237,34 +14167,29 @@
 				;
 				settings.onStick.call(element);
 			},
-
-			unbind: function() {
-				if( module.is.bound() ) {
+			unbind: function(){
+				if( module.is.bound() ){
 					module.debug('Removing container bound position on element');
 					module.remove.offset();
-					$module
-						.classList.remove(className.bound)
-						.classList.remove(className.top)
-						.classList.remove(className.bottom)
-					;
+
+					element.classList.remove(className.bound);
+					element.classList.remove(className.top);
+					element.classList.remove(className.bottom);
 				}
 			},
-
-			unfix: function() {
-				if( module.is.fixed() ) {
+			unfix: function(){
+				if( module.is.fixed() ){
 					module.debug('Removing fixed position on element');
 					module.remove.minimumSize();
 					module.remove.offset();
-					$module
-						.classList.remove(className.fixed)
-						.classList.remove(className.top)
-						.classList.remove(className.bottom)
-					;
+					element.classList.remove(className.fixed);
+					element.classList.remove(className.top);
+					element.classList.remove(className.bottom);
+					
 					settings.onUnstick.call(element);
 				}
 			},
-
-			reset: function() {
+			reset: function(){
 				module.debug('Resetting elements position');
 				module.unbind();
 				module.unfix();
@@ -14272,8 +14197,7 @@
 				module.remove.offset();
 				module.remove.lastScroll();
 			},
-
-			resetCSS: function() {
+			resetCSS: function(){
 				$module
 					.css({
 						width  : '',
@@ -14286,9 +14210,7 @@
 					})
 				;
 			}
-		};*/
-
-		module = {};
+		};
 
 		return module;
 	};
@@ -15083,9 +15005,8 @@
 			animationName,
 			module;
 
-		/*module = {
-
-			initialize: function() {
+		module = {
+			initialize: function(){
 
 				// get full settings
 				settings        = module.get.settings.apply(element, moduleArguments);
@@ -15098,19 +15019,18 @@
 				// define namespace
 				eventNamespace  = '.' + settings.namespace;
 				moduleNamespace = 'module-' + settings.namespace;
-				instance        = $module.data(moduleNamespace) || module;
 
 				// get vendor specific events
 				animationEnd    = module.get.animationEndEvent();
 
-				if(methodInvoked) {
+				if(methodInvoked){
 					methodInvoked = module.invoke(query);
 				}
 
 				// method not invoked, lets run an animation
-				if(methodInvoked === false) {
+				if(methodInvoked === false){
 					module.verbose('Converted arguments into settings object', settings);
-					if(settings.interval) {
+					if(settings.interval){
 						module.delay(settings.animate);
 					}
 					else  {
@@ -15119,47 +15039,35 @@
 					module.instantiate();
 				}
 			},
-
-			destroy: function() {
-				module.verbose('Destroying previous module for', element);
-				$module
-					.removeData(moduleNamespace)
-				;
-			},
-
-			refresh: function() {
+			refresh: function(){
 				module.verbose('Refreshing display type on next animation');
 				delete module.displayType;
 			},
-
-			forceRepaint: function() {
+			forceRepaint: function(){
 				module.verbose('Forcing element repaint');
-				var
-					$parentElement = $module.parent(),
-					$nextElement = $module.next()
-				;
-				if($nextElement.length === 0) {
-					$module.detach().appendTo($parentElement);
+				var parentElement = element.parentElement,
+					nextElement = element.nextElementSibling;
+				
+				element.remove();
+				
+				if(nextElement.length){
+					parentElement.append(element);
 				}
 				else {
-					$module.detach().insertBefore($nextElement);
+					nextElement.before(element);
 				}
 			},
-
-			repaint: function() {
+			repaint: function(){
 				module.verbose('Repainting element');
-				var
-					fakeAssignment = element.offsetWidth
-				;
+				var fakeAssignment = element.offsetWidth;
 			},
-
-			delay: function(interval) {
+			delay: function(interval){
 				var
 					direction = module.get.animationDirection(),
 					shouldReverse,
 					delay
 				;
-				if(!direction) {
+				if(!direction){
 					direction = module.can.transition()
 						? module.get.direction()
 						: 'static'
@@ -15171,23 +15079,22 @@
 				;
 				shouldReverse = (settings.reverse == 'auto' && direction == className.outward);
 				delay = (shouldReverse || settings.reverse == true)
-					? ($allModules.length - index) * settings.interval
+					? (allModules.length - index) * settings.interval
 					: index * settings.interval
 				;
 				module.debug('Delaying animation by', delay);
 				setTimeout(module.animate, delay);
 			},
-
-			animate: function(overrideSettings) {
+			animate: function(overrideSettings){
 				settings = overrideSettings || settings;
-				if(!module.is.supported()) {
+				if(!module.is.supported()){
 					module.error(error.support);
 					return false;
 				}
 				module.debug('Preparing animation', settings.animation);
-				if(module.is.animating()) {
-					if(settings.queue) {
-						if(!settings.allowRepeats && module.has.direction() && module.is.occurring() && module.queuing !== true) {
+				if(module.is.animating()){
+					if(settings.queue){
+						if(!settings.allowRepeats && module.has.direction() && module.is.occurring() && module.queuing !== true){
 							module.debug('Animation is currently occurring, preventing queueing same animation', settings.animation);
 						}
 						else {
@@ -15195,7 +15102,7 @@
 						}
 						return false;
 					}
-					else if(!settings.allowRepeats && module.is.occurring()) {
+					else if(!settings.allowRepeats && module.is.occurring()){
 						module.debug('Animation is already occurring, will not execute repeated animation', settings.animation);
 						return false;
 					}
@@ -15204,44 +15111,41 @@
 						instance.complete();
 					}
 				}
-				if( module.can.animate() ) {
+				if( module.can.animate() ){
 					module.set.animating(settings.animation);
 				}
 				else {
 					module.error(error.noAnimation, settings.animation, element);
 				}
 			},
-
-			reset: function() {
+			reset: function(){
 				module.debug('Resetting animation to beginning conditions');
 				module.remove.animationCallbacks();
 				module.restore.conditions();
 				module.remove.animating();
 			},
-
-			queue: function(animation) {
+			queue: function(animation){
 				module.debug('Queueing animation of', animation);
 				module.queuing = true;
-				$module
-					.one(animationEnd + '.queue' + eventNamespace, function() {
-						module.queuing = false;
-						module.repaint();
-						module.animate.apply(this, settings);
-					})
-				;
+				
+				element.addEventListener(animationEnd, function(event){
+				    module.queuing = false;
+					module.repaint();
+					module.animate.apply(this, settings);
+				    event.target.removeEventListener(event.type, arguments.callee);
+				});
 			},
-
-			complete: function (event) {
+			complete: function (event){
 				module.debug('Animation complete', settings.animation);
 				module.remove.completeCallback();
 				module.remove.failSafe();
-				if(!module.is.looping()) {
-					if( module.is.outward() ) {
+				if(!module.is.looping()){
+					if( module.is.outward() ){
 						module.verbose('Animation is outward, hiding element');
 						module.restore.conditions();
 						module.hide();
 					}
-					else if( module.is.inward() ) {
+					else if( module.is.inward() ){
 						module.verbose('Animation is outward, showing element');
 						module.restore.conditions();
 						module.show();
@@ -15253,77 +15157,64 @@
 					}
 				}
 			},
-
 			force: {
-				visible: function() {
-					var
-						style          = $module.attr('style'),
+				visible: function(){
+					var style          = element.getAttribute('style'),
 						userStyle      = module.get.userStyle(),
 						displayType    = module.get.displayType(),
 						overrideStyle  = userStyle + 'display: ' + displayType + ' !important;',
-						currentDisplay = $module.css('display'),
-						emptyStyle     = (style === undefined || style === '')
-					;
-					if(currentDisplay !== displayType) {
+						currentDisplay = element.style.display,
+						emptyStyle     = (style === undefined || style === '');
+
+					if(currentDisplay !== displayType){
 						module.verbose('Overriding default display to show element', displayType);
-						$module
-							.attr('style', overrideStyle)
-						;
-					}
-					else if(emptyStyle) {
-						$module.removeAttr('style');
+						element.setAttribute('style', overrideStyle);
+					} else if(emptyStyle){
+						element.removeAttribute('style');
 					}
 				},
-				hidden: function() {
-					var
-						style          = $module.attr('style'),
-						currentDisplay = $module.css('display'),
-						emptyStyle     = (style === undefined || style === '')
-					;
-					if(currentDisplay !== 'none' && !module.is.hidden()) {
+				hidden: function(){
+					var style          = element.getAttribute('style'),
+						currentDisplay = element.style.display,
+						emptyStyle     = (style === undefined || style === '');
+					
+					if(currentDisplay !== 'none' && !module.is.hidden()){
 						module.verbose('Overriding default display to hide element');
-						$module
-							.css('display', 'none')
-						;
-					}
-					else if(emptyStyle) {
-						$module
-							.removeAttr('style')
-						;
+						element.style.display = "none";
+
+					} else if(emptyStyle){
+						element.removeAttribute('style');
 					}
 				}
 			},
-
 			has: {
-				direction: function(animation) {
-					var
-						hasDirection = false
-					;
+				direction: function(animation){
+					var hasDirection = false;
+					
 					animation = animation || settings.animation;
-					if(typeof animation === 'string') {
+					if(typeof animation === 'string'){
 						animation = animation.split(' ');
-						$.each(animation, function(index, word){
-							if(word === className.inward || word === className.outward) {
+						animation.forEach(function(word, index){
+							if(word === className.inward || word === className.outward){
 								hasDirection = true;
 							}
 						});
 					}
+
 					return hasDirection;
 				},
-				inlineDisplay: function() {
+				inlineDisplay: function(){
 					var
-						style = $module.attr('style') || ''
+						style = element.getAttribute('style') || ''
 					;
-					return $.isArray(style.match(/display.*?;/, ''));
+					return typeof style.match(/display.*?;/, '') == "object";
 				}
 			},
-
 			set: {
-				animating: function(animation) {
-					var
-						animationClass,
-						direction
-					;
+				animating: function(animation){
+					var animationClass,
+						direction;
+
 					// remove previous callbacks
 					module.remove.completeCallback();
 
@@ -15341,225 +15232,200 @@
 					module.remove.direction();
 
 					module.start.animation(animationClass);
-
 				},
-				duration: function(animationName, duration) {
+				duration: function(animationName, duration){
 					duration = duration || settings.duration;
 					duration = (typeof duration == 'number')
 						? duration + 'ms'
 						: duration
 					;
-					if(duration || duration === 0) {
+					if(duration || duration === 0){
 						module.verbose('Setting animation duration', duration);
-						$module
-							.css({
-								'animation-duration':  duration
-							})
-						;
+						element.style.animationDuration = duration;
 					}
 				},
-				direction: function(direction) {
+				direction: function(direction){
 					direction = direction || module.get.direction();
-					if(direction == className.inward) {
+					if(direction == className.inward){
 						module.set.inward();
 					}
 					else {
 						module.set.outward();
 					}
 				},
-				looping: function() {
+				looping: function(){
 					module.debug('Transition set to loop');
-					$module
-						.classList.add(className.looping)
-					;
+					element.classList.add(className.looping);
 				},
-				hidden: function() {
-					$module
-						.classList.add(className.transition)
-						.classList.add(className.hidden)
-					;
+				hidden: function(){
+					element.classList.add(className.transition);
+					element.classList.add(className.hidden);
 				},
-				inward: function() {
+				inward: function(){
 					module.debug('Setting direction to inward');
-					$module
-						.classList.remove(className.outward)
-						.classList.add(className.inward)
-					;
+					element.classList.remove(className.outward);
+					element.classList.add(className.inward);
 				},
-				outward: function() {
+				outward: function(){
 					module.debug('Setting direction to outward');
-					$module
-						.classList.remove(className.inward)
-						.classList.add(className.outward)
-					;
+					element.classList.remove(className.inward);
+					element.classList.add(className.outward);
 				},
-				visible: function() {
-					$module
-						.classList.add(className.transition)
-						.classList.add(className.visible)
-					;
+				visible: function(){
+					element.classList.add(className.transition);
+					element.classList.add(className.visible);
 				}
 			},
-
 			start: {
-				animation: function(animationClass) {
+				animation: function(animationClass){
 					animationClass = animationClass || module.get.animationClass();
 					module.debug('Starting tween', animationClass);
-					$module
-						.classList.add(animationClass)
-						.one(animationEnd + '.complete' + eventNamespace, module.complete)
-					;
-					if(settings.useFailSafe) {
+					element.classList.add(animationClass);
+					
+					//element.one(animationEnd + '.complete' + eventNamespace, module.complete)
+					element.addEventListener(animationEnd, function(event){
+					    module.complete(event);
+					    event.target.removeEventListener(event.type, arguments.callee);
+					});
+
+					if(settings.useFailSafe){
 						module.add.failSafe();
 					}
+
 					module.set.duration(settings.duration);
 					settings.onStart.call(element);
 				}
 			},
-
 			save: {
-				animation: function(animation) {
-					if(!module.cache) {
+				animation: function(animation){
+					if(!module.cache){
 						module.cache = {};
 					}
 					module.cache.animation = animation;
 				},
-				displayType: function(displayType) {
-					if(displayType !== 'none') {
-						$module.data(metadata.displayType, displayType);
+				displayType: function(displayType){
+					if(displayType !== 'none'){
+						element.dataset[metadata.displayType] = displayType;
 					}
 				},
-				transitionExists: function(animation, exists) {
+				transitionExists: function(animation, exists){
 					ui.transition.exists[animation] = exists;
 					module.verbose('Saving existence of transition', animation, exists);
 				}
 			},
-
 			restore: {
-				conditions: function() {
+				conditions: function(){
 					var
 						animation = module.get.currentAnimation()
 					;
-					if(animation) {
-						$module
-							.classList.remove(animation)
-						;
+					if(animation){
+						element.classList.remove(animation);
 						module.verbose('Removing animation class', module.cache);
 					}
 					module.remove.duration();
 				}
 			},
-
 			add: {
-				failSafe: function() {
+				failSafe: function(){
 					var
 						duration = module.get.duration()
 					;
-					module.timer = setTimeout(function() {
-						$module.triggerHandler(animationEnd);
+					module.timer = setTimeout(function(){
+						element.triggerHandler(animationEnd);
 					}, duration + settings.failSafeDelay);
 					module.verbose('Adding fail safe timer', module.timer);
 				}
 			},
-
 			remove: {
-				animating: function() {
-					$module.classList.remove(className.animating);
+				animating: function(){
+					element.classList.remove(className.animating);
 				},
-				animationCallbacks: function() {
+				animationCallbacks: function(){
 					module.remove.queueCallback();
 					module.remove.completeCallback();
 				},
-				queueCallback: function() {
-					$module.off('.queue' + eventNamespace);
+				queueCallback: function(){
+					//element.off('.queue' + eventNamespace);
 				},
-				completeCallback: function() {
-					$module.off('.complete' + eventNamespace);
+				completeCallback: function(){
+					//element.off('.complete' + eventNamespace);
 				},
-				display: function() {
-					$module.css('display', '');
+				display: function(){
+					element.style.display = '';
 				},
-				direction: function() {
-					$module
-						.classList.remove(className.inward)
-						.classList.remove(className.outward)
-					;
+				direction: function(){
+					element.classList.remove(className.inward);
+					element.classList.remove(className.outward);
 				},
-				duration: function() {
-					$module
-						.css('animation-duration', '')
-					;
+				duration: function(){
+					element.style.animationDuration = "";
 				},
-				failSafe: function() {
+				failSafe: function(){
 					module.verbose('Removing fail safe timer', module.timer);
-					if(module.timer) {
+					if(module.timer){
 						clearTimeout(module.timer);
 					}
 				},
-				hidden: function() {
-					$module.classList.remove(className.hidden);
+				hidden: function(){
+					element.classList.remove(className.hidden);
 				},
-				visible: function() {
-					$module.classList.remove(className.visible);
+				visible: function(){
+					element.classList.remove(className.visible);
 				},
-				looping: function() {
+				looping: function(){
 					module.debug('Transitions are no longer looping');
-					if( module.is.looping() ) {
+					if( module.is.looping() ){
 						module.reset();
-						$module
-							.classList.remove(className.looping)
-						;
+						element.classList.remove(className.looping);
 					}
 				},
-				transition: function() {
-					$module
-						.classList.remove(className.visible)
-						.classList.remove(className.hidden)
-					;
+				transition: function(){
+					element.classList.remove(className.visible);
+					element.classList.remove(className.hidden);
 				}
 			},
 			get: {
-				settings: function(animation, duration, onComplete) {
+				settings: function(animation, duration, onComplete){
 					// single settings object
-					if(typeof animation == 'object') {
-						return $.extend(true, {}, ui.transition.settings, animation);
+					if(typeof animation == 'object'){
+						return ui.extend(true, {}, ui.transition.settings, animation);
 					}
 					// all arguments provided
-					else if(typeof onComplete == 'function') {
-						return $.extend({}, ui.transition.settings, {
+					else if(typeof onComplete == 'function'){
+						return ui.extend({}, ui.transition.settings, {
 							animation  : animation,
 							onComplete : onComplete,
 							duration   : duration
 						});
 					}
 					// only duration provided
-					else if(typeof duration == 'string' || typeof duration == 'number') {
-						return $.extend({}, ui.transition.settings, {
+					else if(typeof duration == 'string' || typeof duration == 'number'){
+						return ui.extend({}, ui.transition.settings, {
 							animation : animation,
 							duration  : duration
 						});
 					}
 					// duration is actually settings object
-					else if(typeof duration == 'object') {
-						return $.extend({}, ui.transition.settings, duration, {
+					else if(typeof duration == 'object'){
+						return ui.extend({}, ui.transition.settings, duration, {
 							animation : animation
 						});
 					}
 					// duration is actually callback
-					else if(typeof duration == 'function') {
-						return $.extend({}, ui.transition.settings, {
+					else if(typeof duration == 'function'){
+						return ui.extend({}, ui.transition.settings, {
 							animation  : animation,
 							onComplete : duration
 						});
 					}
 					// only animation provided
 					else {
-						return $.extend({}, ui.transition.settings, {
+						return ui.extend({}, ui.transition.settings, {
 							animation : animation
 						});
 					}
 				},
-				animationClass: function(animation) {
+				animationClass: function(animation){
 					var
 						animationClass = animation || settings.animation,
 						directionClass = (module.can.transition() && !module.has.direction())
@@ -15572,51 +15438,51 @@
 						+ animationClass
 					;
 				},
-				currentAnimation: function() {
+				currentAnimation: function(){
 					return (module.cache && module.cache.animation !== undefined)
 						? module.cache.animation
 						: false
 					;
 				},
-				currentDirection: function() {
+				currentDirection: function(){
 					return module.is.inward()
 						? className.inward
 						: className.outward
 					;
 				},
-				direction: function() {
+				direction: function(){
 					return module.is.hidden() || !module.is.visible()
 						? className.inward
 						: className.outward
 					;
 				},
-				animationDirection: function(animation) {
+				animationDirection: function(animation){
 					var
 						direction
 					;
 					animation = animation || settings.animation;
-					if(typeof animation === 'string') {
+					if(typeof animation === 'string'){
 						animation = animation.split(' ');
 						// search animation name for out/in class
-						$.each(animation, function(index, word){
-							if(word === className.inward) {
+						animation.forEach(function(word, index){
+							if(word === className.inward){
 								direction = className.inward;
 							}
-							else if(word === className.outward) {
+							else if(word === className.outward){
 								direction = className.outward;
 							}
 						});
 					}
 					// return found direction
-					if(direction) {
+					if(direction){
 						return direction;
 					}
 					return false;
 				},
-				duration: function(duration) {
+				duration: function(duration){
 					duration = duration || settings.duration;
-					if(duration === false) {
-						duration = $module.css('animation-duration') || 0;
+					if(duration === false){
+						duration = element.style.animationDuration || 0;
 					}
 					return (typeof duration === 'string')
 						? (duration.indexOf('ms') > -1)
@@ -15625,28 +15491,28 @@
 						: duration
 					;
 				},
-				displayType: function(shouldDetermine) {
+				displayType: function(shouldDetermine){
 					shouldDetermine = (shouldDetermine !== undefined)
 						? shouldDetermine
 						: true
 					;
-					if(settings.displayType) {
+					if(settings.displayType){
 						return settings.displayType;
 					}
-					if(shouldDetermine && $module.data(metadata.displayType) === undefined) {
+					if(shouldDetermine && element.dataset[metadata.displayType] === undefined){
 						// create fake element to determine display state
 						module.can.transition(true);
 					}
-					return $module.data(metadata.displayType);
+					return element.dataset[metadata.displayType];
 				},
-				userStyle: function(style) {
-					style = style || $module.attr('style') || '';
+				userStyle: function(style){
+					style = style || element.getAttribute('style') || '';
 					return style.replace(/display.*?;/, '');
 				},
-				transitionExists: function(animation) {
+				transitionExists: function(animation){
 					return ui.transition.exists[animation];
 				},
-				animationStartEvent: function() {
+				animationStartEvent: function(){
 					var
 						element     = document.createElement('div'),
 						animations  = {
@@ -15664,7 +15530,7 @@
 					}
 					return false;
 				},
-				animationEndEvent: function() {
+				animationEndEvent: function(){
 					var
 						element     = document.createElement('div'),
 						animations  = {
@@ -15682,63 +15548,66 @@
 					}
 					return false;
 				}
-
 			},
-
 			can: {
-				transition: function(forced) {
+				transition: function(forced){
 					var
 						animation         = settings.animation,
 						transitionExists  = module.get.transitionExists(animation),
 						displayType       = module.get.displayType(false),
 						elementClass,
 						tagName,
-						$clone,
+						clone,
 						currentAnimation,
 						inAnimation,
 						directionExists
 					;
-					if( transitionExists === undefined || forced) {
+					if( transitionExists === undefined || forced){
 						module.verbose('Determining whether animation exists');
-						elementClass = $module.attr('class');
-						tagName      = $module.prop('tagName');
+						
+						elementClass = element.getAttribute('class');
+						tagName = element.tagName;
 
-						$clone = $('<' + tagName + ' />').classList.add( elementClass ).insertAfter($module);
-						currentAnimation = $clone
-							.classList.add(animation)
-							.classList.remove(className.inward)
-							.classList.remove(className.outward)
-							.classList.add(className.animating)
-							.classList.add(className.transition)
-							.css('animationName')
-						;
-						inAnimation = $clone
-							.classList.add(className.inward)
-							.css('animationName')
-						;
-						if(!displayType) {
-							displayType = $clone
-								.attr('class', elementClass)
-								.removeAttr('style')
-								.classList.remove(className.hidden)
-								.classList.remove(className.visible)
-								.show()
-								.css('display')
-							;
+						clone = document.createElement(tagName); 
+						
+						clone.classList.add( elementClass );
+
+						element.after(clone);
+
+						clone.classList.add(animation);
+						clone.classList.remove(className.inward);
+						clone.classList.remove(className.outward);
+						clone.classList.add(className.animating);
+						clone.classList.add(className.transition);
+
+						currentAnimation = clone.style.animationName;
+
+						clone.classList.add(className.inward);
+
+						inAnimation = clone,style.animationName;
+						
+						if(!displayType){
+							clone.setAttribute('class', elementClass);
+							clone.removeAttribute('style');
+							clone.classList.remove(className.hidden);
+							clone.classList.remove(className.visible);
+							//clone.show();
+
+							displayType = clone.style.display;
+							
 							module.verbose('Determining final display state', displayType);
 							module.save.displayType(displayType);
 						}
 
-						$clone.remove();
-						if(currentAnimation != inAnimation) {
+						clone.remove();
+
+						if(currentAnimation != inAnimation){
 							module.debug('Direction exists for animation', animation);
 							directionExists = true;
-						}
-						else if(currentAnimation == 'none' || !currentAnimation) {
+						} else if(currentAnimation == 'none' || !currentAnimation){
 							module.debug('No animation defined in css', animation);
 							return;
-						}
-						else {
+						} else {
 							module.debug('Static animation found', animation, displayType);
 							directionExists = false;
 						}
@@ -15749,44 +15618,42 @@
 						: directionExists
 					;
 				},
-				animate: function() {
+				animate: function(){
 					// can transition does not return a value if animation does not exist
 					return (module.can.transition() !== undefined);
 				}
 			},
-
 			is: {
-				animating: function() {
-					return $module.classList.contains(className.animating);
+				animating: function(){
+					return element.classList.contains(className.animating);
 				},
-				inward: function() {
-					return $module.classList.contains(className.inward);
+				inward: function(){
+					return element.classList.contains(className.inward);
 				},
-				outward: function() {
-					return $module.classList.contains(className.outward);
+				outward: function(){
+					return element.classList.contains(className.outward);
 				},
-				looping: function() {
-					return $module.classList.contains(className.looping);
+				looping: function(){
+					return element.classList.contains(className.looping);
 				},
-				occurring: function(animation) {
+				occurring: function(animation){
 					animation = animation || settings.animation;
 					animation = '.' + animation.replace(' ', '.');
-					return ( $module.filter(animation).length > 0 );
+					return ( element.filter(animation).length > 0 );
 				},
-				visible: function() {
-					return $module.is(':visible');
+				visible: function(){
+					return element.is(':visible');
 				},
-				hidden: function() {
-					return $module.css('visibility') === 'hidden';
+				hidden: function(){
+					return element.css('visibility') === 'hidden';
 				},
-				supported: function() {
+				supported: function(){
 					return(animationEnd !== false);
 				}
 			},
-
-			hide: function() {
+			hide: function(){
 				module.verbose('Hiding element');
-				if( module.is.animating() ) {
+				if( module.is.animating() ){
 					module.reset();
 				}
 				element.blur(); // IE will trigger focus change if element is not blurred before hiding
@@ -15798,8 +15665,7 @@
 				settings.onComplete.call(element);
 				// module.repaint();
 			},
-
-			show: function(display) {
+			show: function(display){
 				module.verbose('Showing element', display);
 				module.remove.hidden();
 				module.set.visible();
@@ -15808,46 +15674,38 @@
 				settings.onComplete.call(element);
 				// module.repaint();
 			},
-
-			toggle: function() {
-				if( module.is.visible() ) {
+			toggle: function(){
+				if( module.is.visible() ){
 					module.hide();
 				}
 				else {
 					module.show();
 				}
 			},
-
-			stop: function() {
+			stop: function(){
 				module.debug('Stopping current animation');
-				$module.triggerHandler(animationEnd);
+				element.triggerHandler(animationEnd);
 			},
-
-			stopAll: function() {
+			stopAll: function(){
 				module.debug('Stopping all animation');
 				module.remove.queueCallback();
-				$module.triggerHandler(animationEnd);
+				element.triggerHandler(animationEnd);
 			},
-
 			clear: {
-				queue: function() {
+				queue: function(){
 					module.debug('Clearing animation queue');
 					module.remove.queueCallback();
 				}
 			},
-
-			enable: function() {
+			enable: function(){
 				module.verbose('Starting animation');
-				$module.classList.remove(className.disabled);
+				element.classList.remove(className.disabled);
 			},
-
-			disable: function() {
+			disable: function(){
 				module.debug('Stopping animation');
-				$module.classList.add(className.disabled);
+				element.classList.add(className.disabled);
 			}
-		};*/
-
-		module = {};
+		};
 
 		return module;
 	};
@@ -15881,10 +15739,10 @@
 		reverse       : 'auto',
 
 		// animation callback event
-		onStart       : function() {},
-		onComplete    : function() {},
-		onShow        : function() {},
-		onHide        : function() {},
+		onStart       : function(){},
+		onComplete    : function(){},
+		onShow        : function(){},
+		onHide        : function(){},
 
 		// whether timeout should be used to ensure callback fires in cases animationend does not
 		useFailSafe   : true,
@@ -15931,9 +15789,8 @@
 	};
 
 	/*!
-	 * # Semantic UI - API
-	 * http://github.com/semantic-org/semantic-ui/
-	 *
+	 * # Vanilla Semantic UI 0.0.1 - API
+	 * https://github.com/morganbarrett/Vanilla-Semantic-UI/
 	 *
 	 * Released under the MIT license
 	 * http://opensource.org/licenses/MIT
@@ -17083,9 +16940,8 @@
 	};*/
 
 	/*!
-	 * # Semantic UI - Visibility
-	 * http://github.com/semantic-org/semantic-ui/
-	 *
+	 * # Vanilla Semantic UI 0.0.1 - Visibility
+	 * https://github.com/morganbarrett/Vanilla-Semantic-UI/
 	 *
 	 * Released under the MIT license
 	 * http://opensource.org/licenses/MIT

@@ -13,7 +13,7 @@ ui.tab = function(element, settings){
 		selector = settings.selector,
 		error = settings.error,
 		context,
-		$tabs,
+		tabs,
 		cache = {},
 		firstLoad = true,
 		recursionDepth = 0,
@@ -22,14 +22,13 @@ ui.tab = function(element, settings){
 		module,
 		historyEvent;
 
-	/*module = {
-
+	module = {
 		initialize: function() {
-			module.debug('Initializing tab menu item', $module);
+			module.debug('Initializing tab menu item', element);
 			module.fix.callbacks();
 			module.determineTabs();
 
-			module.debug('Determining tabs', settings.context, $tabs);
+			module.debug('Determining tabs', settings.context, tabs);
 			// set up automatic routing
 			if(settings.auto) {
 				module.set.auto();
@@ -43,19 +42,17 @@ ui.tab = function(element, settings){
 
 			module.instantiate();
 		},
-
 		bind: {
 			events: function() {
 				// if using $.tab don't add events
 				if( !$.isWindow( element ) ) {
-					module.debug('Attaching tab activation events to element', $module);
-					$module
+					module.debug('Attaching tab activation events to element', element);
+					element
 						.on('click' + eventNamespace, module.event.click)
 					;
 				}
 			}
 		},
-
 		determineTabs: function() {
 			var
 				$reference
@@ -63,12 +60,12 @@ ui.tab = function(element, settings){
 
 			// determine tab context
 			if(settings.context === 'parent') {
-				if($module.closest(selector.ui).length > 0) {
-					$reference = $module.closest(selector.ui);
+				if(element.closest(selector.ui).length > 0) {
+					$reference = element.closest(selector.ui);
 					module.verbose('Using closest UI element as parent', $reference);
 				}
 				else {
-					$reference = $module;
+					$reference = element;
 				}
 				$context = $reference.parent();
 				module.verbose('Determined parent element for creating context', $context);
@@ -334,7 +331,7 @@ ui.tab = function(element, settings){
 					}
 				}
 				else {
-					module.error(error.missingTab, $module, $context, currentPath);
+					module.error(error.missingTab, element, $context, currentPath);
 					return false;
 				}
 			});
@@ -624,7 +621,7 @@ ui.tab = function(element, settings){
 				;
 			}
 		}
-	};*/
+	};
 	
 	module = {};
 	

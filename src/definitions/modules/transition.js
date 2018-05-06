@@ -15,9 +15,8 @@ ui.transition = function(element, settings){
 		animationName,
 		module;
 
-	/*module = {
-
-		initialize: function() {
+	module = {
+		initialize: function(){
 
 			// get full settings
 			settings        = module.get.settings.apply(element, moduleArguments);
@@ -30,19 +29,18 @@ ui.transition = function(element, settings){
 			// define namespace
 			eventNamespace  = '.' + settings.namespace;
 			moduleNamespace = 'module-' + settings.namespace;
-			instance        = $module.data(moduleNamespace) || module;
 
 			// get vendor specific events
 			animationEnd    = module.get.animationEndEvent();
 
-			if(methodInvoked) {
+			if(methodInvoked){
 				methodInvoked = module.invoke(query);
 			}
 
 			// method not invoked, lets run an animation
-			if(methodInvoked === false) {
+			if(methodInvoked === false){
 				module.verbose('Converted arguments into settings object', settings);
-				if(settings.interval) {
+				if(settings.interval){
 					module.delay(settings.animate);
 				}
 				else  {
@@ -51,47 +49,35 @@ ui.transition = function(element, settings){
 				module.instantiate();
 			}
 		},
-
-		destroy: function() {
-			module.verbose('Destroying previous module for', element);
-			$module
-				.removeData(moduleNamespace)
-			;
-		},
-
-		refresh: function() {
+		refresh: function(){
 			module.verbose('Refreshing display type on next animation');
 			delete module.displayType;
 		},
-
-		forceRepaint: function() {
+		forceRepaint: function(){
 			module.verbose('Forcing element repaint');
-			var
-				$parentElement = $module.parent(),
-				$nextElement = $module.next()
-			;
-			if($nextElement.length === 0) {
-				$module.detach().appendTo($parentElement);
+			var parentElement = element.parentElement,
+				nextElement = element.nextElementSibling;
+			
+			element.remove();
+			
+			if(nextElement.length){
+				parentElement.append(element);
 			}
 			else {
-				$module.detach().insertBefore($nextElement);
+				nextElement.before(element);
 			}
 		},
-
-		repaint: function() {
+		repaint: function(){
 			module.verbose('Repainting element');
-			var
-				fakeAssignment = element.offsetWidth
-			;
+			var fakeAssignment = element.offsetWidth;
 		},
-
-		delay: function(interval) {
+		delay: function(interval){
 			var
 				direction = module.get.animationDirection(),
 				shouldReverse,
 				delay
 			;
-			if(!direction) {
+			if(!direction){
 				direction = module.can.transition()
 					? module.get.direction()
 					: 'static'
@@ -103,23 +89,22 @@ ui.transition = function(element, settings){
 			;
 			shouldReverse = (settings.reverse == 'auto' && direction == className.outward);
 			delay = (shouldReverse || settings.reverse == true)
-				? ($allModules.length - index) * settings.interval
+				? (allModules.length - index) * settings.interval
 				: index * settings.interval
 			;
 			module.debug('Delaying animation by', delay);
 			setTimeout(module.animate, delay);
 		},
-
-		animate: function(overrideSettings) {
+		animate: function(overrideSettings){
 			settings = overrideSettings || settings;
-			if(!module.is.supported()) {
+			if(!module.is.supported()){
 				module.error(error.support);
 				return false;
 			}
 			module.debug('Preparing animation', settings.animation);
-			if(module.is.animating()) {
-				if(settings.queue) {
-					if(!settings.allowRepeats && module.has.direction() && module.is.occurring() && module.queuing !== true) {
+			if(module.is.animating()){
+				if(settings.queue){
+					if(!settings.allowRepeats && module.has.direction() && module.is.occurring() && module.queuing !== true){
 						module.debug('Animation is currently occurring, preventing queueing same animation', settings.animation);
 					}
 					else {
@@ -127,7 +112,7 @@ ui.transition = function(element, settings){
 					}
 					return false;
 				}
-				else if(!settings.allowRepeats && module.is.occurring()) {
+				else if(!settings.allowRepeats && module.is.occurring()){
 					module.debug('Animation is already occurring, will not execute repeated animation', settings.animation);
 					return false;
 				}
@@ -136,44 +121,41 @@ ui.transition = function(element, settings){
 					instance.complete();
 				}
 			}
-			if( module.can.animate() ) {
+			if( module.can.animate() ){
 				module.set.animating(settings.animation);
 			}
 			else {
 				module.error(error.noAnimation, settings.animation, element);
 			}
 		},
-
-		reset: function() {
+		reset: function(){
 			module.debug('Resetting animation to beginning conditions');
 			module.remove.animationCallbacks();
 			module.restore.conditions();
 			module.remove.animating();
 		},
-
-		queue: function(animation) {
+		queue: function(animation){
 			module.debug('Queueing animation of', animation);
 			module.queuing = true;
-			$module
-				.one(animationEnd + '.queue' + eventNamespace, function() {
-					module.queuing = false;
-					module.repaint();
-					module.animate.apply(this, settings);
-				})
-			;
+			
+			element.addEventListener(animationEnd, function(event){
+			    module.queuing = false;
+				module.repaint();
+				module.animate.apply(this, settings);
+			    event.target.removeEventListener(event.type, arguments.callee);
+			});
 		},
-
-		complete: function (event) {
+		complete: function (event){
 			module.debug('Animation complete', settings.animation);
 			module.remove.completeCallback();
 			module.remove.failSafe();
-			if(!module.is.looping()) {
-				if( module.is.outward() ) {
+			if(!module.is.looping()){
+				if( module.is.outward() ){
 					module.verbose('Animation is outward, hiding element');
 					module.restore.conditions();
 					module.hide();
 				}
-				else if( module.is.inward() ) {
+				else if( module.is.inward() ){
 					module.verbose('Animation is outward, showing element');
 					module.restore.conditions();
 					module.show();
@@ -185,77 +167,64 @@ ui.transition = function(element, settings){
 				}
 			}
 		},
-
 		force: {
-			visible: function() {
-				var
-					style          = $module.attr('style'),
+			visible: function(){
+				var style          = element.getAttribute('style'),
 					userStyle      = module.get.userStyle(),
 					displayType    = module.get.displayType(),
 					overrideStyle  = userStyle + 'display: ' + displayType + ' !important;',
-					currentDisplay = $module.css('display'),
-					emptyStyle     = (style === undefined || style === '')
-				;
-				if(currentDisplay !== displayType) {
+					currentDisplay = element.style.display,
+					emptyStyle     = (style === undefined || style === '');
+
+				if(currentDisplay !== displayType){
 					module.verbose('Overriding default display to show element', displayType);
-					$module
-						.attr('style', overrideStyle)
-					;
-				}
-				else if(emptyStyle) {
-					$module.removeAttr('style');
+					element.setAttribute('style', overrideStyle);
+				} else if(emptyStyle){
+					element.removeAttribute('style');
 				}
 			},
-			hidden: function() {
-				var
-					style          = $module.attr('style'),
-					currentDisplay = $module.css('display'),
-					emptyStyle     = (style === undefined || style === '')
-				;
-				if(currentDisplay !== 'none' && !module.is.hidden()) {
+			hidden: function(){
+				var style          = element.getAttribute('style'),
+					currentDisplay = element.style.display,
+					emptyStyle     = (style === undefined || style === '');
+				
+				if(currentDisplay !== 'none' && !module.is.hidden()){
 					module.verbose('Overriding default display to hide element');
-					$module
-						.css('display', 'none')
-					;
-				}
-				else if(emptyStyle) {
-					$module
-						.removeAttr('style')
-					;
+					element.style.display = "none";
+
+				} else if(emptyStyle){
+					element.removeAttribute('style');
 				}
 			}
 		},
-
 		has: {
-			direction: function(animation) {
-				var
-					hasDirection = false
-				;
+			direction: function(animation){
+				var hasDirection = false;
+				
 				animation = animation || settings.animation;
-				if(typeof animation === 'string') {
+				if(typeof animation === 'string'){
 					animation = animation.split(' ');
-					$.each(animation, function(index, word){
-						if(word === className.inward || word === className.outward) {
+					animation.forEach(function(word, index){
+						if(word === className.inward || word === className.outward){
 							hasDirection = true;
 						}
 					});
 				}
+
 				return hasDirection;
 			},
-			inlineDisplay: function() {
+			inlineDisplay: function(){
 				var
-					style = $module.attr('style') || ''
+					style = element.getAttribute('style') || ''
 				;
-				return $.isArray(style.match(/display.*?;/, ''));
+				return typeof style.match(/display.*?;/, '') == "object";
 			}
 		},
-
 		set: {
-			animating: function(animation) {
-				var
-					animationClass,
-					direction
-				;
+			animating: function(animation){
+				var animationClass,
+					direction;
+
 				// remove previous callbacks
 				module.remove.completeCallback();
 
@@ -273,225 +242,200 @@ ui.transition = function(element, settings){
 				module.remove.direction();
 
 				module.start.animation(animationClass);
-
 			},
-			duration: function(animationName, duration) {
+			duration: function(animationName, duration){
 				duration = duration || settings.duration;
 				duration = (typeof duration == 'number')
 					? duration + 'ms'
 					: duration
 				;
-				if(duration || duration === 0) {
+				if(duration || duration === 0){
 					module.verbose('Setting animation duration', duration);
-					$module
-						.css({
-							'animation-duration':  duration
-						})
-					;
+					element.style.animationDuration = duration;
 				}
 			},
-			direction: function(direction) {
+			direction: function(direction){
 				direction = direction || module.get.direction();
-				if(direction == className.inward) {
+				if(direction == className.inward){
 					module.set.inward();
 				}
 				else {
 					module.set.outward();
 				}
 			},
-			looping: function() {
+			looping: function(){
 				module.debug('Transition set to loop');
-				$module
-					.classList.add(className.looping)
-				;
+				element.classList.add(className.looping);
 			},
-			hidden: function() {
-				$module
-					.classList.add(className.transition)
-					.classList.add(className.hidden)
-				;
+			hidden: function(){
+				element.classList.add(className.transition);
+				element.classList.add(className.hidden);
 			},
-			inward: function() {
+			inward: function(){
 				module.debug('Setting direction to inward');
-				$module
-					.classList.remove(className.outward)
-					.classList.add(className.inward)
-				;
+				element.classList.remove(className.outward);
+				element.classList.add(className.inward);
 			},
-			outward: function() {
+			outward: function(){
 				module.debug('Setting direction to outward');
-				$module
-					.classList.remove(className.inward)
-					.classList.add(className.outward)
-				;
+				element.classList.remove(className.inward);
+				element.classList.add(className.outward);
 			},
-			visible: function() {
-				$module
-					.classList.add(className.transition)
-					.classList.add(className.visible)
-				;
+			visible: function(){
+				element.classList.add(className.transition);
+				element.classList.add(className.visible);
 			}
 		},
-
 		start: {
-			animation: function(animationClass) {
+			animation: function(animationClass){
 				animationClass = animationClass || module.get.animationClass();
 				module.debug('Starting tween', animationClass);
-				$module
-					.classList.add(animationClass)
-					.one(animationEnd + '.complete' + eventNamespace, module.complete)
-				;
-				if(settings.useFailSafe) {
+				element.classList.add(animationClass);
+				
+				//element.one(animationEnd + '.complete' + eventNamespace, module.complete)
+				element.addEventListener(animationEnd, function(event){
+				    module.complete(event);
+				    event.target.removeEventListener(event.type, arguments.callee);
+				});
+
+				if(settings.useFailSafe){
 					module.add.failSafe();
 				}
+
 				module.set.duration(settings.duration);
 				settings.onStart.call(element);
 			}
 		},
-
 		save: {
-			animation: function(animation) {
-				if(!module.cache) {
+			animation: function(animation){
+				if(!module.cache){
 					module.cache = {};
 				}
 				module.cache.animation = animation;
 			},
-			displayType: function(displayType) {
-				if(displayType !== 'none') {
-					$module.data(metadata.displayType, displayType);
+			displayType: function(displayType){
+				if(displayType !== 'none'){
+					element.dataset[metadata.displayType] = displayType;
 				}
 			},
-			transitionExists: function(animation, exists) {
+			transitionExists: function(animation, exists){
 				ui.transition.exists[animation] = exists;
 				module.verbose('Saving existence of transition', animation, exists);
 			}
 		},
-
 		restore: {
-			conditions: function() {
+			conditions: function(){
 				var
 					animation = module.get.currentAnimation()
 				;
-				if(animation) {
-					$module
-						.classList.remove(animation)
-					;
+				if(animation){
+					element.classList.remove(animation);
 					module.verbose('Removing animation class', module.cache);
 				}
 				module.remove.duration();
 			}
 		},
-
 		add: {
-			failSafe: function() {
+			failSafe: function(){
 				var
 					duration = module.get.duration()
 				;
-				module.timer = setTimeout(function() {
-					$module.triggerHandler(animationEnd);
+				module.timer = setTimeout(function(){
+					element.triggerHandler(animationEnd);
 				}, duration + settings.failSafeDelay);
 				module.verbose('Adding fail safe timer', module.timer);
 			}
 		},
-
 		remove: {
-			animating: function() {
-				$module.classList.remove(className.animating);
+			animating: function(){
+				element.classList.remove(className.animating);
 			},
-			animationCallbacks: function() {
+			animationCallbacks: function(){
 				module.remove.queueCallback();
 				module.remove.completeCallback();
 			},
-			queueCallback: function() {
-				$module.off('.queue' + eventNamespace);
+			queueCallback: function(){
+				//element.off('.queue' + eventNamespace);
 			},
-			completeCallback: function() {
-				$module.off('.complete' + eventNamespace);
+			completeCallback: function(){
+				//element.off('.complete' + eventNamespace);
 			},
-			display: function() {
-				$module.css('display', '');
+			display: function(){
+				element.style.display = '';
 			},
-			direction: function() {
-				$module
-					.classList.remove(className.inward)
-					.classList.remove(className.outward)
-				;
+			direction: function(){
+				element.classList.remove(className.inward);
+				element.classList.remove(className.outward);
 			},
-			duration: function() {
-				$module
-					.css('animation-duration', '')
-				;
+			duration: function(){
+				element.style.animationDuration = "";
 			},
-			failSafe: function() {
+			failSafe: function(){
 				module.verbose('Removing fail safe timer', module.timer);
-				if(module.timer) {
+				if(module.timer){
 					clearTimeout(module.timer);
 				}
 			},
-			hidden: function() {
-				$module.classList.remove(className.hidden);
+			hidden: function(){
+				element.classList.remove(className.hidden);
 			},
-			visible: function() {
-				$module.classList.remove(className.visible);
+			visible: function(){
+				element.classList.remove(className.visible);
 			},
-			looping: function() {
+			looping: function(){
 				module.debug('Transitions are no longer looping');
-				if( module.is.looping() ) {
+				if( module.is.looping() ){
 					module.reset();
-					$module
-						.classList.remove(className.looping)
-					;
+					element.classList.remove(className.looping);
 				}
 			},
-			transition: function() {
-				$module
-					.classList.remove(className.visible)
-					.classList.remove(className.hidden)
-				;
+			transition: function(){
+				element.classList.remove(className.visible);
+				element.classList.remove(className.hidden);
 			}
 		},
 		get: {
-			settings: function(animation, duration, onComplete) {
+			settings: function(animation, duration, onComplete){
 				// single settings object
-				if(typeof animation == 'object') {
-					return $.extend(true, {}, ui.transition.settings, animation);
+				if(typeof animation == 'object'){
+					return ui.extend(true, {}, ui.transition.settings, animation);
 				}
 				// all arguments provided
-				else if(typeof onComplete == 'function') {
-					return $.extend({}, ui.transition.settings, {
+				else if(typeof onComplete == 'function'){
+					return ui.extend({}, ui.transition.settings, {
 						animation  : animation,
 						onComplete : onComplete,
 						duration   : duration
 					});
 				}
 				// only duration provided
-				else if(typeof duration == 'string' || typeof duration == 'number') {
-					return $.extend({}, ui.transition.settings, {
+				else if(typeof duration == 'string' || typeof duration == 'number'){
+					return ui.extend({}, ui.transition.settings, {
 						animation : animation,
 						duration  : duration
 					});
 				}
 				// duration is actually settings object
-				else if(typeof duration == 'object') {
-					return $.extend({}, ui.transition.settings, duration, {
+				else if(typeof duration == 'object'){
+					return ui.extend({}, ui.transition.settings, duration, {
 						animation : animation
 					});
 				}
 				// duration is actually callback
-				else if(typeof duration == 'function') {
-					return $.extend({}, ui.transition.settings, {
+				else if(typeof duration == 'function'){
+					return ui.extend({}, ui.transition.settings, {
 						animation  : animation,
 						onComplete : duration
 					});
 				}
 				// only animation provided
 				else {
-					return $.extend({}, ui.transition.settings, {
+					return ui.extend({}, ui.transition.settings, {
 						animation : animation
 					});
 				}
 			},
-			animationClass: function(animation) {
+			animationClass: function(animation){
 				var
 					animationClass = animation || settings.animation,
 					directionClass = (module.can.transition() && !module.has.direction())
@@ -504,51 +448,51 @@ ui.transition = function(element, settings){
 					+ animationClass
 				;
 			},
-			currentAnimation: function() {
+			currentAnimation: function(){
 				return (module.cache && module.cache.animation !== undefined)
 					? module.cache.animation
 					: false
 				;
 			},
-			currentDirection: function() {
+			currentDirection: function(){
 				return module.is.inward()
 					? className.inward
 					: className.outward
 				;
 			},
-			direction: function() {
+			direction: function(){
 				return module.is.hidden() || !module.is.visible()
 					? className.inward
 					: className.outward
 				;
 			},
-			animationDirection: function(animation) {
+			animationDirection: function(animation){
 				var
 					direction
 				;
 				animation = animation || settings.animation;
-				if(typeof animation === 'string') {
+				if(typeof animation === 'string'){
 					animation = animation.split(' ');
 					// search animation name for out/in class
-					$.each(animation, function(index, word){
-						if(word === className.inward) {
+					animation.forEach(function(word, index){
+						if(word === className.inward){
 							direction = className.inward;
 						}
-						else if(word === className.outward) {
+						else if(word === className.outward){
 							direction = className.outward;
 						}
 					});
 				}
 				// return found direction
-				if(direction) {
+				if(direction){
 					return direction;
 				}
 				return false;
 			},
-			duration: function(duration) {
+			duration: function(duration){
 				duration = duration || settings.duration;
-				if(duration === false) {
-					duration = $module.css('animation-duration') || 0;
+				if(duration === false){
+					duration = element.style.animationDuration || 0;
 				}
 				return (typeof duration === 'string')
 					? (duration.indexOf('ms') > -1)
@@ -557,28 +501,28 @@ ui.transition = function(element, settings){
 					: duration
 				;
 			},
-			displayType: function(shouldDetermine) {
+			displayType: function(shouldDetermine){
 				shouldDetermine = (shouldDetermine !== undefined)
 					? shouldDetermine
 					: true
 				;
-				if(settings.displayType) {
+				if(settings.displayType){
 					return settings.displayType;
 				}
-				if(shouldDetermine && $module.data(metadata.displayType) === undefined) {
+				if(shouldDetermine && element.dataset[metadata.displayType] === undefined){
 					// create fake element to determine display state
 					module.can.transition(true);
 				}
-				return $module.data(metadata.displayType);
+				return element.dataset[metadata.displayType];
 			},
-			userStyle: function(style) {
-				style = style || $module.attr('style') || '';
+			userStyle: function(style){
+				style = style || element.getAttribute('style') || '';
 				return style.replace(/display.*?;/, '');
 			},
-			transitionExists: function(animation) {
+			transitionExists: function(animation){
 				return ui.transition.exists[animation];
 			},
-			animationStartEvent: function() {
+			animationStartEvent: function(){
 				var
 					element     = document.createElement('div'),
 					animations  = {
@@ -596,7 +540,7 @@ ui.transition = function(element, settings){
 				}
 				return false;
 			},
-			animationEndEvent: function() {
+			animationEndEvent: function(){
 				var
 					element     = document.createElement('div'),
 					animations  = {
@@ -614,63 +558,66 @@ ui.transition = function(element, settings){
 				}
 				return false;
 			}
-
 		},
-
 		can: {
-			transition: function(forced) {
+			transition: function(forced){
 				var
 					animation         = settings.animation,
 					transitionExists  = module.get.transitionExists(animation),
 					displayType       = module.get.displayType(false),
 					elementClass,
 					tagName,
-					$clone,
+					clone,
 					currentAnimation,
 					inAnimation,
 					directionExists
 				;
-				if( transitionExists === undefined || forced) {
+				if( transitionExists === undefined || forced){
 					module.verbose('Determining whether animation exists');
-					elementClass = $module.attr('class');
-					tagName      = $module.prop('tagName');
+					
+					elementClass = element.getAttribute('class');
+					tagName = element.tagName;
 
-					$clone = $('<' + tagName + ' />').classList.add( elementClass ).insertAfter($module);
-					currentAnimation = $clone
-						.classList.add(animation)
-						.classList.remove(className.inward)
-						.classList.remove(className.outward)
-						.classList.add(className.animating)
-						.classList.add(className.transition)
-						.css('animationName')
-					;
-					inAnimation = $clone
-						.classList.add(className.inward)
-						.css('animationName')
-					;
-					if(!displayType) {
-						displayType = $clone
-							.attr('class', elementClass)
-							.removeAttr('style')
-							.classList.remove(className.hidden)
-							.classList.remove(className.visible)
-							.show()
-							.css('display')
-						;
+					clone = document.createElement(tagName); 
+					
+					clone.classList.add( elementClass );
+
+					element.after(clone);
+
+					clone.classList.add(animation);
+					clone.classList.remove(className.inward);
+					clone.classList.remove(className.outward);
+					clone.classList.add(className.animating);
+					clone.classList.add(className.transition);
+
+					currentAnimation = clone.style.animationName;
+
+					clone.classList.add(className.inward);
+
+					inAnimation = clone,style.animationName;
+					
+					if(!displayType){
+						clone.setAttribute('class', elementClass);
+						clone.removeAttribute('style');
+						clone.classList.remove(className.hidden);
+						clone.classList.remove(className.visible);
+						//clone.show();
+
+						displayType = clone.style.display;
+						
 						module.verbose('Determining final display state', displayType);
 						module.save.displayType(displayType);
 					}
 
-					$clone.remove();
-					if(currentAnimation != inAnimation) {
+					clone.remove();
+
+					if(currentAnimation != inAnimation){
 						module.debug('Direction exists for animation', animation);
 						directionExists = true;
-					}
-					else if(currentAnimation == 'none' || !currentAnimation) {
+					} else if(currentAnimation == 'none' || !currentAnimation){
 						module.debug('No animation defined in css', animation);
 						return;
-					}
-					else {
+					} else {
 						module.debug('Static animation found', animation, displayType);
 						directionExists = false;
 					}
@@ -681,44 +628,42 @@ ui.transition = function(element, settings){
 					: directionExists
 				;
 			},
-			animate: function() {
+			animate: function(){
 				// can transition does not return a value if animation does not exist
 				return (module.can.transition() !== undefined);
 			}
 		},
-
 		is: {
-			animating: function() {
-				return $module.classList.contains(className.animating);
+			animating: function(){
+				return element.classList.contains(className.animating);
 			},
-			inward: function() {
-				return $module.classList.contains(className.inward);
+			inward: function(){
+				return element.classList.contains(className.inward);
 			},
-			outward: function() {
-				return $module.classList.contains(className.outward);
+			outward: function(){
+				return element.classList.contains(className.outward);
 			},
-			looping: function() {
-				return $module.classList.contains(className.looping);
+			looping: function(){
+				return element.classList.contains(className.looping);
 			},
-			occurring: function(animation) {
+			occurring: function(animation){
 				animation = animation || settings.animation;
 				animation = '.' + animation.replace(' ', '.');
-				return ( $module.filter(animation).length > 0 );
+				return ( element.filter(animation).length > 0 );
 			},
-			visible: function() {
-				return $module.is(':visible');
+			visible: function(){
+				return element.is(':visible');
 			},
-			hidden: function() {
-				return $module.css('visibility') === 'hidden';
+			hidden: function(){
+				return element.css('visibility') === 'hidden';
 			},
-			supported: function() {
+			supported: function(){
 				return(animationEnd !== false);
 			}
 		},
-
-		hide: function() {
+		hide: function(){
 			module.verbose('Hiding element');
-			if( module.is.animating() ) {
+			if( module.is.animating() ){
 				module.reset();
 			}
 			element.blur(); // IE will trigger focus change if element is not blurred before hiding
@@ -730,8 +675,7 @@ ui.transition = function(element, settings){
 			settings.onComplete.call(element);
 			// module.repaint();
 		},
-
-		show: function(display) {
+		show: function(display){
 			module.verbose('Showing element', display);
 			module.remove.hidden();
 			module.set.visible();
@@ -740,46 +684,38 @@ ui.transition = function(element, settings){
 			settings.onComplete.call(element);
 			// module.repaint();
 		},
-
-		toggle: function() {
-			if( module.is.visible() ) {
+		toggle: function(){
+			if( module.is.visible() ){
 				module.hide();
 			}
 			else {
 				module.show();
 			}
 		},
-
-		stop: function() {
+		stop: function(){
 			module.debug('Stopping current animation');
-			$module.triggerHandler(animationEnd);
+			element.triggerHandler(animationEnd);
 		},
-
-		stopAll: function() {
+		stopAll: function(){
 			module.debug('Stopping all animation');
 			module.remove.queueCallback();
-			$module.triggerHandler(animationEnd);
+			element.triggerHandler(animationEnd);
 		},
-
 		clear: {
-			queue: function() {
+			queue: function(){
 				module.debug('Clearing animation queue');
 				module.remove.queueCallback();
 			}
 		},
-
-		enable: function() {
+		enable: function(){
 			module.verbose('Starting animation');
-			$module.classList.remove(className.disabled);
+			element.classList.remove(className.disabled);
 		},
-
-		disable: function() {
+		disable: function(){
 			module.debug('Stopping animation');
-			$module.classList.add(className.disabled);
+			element.classList.add(className.disabled);
 		}
-	};*/
-
-	module = {};
+	};
 
 	return module;
 };
@@ -813,10 +749,10 @@ ui.transition.settings = {
 	reverse       : 'auto',
 
 	// animation callback event
-	onStart       : function() {},
-	onComplete    : function() {},
-	onShow        : function() {},
-	onHide        : function() {},
+	onStart       : function(){},
+	onComplete    : function(){},
+	onShow        : function(){},
+	onHide        : function(){},
 
 	// whether timeout should be used to ensure callback fires in cases animationend does not
 	useFailSafe   : true,

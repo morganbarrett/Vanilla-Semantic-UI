@@ -1,16 +1,11 @@
-var
-  console = require('better-console'),
+var console = require('better-console'),
   config  = require('./user'),
-  release = require('./project/release')
-;
-
+  release = require('./project/release');
 
 module.exports = {
-
   banner : release.banner,
   head : release.head,
   foot : release.foot,
-
   log: {
     created: function(file) {
       return 'Created: ' + file;
@@ -19,20 +14,16 @@ module.exports = {
       return 'Modified: ' + file;
     }
   },
-
   filenames: {
-    concatenatedCSS            : 'vanilla-semantic.css',
-    concatenatedJS             : 'vanilla-semantic.js',
-    concatenatedMinifiedCSS    : 'vanilla-semantic.min.css',
-    concatenatedMinifiedJS     : 'vanilla-semantic.min.js',
-    concatenatedRTLCSS         : 'vanilla-semantic.rtl.css',
-    concatenatedMinifiedRTLCSS : 'vanilla-semantic.rtl.min.css'
+    concatenatedCSS: 'vanilla-semantic.css',
+    concatenatedJS: 'vanilla-semantic.js',
+    concatenatedMinifiedCSS: 'vanilla-semantic.min.css',
+    concatenatedMinifiedJS: 'vanilla-semantic.min.js',
+    concatenatedRTLCSS: 'vanilla-semantic.rtl.css',
+    concatenatedMinifiedRTLCSS: 'vanilla-semantic.rtl.min.css'
   },
-
   regExp: {
-
     comments: {
-
       // remove all comments from config files (.variable)
       variables : {
         in  : /(\/\*[\s\S]+?\*\/+)[\s\S]+?\/\* End Config \*\//,

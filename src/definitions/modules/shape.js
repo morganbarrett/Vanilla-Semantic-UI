@@ -18,43 +18,38 @@ ui.shape = function(element, settings){
 		nextSide,
 		module;
 
-	/*module = {
-
-		initialize: function() {
+	module = {
+		initialize: function(){
 			module.verbose('Initializing module for', element);
 			module.set.defaultSide();
-			module.instantiate();
 		},
-
-		refresh: function() {
+		refresh: function(){
 			module.verbose('Refreshing selector cache for', element);
-			$module = $(element);
+			element = $(element);
 			$sides  = $(this).find(selector.shape);
 			$side   = $(this).find(selector.side);
 		},
-
-		repaint: function() {
+		repaint: function(){
 			module.verbose('Forcing repaint event');
 			var
 				shape          = $sides[0] || document.createElement('div'),
 				fakeAssignment = shape.offsetWidth
 			;
 		},
-
-		animate: function(propertyObject, callback) {
+		animate: function(propertyObject, callback){
 			module.verbose('Animating box with properties', propertyObject);
-			callback = callback || function(event) {
+			callback = callback || function(event){
 				module.verbose('Executing animation callback');
-				if(event !== undefined) {
+				if(event !== undefined){
 					event.stopPropagation();
 				}
 				module.reset();
 				module.set.active();
 			};
 			settings.beforeChange.call($nextSide[0]);
-			if(module.get.transitionEvent()) {
+			if(module.get.transitionEvent()){
 				module.verbose('Starting CSS animation');
-				$module
+				element
 					.classList.add(className.animating)
 				;
 				$sides
@@ -62,8 +57,8 @@ ui.shape = function(element, settings){
 					.one(module.get.transitionEvent(), callback)
 				;
 				module.set.duration(settings.duration);
-				requestAnimationFrame(function() {
-					$module
+				requestAnimationFrame(function(){
+					element
 						.classList.add(className.animating)
 					;
 					$activeSide
@@ -75,22 +70,21 @@ ui.shape = function(element, settings){
 				callback();
 			}
 		},
-
-		queue: function(method) {
+		queue: function(method){
 			module.debug('Queueing animation of', method);
 			$sides
-				.one(module.get.transitionEvent(), function() {
+				.one(module.get.transitionEvent(), function(){
 					module.debug('Executing queued animation');
 					setTimeout(function(){
-						$module.shape(method);
+						element.shape(method);
 					}, 0);
 				})
 			;
 		},
 
-		reset: function() {
+		reset: function(){
 			module.verbose('Animating states reset');
-			$module
+			element
 				.classList.remove(className.animating)
 				.attr('style', '')
 				.removeAttr('style')
@@ -113,35 +107,35 @@ ui.shape = function(element, settings){
 		},
 
 		is: {
-			complete: function() {
+			complete: function(){
 				return ($side.filter('.' + className.active)[0] == $nextSide[0]);
 			},
-			animating: function() {
-				return $module.classList.contains(className.animating);
+			animating: function(){
+				return element.classList.contains(className.animating);
 			}
 		},
 
 		set: {
 
-			defaultSide: function() {
-				$activeSide = $module.find('.' + settings.className.active);
+			defaultSide: function(){
+				$activeSide = element.find('.' + settings.className.active);
 				$nextSide   = ( $activeSide.next(selector.side).length > 0 )
 					? $activeSide.next(selector.side)
-					: $module.find(selector.side).first()
+					: element.find(selector.side).first()
 				;
 				nextIndex = false;
 				module.verbose('Active side set to', $activeSide);
 				module.verbose('Next side set to', $nextSide);
 			},
 
-			duration: function(duration) {
+			duration: function(duration){
 				duration = duration || settings.duration;
 				duration = (typeof duration == 'number')
 					? duration + 'ms'
 					: duration
 				;
 				module.verbose('Setting animation duration', duration);
-				if(settings.duration || settings.duration === 0) {
+				if(settings.duration || settings.duration === 0){
 					$sides.add($side)
 						.css({
 							'-webkit-transition-duration': duration,
@@ -154,13 +148,13 @@ ui.shape = function(element, settings){
 				}
 			},
 
-			currentStageSize: function() {
+			currentStageSize: function(){
 				var
-					$activeSide = $module.find('.' + settings.className.active),
+					$activeSide = element.find('.' + settings.className.active),
 					width       = $activeSide.outerWidth(true),
 					height      = $activeSide.outerHeight(true)
 				;
-				$module
+				element
 					.css({
 						width: width,
 						height: height
@@ -168,9 +162,9 @@ ui.shape = function(element, settings){
 				;
 			},
 
-			stageSize: function() {
+			stageSize: function(){
 				var
-					$clone      = $module.clone().classList.add(className.loading),
+					$clone      = element.clone().classList.add(className.loading),
 					$activeSide = $clone.find('.' + settings.className.active),
 					$nextSide   = (nextIndex)
 						? $clone.find(selector.side).eq(nextIndex)
@@ -180,40 +174,40 @@ ui.shape = function(element, settings){
 					newWidth    = (settings.width == 'next')
 						? $nextSide.outerWidth(true)
 						: (settings.width == 'initial')
-							? $module.width()
+							? element.width()
 							: settings.width,
 					newHeight    = (settings.height == 'next')
 						? $nextSide.outerHeight(true)
 						: (settings.height == 'initial')
-							? $module.height()
+							? element.height()
 							: settings.height
 				;
 				$activeSide.classList.remove(className.active);
 				$nextSide.classList.add(className.active);
-				$clone.insertAfter($module);
+				$clone.insertAfter(element);
 				$clone.remove();
-				if(settings.width != 'auto') {
-					$module.css('width', newWidth + settings.jitter);
+				if(settings.width != 'auto'){
+					element.css('width', newWidth + settings.jitter);
 					module.verbose('Specifying width during animation', newWidth);
 				}
-				if(settings.height != 'auto') {
-					$module.css('height', newHeight + settings.jitter);
+				if(settings.height != 'auto'){
+					element.css('height', newHeight + settings.jitter);
 					module.verbose('Specifying height during animation', newHeight);
 				}
 			},
 
-			nextSide: function(selector) {
+			nextSide: function(selector){
 				nextIndex = selector;
 				$nextSide = $side.filter(selector);
 				nextIndex = $side.index($nextSide);
-				if($nextSide.length === 0) {
+				if($nextSide.length === 0){
 					module.set.defaultSide();
 					module.error(error.side);
 				}
 				module.verbose('Next side manually set to', $nextSide);
 			},
 
-			active: function() {
+			active: function(){
 				module.verbose('Setting new side to active', $nextSide);
 				$side
 					.classList.remove(className.active)
@@ -225,15 +219,13 @@ ui.shape = function(element, settings){
 				module.set.defaultSide();
 			}
 		},
-
 		flip: {
-
-			up: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			up: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping up', $nextSide);
 					var
 						transform = module.get.transform.up()
@@ -246,13 +238,12 @@ ui.shape = function(element, settings){
 					module.queue('flip up');
 				}
 			},
-
-			down: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			down: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping down', $nextSide);
 					var
 						transform = module.get.transform.down()
@@ -265,13 +256,12 @@ ui.shape = function(element, settings){
 					module.queue('flip down');
 				}
 			},
-
-			left: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			left: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping left', $nextSide);
 					var
 						transform = module.get.transform.left()
@@ -284,13 +274,12 @@ ui.shape = function(element, settings){
 					module.queue('flip left');
 				}
 			},
-
-			right: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			right: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping right', $nextSide);
 					var
 						transform = module.get.transform.right()
@@ -303,13 +292,12 @@ ui.shape = function(element, settings){
 					module.queue('flip right');
 				}
 			},
-
-			over: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			over: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping over', $nextSide);
 					module.set.stageSize();
 					module.stage.behind();
@@ -319,13 +307,12 @@ ui.shape = function(element, settings){
 					module.queue('flip over');
 				}
 			},
-
-			back: function() {
-				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats) {
+			back: function(){
+				if(module.is.complete() && !module.is.animating() && !settings.allowRepeats){
 					module.debug('Side already visible', $nextSide);
 					return;
 				}
-				if( !module.is.animating()) {
+				if( !module.is.animating()){
 					module.debug('Flipping back', $nextSide);
 					module.set.stageSize();
 					module.stage.behind();
@@ -335,13 +322,10 @@ ui.shape = function(element, settings){
 					module.queue('flip back');
 				}
 			}
-
 		},
-
 		get: {
-
 			transform: {
-				up: function() {
+				up: function(){
 					var
 						translate = {
 							y: -(($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -353,7 +337,7 @@ ui.shape = function(element, settings){
 					};
 				},
 
-				down: function() {
+				down: function(){
 					var
 						translate = {
 							y: -(($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -365,7 +349,7 @@ ui.shape = function(element, settings){
 					};
 				},
 
-				left: function() {
+				left: function(){
 					var
 						translate = {
 							x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2),
@@ -377,7 +361,7 @@ ui.shape = function(element, settings){
 					};
 				},
 
-				right: function() {
+				right: function(){
 					var
 						translate = {
 							x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2),
@@ -389,7 +373,7 @@ ui.shape = function(element, settings){
 					};
 				},
 
-				over: function() {
+				over: function(){
 					var
 						translate = {
 							x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2)
@@ -400,7 +384,7 @@ ui.shape = function(element, settings){
 					};
 				},
 
-				back: function() {
+				back: function(){
 					var
 						translate = {
 							x : -(($activeSide.outerWidth(true) - $nextSide.outerWidth(true)) / 2)
@@ -412,7 +396,7 @@ ui.shape = function(element, settings){
 				}
 			},
 
-			transitionEvent: function() {
+			transitionEvent: function(){
 				var
 					element     = document.createElement('element'),
 					transitions = {
@@ -430,10 +414,10 @@ ui.shape = function(element, settings){
 				}
 			},
 
-			nextSide: function() {
+			nextSide: function(){
 				return ( $activeSide.next(selector.side).length > 0 )
 					? $activeSide.next(selector.side)
-					: $module.find(selector.side).first()
+					: element.find(selector.side).first()
 				;
 			}
 
@@ -441,7 +425,7 @@ ui.shape = function(element, settings){
 
 		stage: {
 
-			above: function() {
+			above: function(){
 				var
 					box = {
 						origin : (($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -471,7 +455,7 @@ ui.shape = function(element, settings){
 				;
 			},
 
-			below: function() {
+			below: function(){
 				var
 					box = {
 						origin : (($activeSide.outerHeight(true) - $nextSide.outerHeight(true)) / 2),
@@ -501,7 +485,7 @@ ui.shape = function(element, settings){
 				;
 			},
 
-			left: function() {
+			left: function(){
 				var
 					height = {
 						active : $activeSide.outerWidth(true),
@@ -535,7 +519,7 @@ ui.shape = function(element, settings){
 				;
 			},
 
-			right: function() {
+			right: function(){
 				var
 					height = {
 						active : $activeSide.outerWidth(true),
@@ -569,7 +553,7 @@ ui.shape = function(element, settings){
 				;
 			},
 
-			behind: function() {
+			behind: function(){
 				var
 					height = {
 						active : $activeSide.outerWidth(true),
@@ -598,9 +582,7 @@ ui.shape = function(element, settings){
 				;
 			}
 		}
-	};*/
-
-	module = {};
+	};
 	
 	return module;
 };
@@ -616,8 +598,8 @@ ui.shape.settings = {
 	height: 'initial',
 	allowRepeats: false,
 	duration: false,
-	beforeChange: function() {},
-	onChange: function() {},
+	beforeChange: function(){},
+	onChange: function(){},
 	selector: {
 		sides: '.sides',
 		side: '.side'
